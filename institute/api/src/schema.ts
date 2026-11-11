@@ -22,7 +22,8 @@ export function buildSchema(config: Config): SchemaPayload {
     // `seed` is a function here and a JSON array over the wire; everything else travels as written.
     collections: COLLECTIONS.map(({ seed, ...def }) => ({ ...def, seed: seed() as Record<string, unknown>[] })),
     forms: FORMS,
-    links: LINKS,
+    // The CMS shows these as external links, so a path becomes an address on this house's web.
+    links: LINKS.map((l) => (l.href.startsWith("/") ? { ...l, href: `${config.web.url}${l.href}` } : l)),
     webhook: { url: `${config.publicUrl}/cms/webhook` },
   };
 }
