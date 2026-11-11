@@ -1,0 +1,60 @@
+/* ITC Open Source admin theme: black, white type, mint accent (black text on mint), Archivo Black + Space Mono,
+   zero radius, 2px borders, hard offset shadow. Contrast: white/#A6A6A6 text and mint on #0B0B0B–#1C1C1C all ≥ 7:1. */
+.cms {
+  --cms-bg: #0B0B0B;
+  --cms-panel: #141414;
+  --cms-group: #1C1C1C;
+  --cms-input: #0B0B0B;
+  --cms-hover: #1F1F1F;
+  --cms-ink: #FFFFFF;
+  --cms-muted: #A6A6A6;
+  --cms-line: rgba(255, 255, 255, 0.28);
+  --cms-line-strong: rgba(255, 255, 255, 0.7);
+  --cms-accent: #C6F432;
+  --cms-accent-ink: #0B0B0B;
+  --cms-danger: #FF7A6B;
+  --cms-ok: #C6F432;
+  --cms-ok-ink: #C6F432;
+  --cms-ok-bg: #172006;
+  --cms-bad-bg: #2A1210;
+  --cms-warn: #FFC94D;
+  --cms-side: #0B0B0B;
+  --cms-side-ink: #FFFFFF;
+  --cms-side-line: rgba(255, 255, 255, 0.4);
+  --cms-side-hover: rgba(255, 255, 255, 0.1);
+  --cms-side-active: #C6F432;
+  --cms-side-active-ink: #0B0B0B;
+  --cms-radius: 0px;
+  --cms-shadow: 8px 8px 0 #C6F432;
+  --cms-font-display: var(--font-archivo-black), Impact, sans-serif;
+  --cms-font-ui: var(--font-space-mono), ui-monospace, monospace;
+  --cms-font-mono: var(--font-space-mono), ui-monospace, monospace;
+  color-scheme: dark;
+}
+
+/* House overrides the shared variables can't express (admin.css stays identical in every app). */
+
+/* Archivo Black has a single weight: don't let the browser fake a bolder one. */
+.cms h1, .cms h2, .cms .cms-brand { font-weight: 400; }
+
+/* Brutalist grid: 2px rules, square everything. */
+.cms .cms-btn, .cms .cms-auth-card, .cms .cms-card, .cms .cms-panel, .cms .cms-tablewrap, .cms .cms-fields,
+.cms .cms-item, .cms .cms-group, .cms .cms-dl, .cms .cms-multi-list, .cms .cms-danger, .cms .cms-flash,
+.cms .cms-chip, .cms .cms-add, .cms .cms-navtoggle,
+.cms input:not([type="checkbox"]):not([type="hidden"]), .cms select, .cms textarea { border-width: 2px; }
+.cms .cms-side { border-right: 2px solid var(--cms-ink); }
+.cms .cms-chip, .cms .cms-badge { border-radius: 0; }
+
+/* The kit's danger button has white text; on this dark theme the danger colour is light, so use black text. */
+.cms .cms-btn.danger { color: var(--cms-accent-ink); }
+
+/* Hard hovers, like the public site. */
+.cms .cms-btn:not(.primary):not(.danger):hover { background: var(--cms-ink); color: var(--cms-bg); border-color: var(--cms-ink); }
+.cms .cms-btn.primary:hover { filter: none; background: var(--cms-ink); border-color: var(--cms-ink); color: var(--cms-bg); }
+.cms .cms-card:hover { transform: none; box-shadow: 6px 6px 0 var(--cms-accent); }
+.cms :focus-visible { outline-width: 3px; }
+
+@media (max-width: 900px) {
+  .cms .cms-side { border-right: 0; border-bottom: 2px solid var(--cms-ink); }
+}
+.cms .cms-group { border-width: 2px !important; } /* admin.css sets this border with !important */

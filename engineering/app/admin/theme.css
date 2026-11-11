@@ -1,0 +1,38 @@
+/* ITC Engineering admin theme: blueprint light, ink sidebar, saffron accent, IBM Plex Sans + Plex Mono, zero radius, hairline rules.
+   The accent is saffron darkened to #BF4A0C so it passes WCAG AA as text on paper (4.5:1) and under white button text;
+   the pure brand saffron #E35D0F marks the active sidebar item, set against ink text (5.2:1). */
+.cms {
+  --cms-bg: #F5F5F0;
+  --cms-panel: #FFFFFD;
+  --cms-group: #F9F9F5;
+  --cms-input: #FFFFFD;
+  --cms-hover: #ECECE4;
+  --cms-ink: #111111;
+  --cms-muted: #55554F;
+  --cms-line: rgba(17, 17, 17, 0.16);
+  --cms-line-strong: rgba(17, 17, 17, 0.42);
+  --cms-accent: #BF4A0C;
+  --cms-accent-ink: #FFFFFF;
+  --cms-danger: #B42318;
+  --cms-ok: #18794E;
+  --cms-ok-ink: #0F5132;
+  --cms-ok-bg: #EAF5EE;
+  --cms-bad-bg: #FDF1EF;
+  --cms-warn: #9A5A00;
+  --cms-side: #111111;
+  --cms-side-ink: #F5F5F0;
+  --cms-side-line: rgba(245, 245, 240, 0.18);
+  --cms-side-hover: rgba(245, 245, 240, 0.08);
+  --cms-side-active: #E35D0F;
+  --cms-side-active-ink: #111111;
+  --cms-radius: 0px;
+  --cms-shadow: 0 0 0 1px rgba(17, 17, 17, 0.06);
+  --cms-font-display: var(--font-plex-sans), system-ui, sans-serif;
+  --cms-font-ui: var(--font-plex-sans), system-ui, sans-serif;
+  --cms-font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+/* House workaround: the kit hard-codes pill radii on chips and badges (admin.css), which ignore --cms-radius.
+   Engineering is zero-radius throughout, and chips read as mono status stamps like the public site's. */
+.cms .cms-chip, .cms .cms-badge { border-radius: var(--cms-radius); }
+.cms .cms-chip { font-family: var(--cms-font-mono); text-transform: uppercase; letter-spacing: .04em; font-size: 11px; }

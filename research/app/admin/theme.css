@@ -1,0 +1,31 @@
+/* ITC Research admin theme: paper white, lapis ink, saffron accent, Newsreader + Inter Tight, square corners. */
+.cms {
+  --cms-bg: #F6F5F0;
+  --cms-panel: #FFFFFE;
+  --cms-group: #FBFAF6;
+  --cms-input: #FFFFFE;
+  --cms-hover: #F6F5F0;
+  --cms-ink: #1F2A5A;
+  --cms-muted: #5E6688;
+  --cms-line: rgba(31, 42, 90, 0.14);
+  --cms-line-strong: rgba(31, 42, 90, 0.32);
+  --cms-accent: #C2410C;
+  --cms-accent-ink: #FFFFFF;
+  --cms-danger: #B42318;
+  --cms-ok: #1D6B42;
+  --cms-ok-ink: #14532D;
+  --cms-ok-bg: #ECF6F0;
+  --cms-bad-bg: #FDF1EF;
+  --cms-warn: #A15C07;
+  --cms-side: #1F2A5A;
+  --cms-side-ink: #F6F5F0;
+  --cms-side-line: rgba(246, 245, 240, 0.2);
+  --cms-side-hover: rgba(246, 245, 240, 0.08);
+  --cms-side-active: #FFFFFE;
+  --cms-side-active-ink: #1F2A5A;
+  --cms-radius: 0px;
+  --cms-shadow: 0 1px 0 rgba(31, 42, 90, .08), 0 24px 48px -32px rgba(31, 42, 90, .35);
+  --cms-font-display: var(--font-newsreader), Georgia, serif;
+  --cms-font-ui: var(--font-inter-tight), system-ui, sans-serif;
+  --cms-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}

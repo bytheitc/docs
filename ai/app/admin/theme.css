@@ -1,0 +1,43 @@
+/* ITC AI admin theme: dark #070A14 surfaces, lapis + turquoise accents, gold only for "waiting" states,
+   Space Grotesk + JetBrains Mono, 12px corners. All text pairs meet WCAG AA (most AAA); control borders ≥ 3:1. */
+.cms {
+  --cms-bg: #070A14;
+  --cms-panel: #0D1222;
+  --cms-group: #121A33;
+  --cms-input: #090D1A;
+  --cms-hover: #141B36;
+  --cms-ink: #E8ECFF;
+  --cms-muted: #9AA3C7;
+  --cms-line: rgba(124, 147, 255, 0.18);
+  --cms-line-strong: #6476C0;
+  --cms-accent: #8FA3FF;
+  --cms-accent-ink: #070A14;
+  --cms-danger: #FF8F8F;
+  --cms-ok: #2EC4B6;
+  --cms-ok-ink: #7FE3D9;
+  --cms-ok-bg: #0A2629;
+  --cms-bad-bg: #2A0F18;
+  --cms-warn: #E0B252;
+  --cms-side: #050811;
+  --cms-side-ink: #E8ECFF;
+  --cms-side-line: rgba(124, 147, 255, 0.16);
+  --cms-side-hover: rgba(124, 147, 255, 0.10);
+  --cms-side-active: #2EC4B6;
+  --cms-side-active-ink: #04131A;
+  --cms-radius: 12px;
+  --cms-shadow: 0 1px 0 rgba(124, 147, 255, .08), 0 30px 80px -40px rgba(76, 111, 255, .5);
+  --cms-font-display: var(--font-space-grotesk), system-ui, sans-serif;
+  --cms-font-ui: var(--font-space-grotesk), system-ui, sans-serif;
+  --cms-font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  /* Dark native controls: select menus, checkboxes, date pickers, scrollbars. */
+  color-scheme: dark;
+  accent-color: #2EC4B6;
+}
+.cms h1, .cms h2 { letter-spacing: -0.02em; }
+.cms ::placeholder { color: #7C86AE; opacity: 1; }
+.cms ::selection { background: rgba(46, 196, 182, .35); color: #FFFFFF; }
+
+/* Workaround (kit): admin.css hard-codes #fff text on danger buttons; on a dark theme the danger colour
+   must be light to be readable as text, so the button text needs to be dark. */
+.cms .cms-btn.danger { color: #1A0508; }

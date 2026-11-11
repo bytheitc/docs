@@ -1,0 +1,10 @@
+{
+  "total_count": 4,
+  "incomplete_results": false,
+  "items": [
+    { "id": 2001, "number": 12, "title": "Add Hijri date parsing", "html_url": "https://github.com/itc-oss/hijri-kit/pull/12", "state": "closed", "created_at": "2026-09-01T10:00:00Z", "closed_at": "2026-09-03T09:00:00Z", "repository_url": "https://api.github.com/repos/itc-oss/hijri-kit", "user": { "id": 501, "login": "amina-dev" }, "pull_request": { "merged_at": "2026-09-03T09:00:00Z" } },
+    { "id": 2002, "number": 13, "title": "<b>Fix</b> RTL layout in <script>alert(1)</script>docs", "html_url": "https://github.com/itc-oss/hijri-kit/pull/13", "state": "open", "created_at": "2026-10-05T10:00:00Z", "closed_at": null, "repository_url": "https://api.github.com/repos/itc-oss/hijri-kit", "user": { "id": 777, "login": "Yusuf-K" }, "pull_request": { "merged_at": null } },
+    { "id": 2003, "number": 14, "title": "Experimental refactor", "html_url": "https://github.com/itc-oss/qibla/pull/14", "state": "closed", "created_at": "2026-10-06T10:00:00Z", "closed_at": "2026-10-07T10:00:00Z", "repository_url": "https://api.github.com/repos/itc-oss/qibla", "user": { "id": 501, "login": "amina-dev" }, "pull_request": { "merged_at": null } },
+    { "id": 2004, "number": 15, "title": "Malicious link", "html_url": "javascript:alert(1)", "state": "open", "created_at": "2026-10-06T10:00:00Z", "closed_at": null, "repository_url": "https://api.github.com/repos/itc-oss/qibla", "user": { "id": 9, "login": "x" }, "pull_request": { "merged_at": null } }
+  ]
+}

@@ -1,0 +1,348 @@
+/* ITC CMS: house themes. Each space renders in its house's admin theme, ported from <house>/app/admin/theme.css and
+   scoped to .cms[data-space="<id>"]. The token block also applies to .cms-spacecard[data-space], so the space picker
+   previews each house. Workarounds the houses needed against the old kit are expressed with the themeable tokens
+   (--cms-bw, --cms-pill-radius, --cms-heading-weight, --cms-danger-ink) where they can be.
+   "itc" is the neutral CMS theme (space picker, accounts, audit, sign-in), in the Collective's palette. */
+
+/* ================================================================== */
+/* itc: neutral CMS theme (the Collective's parchment, emerald, gold)  */
+/* ================================================================== */
+:is(.cms, .cms-spacecard)[data-space="itc"] {
+  --cms-mark-accent: #D9B56B; /* the house centre of the mark, on the sidebar colour */
+  --cms-bg: #F3EDE0;
+  --cms-panel: #FFFCF6;
+  --cms-group: #F9F4EA;
+  --cms-input: #FFFFFF;
+  --cms-hover: #F3EDE0;
+  --cms-ink: #14201B;
+  --cms-muted: #4A5650;
+  --cms-line: rgba(20, 32, 27, 0.14);
+  --cms-line-strong: rgba(20, 32, 27, 0.34);
+  --cms-accent: #0F5C4D;
+  --cms-accent-ink: #F3EDE0;
+  --cms-danger: #A3271F;
+  --cms-ok: #0F5C4D;
+  --cms-ok-ink: #0A3F35;
+  --cms-ok-bg: #E5EFE9;
+  --cms-bad-bg: #FBEDE9;
+  --cms-warn: #85601A;
+  --cms-side: #14201B;
+  --cms-side-ink: #F3EDE0;
+  --cms-side-line: rgba(243, 237, 224, 0.2);
+  --cms-side-hover: rgba(243, 237, 224, 0.09);
+  --cms-side-active: #F3EDE0;
+  --cms-side-active-ink: #14201B;
+  --cms-radius: 10px;
+  --cms-shadow: 0 1px 0 rgba(20, 32, 27, .06), 0 24px 48px -32px rgba(10, 63, 53, .4);
+  --cms-font-display: var(--font-fraunces), Georgia, serif;
+  --cms-font-ui: var(--font-manrope), system-ui, sans-serif;
+  --cms-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: light;
+}
+.cms[data-space="itc"] .cms-side { box-shadow: inset -3px 0 0 #B8862F; }
+.cms[data-space="itc"] .cms-side .cms-badge { background: #D9B56B; color: #14201B; }
+.cms[data-space="itc"] .cms-side :focus-visible { outline-color: #D9B56B; }
+.cms[data-space="itc"] .cms-auth-card { border-top: 3px solid #B8862F; }
+@media (max-width: 900px) {
+  .cms[data-space="itc"] .cms-side { box-shadow: inset 0 -3px 0 #B8862F; }
+}
+
+/* ================================================================== */
+/* site: Collective Studio. Warm parchment, emerald sidebar and accent, gold rules, Fraunces + Manrope.
+   Gold is used only for rules, marks and badges on dark ground (it is too light for text on parchment). */
+/* ================================================================== */
+:is(.cms, .cms-spacecard)[data-space="site"] {
+  --cms-mark-accent: #D9B56B; /* the house centre of the mark, on the sidebar colour */
+  --cms-bg: #F3EDE0;
+  --cms-panel: #FFFCF6;
+  --cms-group: #F9F4EA;
+  --cms-input: #FFFFFF;
+  --cms-hover: #F3EDE0;
+  --cms-ink: #14201B;
+  --cms-muted: #4A5650;
+  --cms-line: rgba(20, 32, 27, 0.14);
+  --cms-line-strong: rgba(20, 32, 27, 0.34);
+  --cms-accent: #0F5C4D;
+  --cms-accent-ink: #F3EDE0;
+  --cms-danger: #A3271F;
+  --cms-ok: #0F5C4D;
+  --cms-ok-ink: #0A3F35;
+  --cms-ok-bg: #E5EFE9;
+  --cms-bad-bg: #FBEDE9;
+  --cms-warn: #85601A;
+  --cms-side: #0A3F35;
+  --cms-side-ink: #F3EDE0;
+  --cms-side-line: rgba(243, 237, 224, 0.2);
+  --cms-side-hover: rgba(243, 237, 224, 0.09);
+  --cms-side-active: #F3EDE0;
+  --cms-side-active-ink: #0A3F35;
+  --cms-radius: 10px;
+  --cms-shadow: 0 1px 0 rgba(20, 32, 27, .06), 0 24px 48px -32px rgba(10, 63, 53, .4);
+  --cms-font-display: var(--font-fraunces), Georgia, serif;
+  --cms-font-ui: var(--font-manrope), system-ui, sans-serif;
+  --cms-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: light;
+}
+/* The sidebar is emerald, so its badges and focus rings use gold instead of the accent. */
+.cms[data-space="site"] .cms-side { box-shadow: inset -3px 0 0 #B8862F; }
+.cms[data-space="site"] .cms-side .cms-mark { color: #F3EDE0; }
+.cms[data-space="site"] .cms-side .cms-badge { background: #D9B56B; color: #14201B; }
+.cms[data-space="site"] .cms-side :focus-visible { outline-color: #D9B56B; }
+@media (max-width: 900px) {
+  .cms[data-space="site"] .cms-side { box-shadow: inset 0 -3px 0 #B8862F; }
+}
+
+/* ================================================================== */
+/* ai: dark #070A14 surfaces, lapis + turquoise accents, gold only for "waiting" states, Space Grotesk + JetBrains Mono,
+   12px corners. All text pairs meet WCAG AA (most AAA); control borders ≥ 3:1. */
+/* ================================================================== */
+:is(.cms, .cms-spacecard)[data-space="ai"] {
+  --cms-mark-accent: #2EC4B6; /* the house centre of the mark, on the sidebar colour */
+  --cms-bg: #070A14;
+  --cms-panel: #0D1222;
+  --cms-group: #121A33;
+  --cms-input: #090D1A;
+  --cms-hover: #141B36;
+  --cms-ink: #E8ECFF;
+  --cms-muted: #9AA3C7;
+  --cms-line: rgba(124, 147, 255, 0.18);
+  --cms-line-strong: #6476C0;
+  --cms-accent: #8FA3FF;
+  --cms-accent-ink: #070A14;
+  --cms-danger: #FF8F8F;
+  --cms-danger-ink: #1A0508; /* the danger colour is light on this dark theme, so its button text is dark */
+  --cms-ok: #2EC4B6;
+  --cms-ok-ink: #7FE3D9;
+  --cms-ok-bg: #0A2629;
+  --cms-bad-bg: #2A0F18;
+  --cms-warn: #E0B252;
+  --cms-side: #050811;
+  --cms-side-ink: #E8ECFF;
+  --cms-side-line: rgba(124, 147, 255, 0.16);
+  --cms-side-hover: rgba(124, 147, 255, 0.10);
+  --cms-side-active: #2EC4B6;
+  --cms-side-active-ink: #04131A;
+  --cms-radius: 12px;
+  --cms-shadow: 0 1px 0 rgba(124, 147, 255, .08), 0 30px 80px -40px rgba(76, 111, 255, .5);
+  --cms-font-display: var(--font-space-grotesk), system-ui, sans-serif;
+  --cms-font-ui: var(--font-space-grotesk), system-ui, sans-serif;
+  --cms-font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  /* Dark native controls: select menus, checkboxes, date pickers, scrollbars. */
+  color-scheme: dark;
+  accent-color: #2EC4B6;
+}
+.cms[data-space="ai"] h1, .cms[data-space="ai"] h2, .cms-spacecard[data-space="ai"] h2 { letter-spacing: -0.02em; }
+.cms[data-space="ai"] ::placeholder { color: #7C86AE; opacity: 1; }
+.cms[data-space="ai"] ::selection { background: rgba(46, 196, 182, .35); color: #FFFFFF; }
+
+/* ================================================================== */
+/* engineering: blueprint light, ink sidebar, saffron accent, IBM Plex Sans + Plex Mono, zero radius, hairline rules.
+   The accent is saffron darkened to #BF4A0C so it passes WCAG AA as text on paper (4.5:1) and under white button text;
+   the pure brand saffron #E35D0F marks the active sidebar item, set against ink text (5.2:1). */
+/* ================================================================== */
+:is(.cms, .cms-spacecard)[data-space="engineering"] {
+  --cms-mark-accent: #E35D0F; /* the house centre of the mark, on the sidebar colour */
+  --cms-bg: #F5F5F0;
+  --cms-panel: #FFFFFD;
+  --cms-group: #F9F9F5;
+  --cms-input: #FFFFFD;
+  --cms-hover: #ECECE4;
+  --cms-ink: #111111;
+  --cms-muted: #55554F;
+  --cms-line: rgba(17, 17, 17, 0.16);
+  --cms-line-strong: rgba(17, 17, 17, 0.42);
+  --cms-accent: #BF4A0C;
+  --cms-accent-ink: #FFFFFF;
+  --cms-danger: #B42318;
+  --cms-ok: #18794E;
+  --cms-ok-ink: #0F5132;
+  --cms-ok-bg: #EAF5EE;
+  --cms-bad-bg: #FDF1EF;
+  --cms-warn: #9A5A00;
+  --cms-side: #111111;
+  --cms-side-ink: #F5F5F0;
+  --cms-side-line: rgba(245, 245, 240, 0.18);
+  --cms-side-hover: rgba(245, 245, 240, 0.08);
+  --cms-side-active: #E35D0F;
+  --cms-side-active-ink: #111111;
+  --cms-radius: 0px;
+  --cms-pill-radius: 0px; /* zero-radius throughout, chips and badges included */
+  --cms-shadow: 0 0 0 1px rgba(17, 17, 17, 0.06);
+  --cms-font-display: var(--font-plex-sans), system-ui, sans-serif;
+  --cms-font-ui: var(--font-plex-sans), system-ui, sans-serif;
+  --cms-font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  color-scheme: light;
+}
+/* Chips read as mono status stamps, like the public site's. */
+.cms[data-space="engineering"] .cms-chip { font-family: var(--cms-font-mono); text-transform: uppercase; letter-spacing: .04em; font-size: 11px; }
+
+/* ================================================================== */
+/* institute: cream, pomegranate sidebar, gold ornament, Cormorant Garamond + Work Sans, soft corners.
+   Gold is used only for rules and marks (it is too light for text on cream). */
+/* ================================================================== */
+:is(.cms, .cms-spacecard)[data-space="institute"] {
+  --cms-mark-accent: #D9B56B; /* the house centre of the mark, on the sidebar colour */
+  --cms-bg: #FAF6EF;
+  --cms-panel: #FFFDF9;
+  --cms-group: #F6EFE2;
+  --cms-input: #FFFDF9;
+  --cms-hover: #F2EADB;
+  --cms-ink: #2A1A1C;
+  --cms-muted: #5E4B4D;
+  --cms-line: rgba(122, 31, 43, 0.16);
+  --cms-line-strong: rgba(122, 31, 43, 0.58);
+  --cms-accent: #7A1F2B;
+  --cms-accent-ink: #FAF6EF;
+  --cms-danger: #A61B1B;
+  --cms-ok: #1D6B42;
+  --cms-ok-ink: #14532D;
+  --cms-ok-bg: #EEF5EE;
+  --cms-bad-bg: #FBEFEF;
+  --cms-warn: #85570A;
+  --cms-side: #7A1F2B;
+  --cms-side-ink: #FAF6EF;
+  --cms-side-line: rgba(217, 181, 107, 0.45);
+  --cms-side-hover: rgba(250, 246, 239, 0.1);
+  --cms-side-active: #FAF6EF;
+  --cms-side-active-ink: #7A1F2B;
+  --cms-radius: 6px;
+  --cms-shadow: 0 1px 0 rgba(122, 31, 43, .06), 0 24px 48px -32px rgba(90, 21, 32, .35);
+  --cms-font-display: var(--font-cormorant), "Cormorant", Georgia, serif;
+  --cms-font-ui: var(--font-work-sans), system-ui, sans-serif;
+  --cms-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: light;
+}
+/* The accent is the sidebar colour, so the sidebar's badges and focus rings use gold instead. */
+@media (min-width: 901px) { .cms[data-space="institute"] .cms-side { box-shadow: inset -3px 0 0 #A88438; } }
+@media (max-width: 900px) { .cms[data-space="institute"] .cms-side { box-shadow: inset 0 -2px 0 #A88438; } }
+.cms[data-space="institute"] .cms-side .cms-badge { background: #D9B56B; color: #2A1A1C; }
+.cms[data-space="institute"] .cms-side :focus-visible { outline-color: #D9B56B; }
+/* Cormorant's old-style 1 reads as a roman I in counts. */
+.cms[data-space="institute"] .cms-card-n { font-variant-numeric: lining-nums; }
+
+/* ================================================================== */
+/* oss: black, white type, mint accent (black text on mint), Archivo Black + Space Mono, zero radius, 2px borders,
+   hard offset shadow. Contrast: white/#A6A6A6 text and mint on #0B0B0B–#1C1C1C all ≥ 7:1. */
+/* ================================================================== */
+:is(.cms, .cms-spacecard)[data-space="oss"] {
+  --cms-mark-accent: #C6F432; /* the house centre of the mark, on the sidebar colour */
+  --cms-bg: #0B0B0B;
+  --cms-panel: #141414;
+  --cms-group: #1C1C1C;
+  --cms-input: #0B0B0B;
+  --cms-hover: #1F1F1F;
+  --cms-ink: #FFFFFF;
+  --cms-muted: #A6A6A6;
+  --cms-line: rgba(255, 255, 255, 0.28);
+  --cms-line-strong: rgba(255, 255, 255, 0.7);
+  --cms-accent: #C6F432;
+  --cms-accent-ink: #0B0B0B;
+  --cms-danger: #FF7A6B;
+  --cms-danger-ink: #0B0B0B;
+  --cms-ok: #C6F432;
+  --cms-ok-ink: #C6F432;
+  --cms-ok-bg: #172006;
+  --cms-bad-bg: #2A1210;
+  --cms-warn: #FFC94D;
+  --cms-side: #0B0B0B;
+  --cms-side-ink: #FFFFFF;
+  --cms-side-line: rgba(255, 255, 255, 0.4);
+  --cms-side-hover: rgba(255, 255, 255, 0.1);
+  --cms-side-active: #C6F432;
+  --cms-side-active-ink: #0B0B0B;
+  --cms-radius: 0px;
+  --cms-pill-radius: 0px;
+  --cms-bw: 2px;              /* brutalist grid: 2px rules */
+  --cms-heading-weight: 400;  /* Archivo Black has a single weight: don't let the browser fake a bolder one */
+  --cms-shadow: 8px 8px 0 #C6F432;
+  --cms-font-display: var(--font-archivo-black), Impact, sans-serif;
+  --cms-font-ui: var(--font-space-mono), ui-monospace, monospace;
+  --cms-font-mono: var(--font-space-mono), ui-monospace, monospace;
+  color-scheme: dark;
+}
+.cms[data-space="oss"] .cms-brand { font-weight: 400; }
+.cms[data-space="oss"] .cms-add { border-width: 2px; }
+.cms[data-space="oss"] .cms-side { border-right: 2px solid var(--cms-ink); }
+/* Hard hovers, like the public site. */
+.cms[data-space="oss"] .cms-btn:not(.primary):not(.danger):hover { background: var(--cms-ink); color: var(--cms-bg); border-color: var(--cms-ink); }
+.cms[data-space="oss"] .cms-btn.primary:hover { filter: none; background: var(--cms-ink); border-color: var(--cms-ink); color: var(--cms-bg); }
+.cms[data-space="oss"] .cms-card:hover { transform: none; box-shadow: 6px 6px 0 var(--cms-accent); }
+.cms[data-space="oss"] :focus-visible { outline-width: 3px; }
+.cms-spacecard[data-space="oss"] { box-shadow: 6px 6px 0 #C6F432; }
+@media (max-width: 900px) {
+  .cms[data-space="oss"] .cms-side { border-right: 0; border-bottom: 2px solid var(--cms-ink); }
+}
+
+/* ================================================================== */
+/* research: paper white, lapis ink, saffron accent, Newsreader + Inter Tight, square corners. */
+/* ================================================================== */
+:is(.cms, .cms-spacecard)[data-space="research"] {
+  --cms-mark-accent: #E8743F; /* the house centre of the mark, on the sidebar colour */
+  --cms-bg: #F6F5F0;
+  --cms-panel: #FFFFFE;
+  --cms-group: #FBFAF6;
+  --cms-input: #FFFFFE;
+  --cms-hover: #F6F5F0;
+  --cms-ink: #1F2A5A;
+  --cms-muted: #5E6688;
+  --cms-line: rgba(31, 42, 90, 0.14);
+  --cms-line-strong: rgba(31, 42, 90, 0.32);
+  --cms-accent: #C2410C;
+  --cms-accent-ink: #FFFFFF;
+  --cms-danger: #B42318;
+  --cms-ok: #1D6B42;
+  --cms-ok-ink: #14532D;
+  --cms-ok-bg: #ECF6F0;
+  --cms-bad-bg: #FDF1EF;
+  --cms-warn: #A15C07;
+  --cms-side: #1F2A5A;
+  --cms-side-ink: #F6F5F0;
+  --cms-side-line: rgba(246, 245, 240, 0.2);
+  --cms-side-hover: rgba(246, 245, 240, 0.08);
+  --cms-side-active: #FFFFFE;
+  --cms-side-active-ink: #1F2A5A;
+  --cms-radius: 0px;
+  --cms-shadow: 0 1px 0 rgba(31, 42, 90, .08), 0 24px 48px -32px rgba(31, 42, 90, .35);
+  --cms-font-display: var(--font-newsreader), Georgia, serif;
+  --cms-font-ui: var(--font-inter-tight), system-ui, sans-serif;
+  --cms-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: light;
+}
+
+/* ================================================================== */
+/* portal: the Collective's parchment, emerald and gold, Fraunces + Manrope, soft corners. */
+/* ================================================================== */
+:is(.cms, .cms-spacecard)[data-space="portal"] {
+  --cms-mark-accent: #D9B56B; /* the house centre of the mark, on the sidebar colour */
+  --cms-bg: #F3EDE0;
+  --cms-panel: #FCFAF5;
+  --cms-group: #F7F2E7;
+  --cms-input: #FFFFFF;
+  --cms-hover: #F3EDE0;
+  --cms-ink: #14201B;
+  --cms-muted: #4B5852;
+  --cms-line: rgba(20, 32, 27, 0.14);
+  --cms-line-strong: rgba(20, 32, 27, 0.32);
+  --cms-accent: #0F5C4D;
+  --cms-accent-ink: #FFFFFF;
+  --cms-danger: #A3261B;
+  --cms-ok: #0F5C4D;
+  --cms-ok-ink: #0A3F35;
+  --cms-ok-bg: #E7F1EC;
+  --cms-bad-bg: #FBEEEA;
+  --cms-warn: #8A5A12;
+  --cms-side: #0A3F35;
+  --cms-side-ink: #F3EDE0;
+  --cms-side-line: rgba(217, 181, 107, 0.35);
+  --cms-side-hover: rgba(243, 237, 224, 0.1);
+  --cms-side-active: #F3EDE0;
+  --cms-side-active-ink: #0A3F35;
+  --cms-radius: 10px;
+  --cms-shadow: 0 1px 0 rgba(20, 32, 27, .06), 0 24px 48px -32px rgba(20, 32, 27, .35);
+  --cms-font-display: var(--font-fraunces), Georgia, serif;
+  --cms-font-ui: var(--font-manrope), system-ui, sans-serif;
+  --cms-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: light;
+}
+
+/* Unknown spaces fall back to the neutral theme's tokens (inherited from the page's .cms[data-space="itc"]). */
