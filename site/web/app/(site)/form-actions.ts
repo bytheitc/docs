@@ -21,6 +21,16 @@ export async function sendInvite(fd: FormData) {
   return record("invite", fd, ["email"]);
 }
 
+/** /rfps/[slug]: a proposal against a published brief. Form id "rfp-proposal". */
+export async function sendProposal(fd: FormData) {
+  return record("rfp-proposal", fd, ["rfp", "name", "organisation", "email", "links", "approach", "availability"]);
+}
+
+/** /suggest: what the Collective should build. Form id "suggestion". */
+export async function sendSuggestion(fd: FormData) {
+  return record("suggestion", fd, ["area", "who", "today", "change", "existing", "name", "email"]);
+}
+
 /** /contact: general message. Form id "contact". */
 export async function sendContact(fd: FormData) {
   return record("contact", fd, ["name", "email", "topic", "message"]);

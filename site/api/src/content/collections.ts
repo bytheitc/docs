@@ -8,6 +8,8 @@ import { HOUSES } from "./houses.js";
 import { NEWS_KINDS, SEED_NEWS } from "./news.js";
 import { SEED_CONTACT, SEED_GIVING, SEED_JOIN, SEED_PRESS } from "./pages.js";
 import { SEED_POLICIES } from "./policies.js";
+import { RFP_STATUSES, SEED_RFPS } from "./rfps.js";
+import { SEED_SUGGEST } from "./suggestions.js";
 import { SEED_PRINCIPLES } from "./principles.js";
 import { SEED_TEAM } from "./team.js";
 import type { CollectionDef, Field, SpaceLink } from "./types.js";
@@ -233,6 +235,71 @@ export const COLLECTIONS: CollectionDef[] = [
     ],
   },
   {
+    name: "rfps",
+    label: "Requests for proposals",
+    singular: "RFP",
+    description: "Work the Collective wants built, put out as a public brief. Shown on /rfps, one page each.",
+    idField: "slug",
+    titleField: "title",
+    columns: ["status", "house", "closes"],
+    seed: () => rows(SEED_RFPS),
+    fields: [
+      { type: "text", name: "slug", label: "Slug", required: true, help: "Appears in the address: /rfps/slug." },
+      { type: "text", name: "title", label: "Title", required: true },
+      { type: "select", name: "house", label: "Stewarding house", required: true, options: HOUSE_IDS, help: "Whose team answers questions and holds the relationship." },
+      { type: "select", name: "status", label: "Status", required: true, options: RFP_STATUSES },
+      { type: "text", name: "budget", label: "Budget", required: true, help: "Say it plainly, e.g. “£15,000–£25,000” or “To be agreed”. Never hide a number." },
+      { type: "text", name: "closes", label: "Closes", required: true, help: "Free text, e.g. “28 February 2027” or “Rolling”." },
+      { type: "text", name: "duration", label: "Expected duration", required: true, placeholder: "Six to nine months" },
+      { type: "textarea", name: "summary", label: "Summary", required: true, rows: 2, help: "One sentence for the list page." },
+      { type: "paragraphs", name: "need", label: "The need", required: true, help: "Who is underserved today, and what changes for them." },
+      { type: "lines", name: "scope", label: "Scope", required: true, help: "What a proposal must cover. One item per line." },
+      { type: "lines", name: "criteria", label: "How proposals are judged", required: true, help: "In order of weight. One per line." },
+      { type: "lines", name: "conditions", label: "Conditions", required: true, help: "Non-negotiables: licence, data handling, accessibility, review. One per line." },
+      {
+        type: "list", name: "sections", label: "Further sections", itemLabel: "section", itemTitle: "heading",
+        help: "Optional. Use for “How to propose”, timelines, or anything this brief needs that the fields above don’t cover.",
+        fields: [
+          { type: "text", name: "heading", label: "Heading", required: true },
+          { type: "paragraphs", name: "body", label: "Paragraphs", required: true },
+        ],
+      },
+    ],
+  },
+  {
+    name: "suggest",
+    label: "Suggestions page",
+    singular: "Suggestions page",
+    description: "The copy on /suggest, where people tell us what to build. The suggestions themselves arrive in the inbox.",
+    idField: "id",
+    titleField: "id",
+    singleton: true,
+    seed: () => rows([SEED_SUGGEST]),
+    fields: [
+      { type: "text", name: "id", label: "Id", required: true, help: "Leave as “suggest”." },
+      { type: "text", name: "headline", label: "Headline", required: true },
+      { type: "textarea", name: "intro", label: "Introduction", required: true, rows: 4 },
+      {
+        type: "list", name: "prompts", label: "What to tell us", itemLabel: "prompt", itemTitle: "title", required: true,
+        help: "Questions that help someone describe a need rather than a feature.",
+        fields: [
+          { type: "text", name: "title", label: "Question", required: true },
+          { type: "textarea", name: "body", label: "Explanation", required: true, rows: 2 },
+        ],
+      },
+      {
+        type: "list", name: "steps", label: "What happens next", itemLabel: "step", itemTitle: "title", required: true,
+        fields: [
+          { type: "text", name: "title", label: "Step", required: true },
+          { type: "textarea", name: "body", label: "Text", required: true, rows: 2 },
+        ],
+      },
+      { type: "lines", name: "areas", label: "Areas of need", required: true, help: "Options in the form’s “What is this about?” menu, one per line." },
+      { type: "lines", name: "outOfScope", label: "What we won’t take on", required: true, help: "Said plainly, so nobody wastes their time. One per line." },
+      { type: "textarea", name: "privacy", label: "Privacy note", required: true, rows: 3, help: "Shown under the form." },
+    ],
+  },
+  {
     name: "contact",
     label: "Contact page",
     singular: "Contact page",
@@ -281,6 +348,8 @@ export const COLLECTIONS: CollectionDef[] = [
 /** Names of the public forms whose submissions land in the inbox. */
 export const FORMS: Record<string, string> = {
   join: "Join: expression of interest",
+  "rfp-proposal": "RFPs: proposal",
+  suggestion: "Suggestions: what to build",
   invite: "Home: invitation request",
   contact: "Contact: message",
 };

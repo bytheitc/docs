@@ -12,6 +12,8 @@ import type { NewsPost } from "@/lib/news";
 import type { ContactPage, GivingPage, JoinPage, PressPage } from "@/lib/pages";
 import type { PolicyDoc } from "@/lib/policies";
 import type { Principle } from "@/lib/principles";
+import type { Rfp } from "@/lib/rfps";
+import type { SuggestPage } from "@/lib/suggestions";
 import type { Team } from "@/lib/team";
 
 const isHouse = (x: unknown): x is HouseId => HOUSES.some((h) => h.id === x);
@@ -47,6 +49,18 @@ export const getHouseProfiles = async () =>
 export const getFaq = async () =>
   (await getPublished<FaqItem>("faq")).map((f) => ({ ...f, link: link(f.link) }));
 
+const normaliseRfp = (r: Rfp): Rfp => ({
+  ...r,
+  need: r.need ?? [], scope: r.scope ?? [], criteria: r.criteria ?? [], conditions: r.conditions ?? [],
+  sections: (r.sections ?? []).map((x) => ({ ...x, body: x.body ?? [] })),
+});
+
+export const getRfps = async () => (await getPublished<Rfp>("rfps")).map(normaliseRfp);
+export const getRfp = async (slug: string) => {
+  const r = await getPublishedOne<Rfp>("rfps", slug);
+  return r && normaliseRfp(r);
+};
+
 export const getPolicy = async (slug: string) => {
   const p = await getPublishedOne<PolicyDoc>("policies", slug);
   return p && { ...p, sections: p.sections ?? [] };
@@ -59,6 +73,9 @@ const EMPTY_TEAM: Team = { id: "team", leadership: [], stewards: [], councils: [
 const EMPTY_JOIN: JoinPage = { id: "join", ways: [] };
 const EMPTY_GIVING: GivingPage = { id: "giving", uses: [], options: [], email: "", note: "", notice: [] };
 const EMPTY_CONTACT: ContactPage = { id: "contact", channels: [], topics: ["General"] };
+const EMPTY_SUGGEST: SuggestPage = {
+  id: "suggest", headline: "Tell us what to build", intro: "", prompts: [], steps: [], areas: ["Something else entirely"], outOfScope: [], privacy: "",
+};
 const EMPTY_PRESS: PressPage = { id: "press", email: "", centers: [], donts: [], guidelines: "" };
 
 export const getTeam = async (): Promise<Team> => {
@@ -79,6 +96,15 @@ export const getGivingPage = async (): Promise<GivingPage> => {
 export const getContactPage = async (): Promise<ContactPage> => {
   const c = (await getSingleton<ContactPage>("contact")) ?? EMPTY_CONTACT;
   return { ...c, channels: c.channels ?? [], topics: c.topics?.length ? c.topics : EMPTY_CONTACT.topics };
+};
+
+export const getSuggestPage = async (): Promise<SuggestPage> => {
+  const s = (await getSingleton<SuggestPage>("suggest")) ?? EMPTY_SUGGEST;
+  return {
+    ...s,
+    prompts: s.prompts ?? [], steps: s.steps ?? [], outOfScope: s.outOfScope ?? [],
+    areas: s.areas?.length ? s.areas : EMPTY_SUGGEST.areas,
+  };
 };
 
 export const getPressPage = async (): Promise<PressPage> => {
