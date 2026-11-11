@@ -98,6 +98,23 @@ signed with `X-CMS-Signature: sha256=<HMAC of body, keyed by the space key>`. `e
 - House-specific endpoints as needed, e.g. `oss/api GET /portal-wall` (from `portal/api`).
 - On boot it registers its schema with the CMS, retrying with backoff. Failure is not fatal.
 
+## As built
+
+Phase 2 is done: all seven houses are split. A few details settled during the work.
+
+- **House apis are one template.** `config.ts`, `http.ts`, `cms.ts`, `schema.ts`, `register.ts`,
+  `revalidate.ts`, `app.ts`, `server.ts` and `routes/` are identical in every house, like the Khatam mark.
+  Only `src/content/` and `src/content/house.ts` (space id, label, ports) differ.
+- **Seed content lives with the api.** A house's content modules moved to `<house>/api/src/content/`; the web
+  keeps the TypeScript types its pages render. There is one source of truth for the content, and it is the
+  side that registers it.
+- **Webs reach their api through one file,** `lib/api.ts`: `getPublished`, `getPublishedOne`, `getSingleton`
+  and `submitForm`. Reads are cached for `CONTENT_TTL` and tagged `content` / `content:<collection>`, so
+  `POST /api/revalidate` can drop exactly what changed.
+- **`SpaceLink` hrefs may be paths.** `buildSchema` resolves a leading `/` against `WEB_URL`, so the portal
+  registers `/staff` and the CMS shows the absolute address.
+- **A form failure reports `unavailable`,** not `no-database`: a web has no database to be missing.
+
 ## Portal
 - **`portal/api`** owns contributor auth (OAuth code exchange; access tokens are discarded), bearer sessions, the dashboard,
   self-logged work, profiles, export and deletion, claims, providers, sync and the public wall (`GET /public/contributors`). Its data
@@ -106,13 +123,30 @@ signed with `X-CMS-Signature: sha256=<HMAC of body, keyed by the space key>`. `e
   to the api. **`/staff/*`** holds the portal tools (contributors, verification, claims, sync, providers), signed in with a CMS account
   that has access to space `portal` (checked by `portal/api` through CMS introspection). The CMS space `portal` links to `/staff`.
 
+### Portal api surface (as built)
+- **Auth:** `GET /auth/providers`, `POST /auth/authorize`, `POST /auth/callback`, `POST /auth/signout`,
+  `POST /auth/signout-all`. The web owns the redirect URI and the short-lived state/PKCE cookie; the api holds the
+  client id and secret, exchanges the code, reads the profile and discards the access token.
+- **Sessions** are opaque bearer tokens. The api stores only a SHA-256 hash; the web keeps the token in an httpOnly
+  cookie on its own origin and forwards it as `Authorization: Bearer …`.
+- **The contributor:** `GET /me`, `GET /me/dashboard`, `GET /me/export`, `DELETE /me`, `PATCH /me/profile`,
+  `POST /me/contributions`, `DELETE /me/accounts/:provider/:providerUserId`, `POST /me/claims`.
+- **Public:** `GET /public/contributors` (the opt-in wall, read by `oss/api`) and `GET /public/contributors/:handle`,
+  which returns a list only for the switches that person turned on.
+- **Staff:** `POST /staff/login` (proxies the CMS's own sign-in, so there is no second password), then
+  `/staff/overview`, `/staff/contributors`, `/staff/contributions`, `/staff/claims`, `/staff/sync`,
+  `/staff/providers` and `/staff/audit`. Editors read; publishers verify, hide, release and sync; admins disable.
+  Staff changes go to the portal's **own** audit log (`portal_audit`), because this api owns the data they change.
+
 ## Environment (per package; see each `.env.example`)
 - `cms/api`: `MONGODB_URI`, `CMS_DB_NAME` (`itc_cms`), `CMS_SPACE_KEYS`, `CMS_SETUP_TOKEN`, `PORT`; optional `CMS_DB` (`mongodb`),
   `CMS_TRUST_PROXY`, `CMS_LOGIN_LIMIT`, `CMS_LOG=off`.
 - `cms/web`: `CMS_API_URL`, `PORT`.
-- `<house>/api`: `CMS_API_URL`, `CMS_SPACE_KEY`, `WEB_URL`, `REVALIDATE_SECRET`, `PORT`, plus house-specific settings.
-  For the portal: `MONGODB_URI` and the OAuth provider settings.
-- `<house>/web`: `API_URL`, `REVALIDATE_SECRET`, and the `NEXT_PUBLIC_ITC_*_URL` links.
+- `<house>/api`: `CMS_API_URL`, `CMS_SPACE_KEY`, `API_PUBLIC_URL` (the address the CMS posts webhooks to), `WEB_URL`,
+  `REVALIDATE_SECRET`, `PORT`, `CONTENT_TTL`, plus house-specific settings: `PORTAL_API_URL` for `oss/api`, and
+  `MONGODB_URI`, `PORTAL_DB_NAME` and the OAuth provider settings for `portal/api`.
+- `<house>/web`: `API_URL`, `REVALIDATE_SECRET`, and the `NEXT_PUBLIC_ITC_*_URL` links. `portal/web` also takes
+  `NEXT_PUBLIC_CMS_WEB_URL`, so its staff tools can link into the Studio.
 
 Databases: one MongoDB cluster (Atlas). `cms/api` uses `itc_cms`; `portal/api` uses `itc_portal`. Other databases can be supported
 behind the storage-adapter interface in `cms/api`.

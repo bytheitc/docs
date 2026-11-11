@@ -71,7 +71,13 @@ and the Institute attribute publications, datasets and proceedings to the right 
 - **Newsletter:** double opt-in, with one list per house that people choose themselves.
 - **Volunteer board:** needs posted by any house, matched to members' stated skills.
 - **Donations:** a real payment processor and receipts. Zakat eligibility needs scholarly guidance and legal advice first.
-- **Content:** news, team, FAQ and pages move into the Studio.
+- **Content:** news, team, FAQ and pages move into the Studio. ✅
+- **Requests for proposals** (`/rfps`): work the Collective wants built, published as open briefs anyone can
+  answer, each with a register-interest form. ✅ Next: a real commissioning process behind it — who decides,
+  how a shortlist is paid for discovery, and where the contract and the money actually come from.
+- **Suggestions** (`/suggest`): anyone can describe a need software could carry for the community. ✅ Next:
+  triage in the Studio (statuses, grouping by the need underneath), and the promise the page makes — telling
+  people what happened to their suggestion — needs F6 transactional email to be real.
 
 ### AI (`ai/`)
 - **Live evals:** eval runs in CI publish results as data. `/evals` renders them, with version history and methodology links. No hand-typed numbers.
@@ -123,12 +129,23 @@ and the Institute attribute publications, datasets and proceedings to the right 
 | Phase | Goal | Contents |
 |---|---|---|
 | **1. Foundations** | Safe to build on | F1–F3, F5 (Studio with content collections), F6 |
-| **2. Content in the Studio** | Editors can work without developers | Move all `lib/*.ts` content into the Studio for all six houses; route forms into inboxes; newsletter |
+| **2. Content in the Studio** ✅ | Editors can work without developers | **Done.** Every house is split into `<house>/web` and `<house>/api`; content models and seeds moved into the house apis and register with the standalone CMS; forms route into the CMS inbox; the per-house `/admin` panels are gone, replaced by `cms/web`. Still open: the newsletter. |
 | **3. Accounts + GitHub** | People can participate | F4 ITC Account, GitHub OAuth (A), GitHub App (B), live OSS data, claim-an-issue, contributor dashboard, event RSVP |
 | **4. Applications** | Programs run online | Fellowship portal, careers tracking, membership review, center proposals, research publishing pipeline, ORCID |
 | **5. Depth** | Each house's signature feature | Live evals, real status page, gated datasets, DOIs, sprint boards, conduct reporting, Arabic/RTL versions, donations, F7 shared design package |
 
 ---
+
+### What Phase 2 left open
+
+| Item | Where it bites |
+|---|---|
+| The newsletter | Named in Phase 2 and not built. Needs F6. |
+| Replying to suggestions | `/suggest` promises people hear back. Without F6 that is a promise nobody can keep. |
+| CI across fourteen packages | F1 says typecheck and build on every pull request. There are now 14 packages, not 6. |
+| Running the stack | Seven api + seven web + the CMS is fifteen processes. Worth one command (Engineering's **Bayt**). |
+| Shared api template | The house api runtime is copied into seven packages on purpose. When it drifts, that is the cost being paid. |
+| Deployment | `API_PUBLIC_URL`, `WEB_URL` and `REVALIDATE_SECRET` have to line up per house, per environment. |
 
 ## 4. Decisions needed
 
