@@ -21,3 +21,6 @@ export const HOUSES: House[] = [
 ];
 
 export const house = (id: HouseId): House => HOUSES.find((h) => h.id === id)!;
+
+/** The contributor portal: a Collective-level service, not a house. */
+export const PORTAL_URL = process.env.NEXT_PUBLIC_ITC_PORTAL_URL ?? "http://localhost:3006";
