@@ -6,6 +6,7 @@ import {
   type Claim, type Contribution, type ContributionFilter, type Contributor, type ContributorSession,
   type AuditEvent, type LinkedAccount, type PortalStore, type SyncRun,
 } from "./types.js";
+import type { Maintainership, Nomination, ReviewerInvitation } from "./maintainers.js";
 
 // One connection pool per URI, per process.
 const g = globalThis as unknown as { __itcMongo?: Map<string, Promise<MongoClient>> };
@@ -49,6 +50,23 @@ export function createPortalMongoStore(uri: string, dbName: string): PortalStore
         d.collection("portal_claims").createIndex({ provider: 1, repo: 1, issue: 1 }, { unique: true, partialFilterExpression: { status: "active" } }),
         d.collection("portal_sync_runs").createIndex({ sourceId: 1, startedAt: -1 }),
         d.collection("portal_audit").createIndex({ at: -1 }),
+        d.collection("portal_maintainers").createIndex({ id: 1 }, { unique: true }),
+        d.collection("portal_maintainers").createIndex({ contributorId: 1, endedAt: 1 }),
+        // One live maintainership per person per repo per role.
+        d.collection("portal_maintainers").createIndex(
+          { contributorId: 1, repo: 1, role: 1 },
+          { unique: true, partialFilterExpression: { endedAt: { $exists: false } } },
+        ),
+        d.collection("portal_nominations").createIndex({ id: 1 }, { unique: true }),
+        d.collection("portal_nominations").createIndex({ status: 1, closesAt: 1 }),
+        d.collection("portal_nominations").createIndex({ repo: 1 }),
+        // One open nomination per candidate per repo.
+        d.collection("portal_nominations").createIndex(
+          { repo: 1, candidateId: 1 },
+          { unique: true, partialFilterExpression: { status: "open" } },
+        ),
+        d.collection("portal_invitations").createIndex({ id: 1 }, { unique: true }),
+        d.collection("portal_invitations").createIndex({ contributorId: 1, status: 1 }),
       ]);
       return d;
     })().catch((e) => { ready = null; throw e; });
@@ -202,7 +220,11 @@ export function createPortalMongoStore(uri: string, dbName: string): PortalStore
     },
     async markClaimAssigned(id) { await (await col<Claim>("portal_claims")).updateOne({ id }, { $set: { assigned: true } }); },
     async expireClaims() {
-      return (await (await col<Claim>("portal_claims")).updateMany({ status: "active", expiresAt: { $lte: new Date() } }, { $set: { status: "expired" } })).modifiedCount;
+      const c = await col<Claim>("portal_claims");
+      const due = await c.find({ status: "active", expiresAt: { $lte: new Date() } }).toArray();
+      if (!due.length) return [];
+      await c.updateMany({ id: { $in: due.map((d) => d.id) }, status: "active" }, { $set: { status: "expired" } });
+      return due.map((d) => ({ ...strip<Claim>(d), status: "expired" as const }));
     },
 
     async addSyncRun(r) { await (await col<SyncRun>("portal_sync_runs")).insertOne({ ...r }); },
@@ -214,6 +236,70 @@ export function createPortalMongoStore(uri: string, dbName: string): PortalStore
     async lastSuccessfulRun(sourceId) {
       const d = await (await col<SyncRun>("portal_sync_runs")).find({ sourceId, status: "ok" }).sort({ startedAt: -1 }).limit(1).toArray();
       return d[0] ? strip<SyncRun>(d[0]) : null;
+    },
+
+    async listMaintainerships(opts) {
+      const q: Filter<Maintainership> = {};
+      if (opts.contributorId) q.contributorId = opts.contributorId;
+      if (opts.repo) q.repo = opts.repo;
+      if (!opts.includeEnded) q.endedAt = { $exists: false };
+      return (await (await col<Maintainership>("portal_maintainers")).find(q).sort({ since: 1 }).toArray()).map((d) => strip<Maintainership>(d));
+    },
+    async getMaintainership(id) {
+      const d = await (await col<Maintainership>("portal_maintainers")).findOne({ id });
+      return d ? strip<Maintainership>(d) : null;
+    },
+    async addMaintainership(m) { await (await col<Maintainership>("portal_maintainers")).insertOne({ ...m }); },
+    async endMaintainership(id, patch) {
+      await (await col<Maintainership>("portal_maintainers")).updateOne({ id }, { $set: patch });
+    },
+    async staleMaintainerships(before) {
+      // Candidates only: whether a repo has seen work is answered per row by lastContributionAt.
+      return (await (await col<Maintainership>("portal_maintainers"))
+        .find({ endedAt: { $exists: false }, role: "maintainer", since: { $lte: before } })
+        .toArray()).map((d) => strip<Maintainership>(d));
+    },
+
+    async addNomination(n) { await (await col<Nomination>("portal_nominations")).insertOne({ ...n }); },
+    async getNomination(id) {
+      const d = await (await col<Nomination>("portal_nominations")).findOne({ id });
+      return d ? strip<Nomination>(d) : null;
+    },
+    async listNominations(opts) {
+      const q: Filter<Nomination> = {};
+      if (opts?.repo) q.repo = opts.repo;
+      if (opts?.candidateId) q.candidateId = opts.candidateId;
+      if (opts?.status) q.status = opts.status;
+      return (await (await col<Nomination>("portal_nominations")).find(q).sort({ openedAt: -1 }).limit(500).toArray()).map((d) => strip<Nomination>(d));
+    },
+    async updateNomination(id, patch) {
+      await (await col<Nomination>("portal_nominations")).updateOne({ id }, { $set: patch });
+    },
+    async dueNominations(now) {
+      return (await (await col<Nomination>("portal_nominations")).find({ status: "open", closesAt: { $lte: now } }).toArray()).map((d) => strip<Nomination>(d));
+    },
+
+    async addInvitation(i) { await (await col<ReviewerInvitation>("portal_invitations")).insertOne({ ...i }); },
+    async getInvitation(id) {
+      const d = await (await col<ReviewerInvitation>("portal_invitations")).findOne({ id });
+      return d ? strip<ReviewerInvitation>(d) : null;
+    },
+    async listInvitations(opts) {
+      const q: Filter<ReviewerInvitation> = {};
+      if (opts.contributorId) q.contributorId = opts.contributorId;
+      if (opts.repo) q.repo = opts.repo;
+      if (opts.status) q.status = opts.status as ReviewerInvitation["status"];
+      return (await (await col<ReviewerInvitation>("portal_invitations")).find(q).sort({ createdAt: -1 }).limit(200).toArray()).map((d) => strip<ReviewerInvitation>(d));
+    },
+    async updateInvitation(id, patch) {
+      await (await col<ReviewerInvitation>("portal_invitations")).updateOne({ id }, { $set: patch });
+    },
+
+    async lastContributionAt(contributorId, repo) {
+      const d = await (await col<Contribution>("portal_contributions"))
+        .find({ contributorId, repo, hidden: { $ne: true } })
+        .sort({ occurredAt: -1 }).limit(1).toArray();
+      return d[0] ? new Date(d[0].occurredAt) : null;
     },
 
     async addAudit(ev) { await (await col<AuditEvent>("portal_audit")).insertOne({ ...ev }); },

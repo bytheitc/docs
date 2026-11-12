@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 
 const TABS = [
   ["/staff", "Overview"], ["/staff/contributors", "Contributors"], ["/staff/contributions", "Contributions"],
-  ["/staff/claims", "Claims"], ["/staff/sync", "Sync"], ["/staff/providers", "Providers"], ["/staff/recognition", "Recognition"],
+  ["/staff/claims", "Claims"], ["/staff/maintainers", "Maintainers"], ["/staff/sync", "Sync"], ["/staff/providers", "Providers"], ["/staff/recognition", "Recognition"],
 ] as const;
 
 export function StaffTabs() {

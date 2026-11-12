@@ -11,12 +11,16 @@ const LINKS = [
   { href: "/dashboard/data", label: "Your data" },
 ];
 
-export function DashNav() {
+/** Shown only to people who hold something: most contributors never maintain a repository. */
+const MAINTAINERS = { href: "/maintainers", label: "Maintainers" };
+
+export function DashNav({ maintainer = false }: { maintainer?: boolean }) {
   const path = usePathname();
+  const links = maintainer ? [...LINKS, MAINTAINERS] : LINKS;
   return (
     <nav className="dash-nav" aria-label="Dashboard">
       <ul>
-        {LINKS.map((l) => (
+        {links.map((l) => (
           <li key={l.href}><Link href={l.href} aria-current={path === l.href ? "page" : undefined}>{l.label}</Link></li>
         ))}
       </ul>

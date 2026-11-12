@@ -1,6 +1,7 @@
 // Portal data model. Stored in the portal's own database (itc_portal), in collections prefixed `portal_`.
 import type { HouseId } from "../content/houses.js";
 import type { ContributionKind, ContributionState } from "../providers/types.js";
+import type { Maintainership, Nomination, NominationStatus, ReviewerInvitation } from "./maintainers.js";
 
 export interface PublicProfile {
   /** Master switch: nothing is public unless this is true. */
@@ -177,13 +178,37 @@ export interface PortalStore {
   listClaims(opts?: { contributorId?: string; status?: ClaimStatus }): Promise<Claim[]>;
   releaseClaim(id: string, by: string): Promise<Claim | null>;
   markClaimAssigned(id: string): Promise<void>;
-  expireClaims(): Promise<number>;
+  /** Marks every active claim past its date as expired. Returns the ones it changed. */
+  expireClaims(): Promise<Claim[]>;
 
   // sync runs
   addSyncRun(r: SyncRun): Promise<void>;
   updateSyncRun(id: string, patch: Partial<SyncRun>): Promise<void>;
   listSyncRuns(opts?: { sourceId?: string; limit?: number }): Promise<SyncRun[]>;
   lastSuccessfulRun(sourceId: string): Promise<SyncRun | null>;
+
+  // maintainers (the governance path: nominate, object, carry by silence)
+  listMaintainerships(opts: { contributorId?: string; repo?: string; includeEnded?: boolean }): Promise<Maintainership[]>;
+  getMaintainership(id: string): Promise<Maintainership | null>;
+  addMaintainership(m: Maintainership): Promise<void>;
+  endMaintainership(id: string, patch: Pick<Maintainership, "endedAt" | "endedReason"> & { endedNote?: string }): Promise<void>;
+  /** Maintainerships in force that have seen no work on their repo since `before`. */
+  staleMaintainerships(before: Date): Promise<Maintainership[]>;
+
+  addNomination(n: Nomination): Promise<void>;
+  getNomination(id: string): Promise<Nomination | null>;
+  listNominations(opts?: { repo?: string; candidateId?: string; status?: NominationStatus }): Promise<Nomination[]>;
+  updateNomination(id: string, patch: Partial<Nomination>): Promise<void>;
+  /** Open nominations whose objection window has closed. */
+  dueNominations(now: Date): Promise<Nomination[]>;
+
+  addInvitation(i: ReviewerInvitation): Promise<void>;
+  getInvitation(id: string): Promise<ReviewerInvitation | null>;
+  listInvitations(opts: { contributorId?: string; repo?: string; status?: string }): Promise<ReviewerInvitation[]>;
+  updateInvitation(id: string, patch: Partial<ReviewerInvitation>): Promise<void>;
+
+  /** When this contributor last did anything on this repo, for the six-month rule. */
+  lastContributionAt(contributorId: string, repo: string): Promise<Date | null>;
 
   // audit log
   addAudit(ev: AuditEvent): Promise<void>;

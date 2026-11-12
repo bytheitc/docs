@@ -10,6 +10,7 @@ import { getPortalStore } from "./portal/store.js";
 import { authRoutes } from "./routes/auth.js";
 import { contentRoutes } from "./routes/content.js";
 import { formRoutes } from "./routes/forms.js";
+import { maintainerRoutes } from "./routes/maintainers.js";
 import { meRoutes } from "./routes/me.js";
 import { publicRoutes } from "./routes/public.js";
 import { staffRoutes } from "./routes/staff.js";
@@ -59,6 +60,7 @@ export function createApp(ctx: Ctx) {
   app.use(authRoutes(ctx));
   app.use(publicRoutes(ctx));
   app.use(meRoutes(ctx));
+  app.use(maintainerRoutes(ctx));
   app.use(staffRoutes(ctx));
 
   app.use(notFoundHandler);

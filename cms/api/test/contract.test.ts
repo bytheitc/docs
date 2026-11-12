@@ -470,6 +470,35 @@ describe("submissions and the inbox", () => {
     assert.equal((await call(DEV, "POST", "/v1/spaces/ai/submissions", { token: RESEARCH_KEY, body: { form: "interest", fields: { name: "x" } } })).status, 403);
     assert.equal((await call(DEV, "GET", "/v1/spaces/research/inbox", { token: pubToken })).json.submissions.length, 0);
   });
+
+  test("replies go to the address on the submission, and are kept with it", async () => {
+    await call(DEV, "POST", "/v1/spaces/ai/submissions", {
+      token: "dev-ai-key",
+      body: { form: "interest", fields: { name: "Yusuf", email: "yusuf@example.org", message: "Can I help?" } },
+    });
+    const inbox = await call(DEV, "GET", "/v1/spaces/ai/inbox", { token: editorToken });
+    const sub = inbox.json.submissions.find((x: { data: { name: string } }) => x.data.name === "Yusuf");
+
+    const replied = await call(DEV, "POST", `/v1/spaces/ai/inbox/${sub.id}/reply`, {
+      token: editorToken,
+      body: { body: "Yes — come to the next Open Studio." },
+    });
+    assert.equal(replied.status, 200);
+    const stored = replied.json.submission;
+    assert.equal(stored.replies.length, 1);
+    assert.equal(stored.replies[0].to, "yusuf@example.org", "answered at the submission's own address");
+    assert.match(stored.replies[0].body, /Open Studio/);
+    assert.equal(stored.status, "in-progress", "replying moves it off the new pile");
+
+    // An empty reply is refused, and so is one to a submission with no address to answer at.
+    assert.equal((await call(DEV, "POST", `/v1/spaces/ai/inbox/${sub.id}/reply`, { token: editorToken, body: { body: "" } })).status, 400);
+    await call(DEV, "POST", "/v1/spaces/ai/submissions", { token: "dev-ai-key", body: { form: "interest", fields: { name: "Anonymous" } } });
+    const again = await call(DEV, "GET", "/v1/spaces/ai/inbox", { token: editorToken });
+    const noAddress = again.json.submissions.find((x: { data: { name: string } }) => x.data.name === "Anonymous");
+    const refused = await call(DEV, "POST", `/v1/spaces/ai/inbox/${noAddress.id}/reply`, { token: editorToken, body: { body: "Hello?" } });
+    assert.equal(refused.status, 400);
+    assert.match(refused.json.error.message, /nobody to reply to/);
+  });
 });
 
 describe("introspect", () => {

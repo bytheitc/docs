@@ -68,3 +68,26 @@ export async function runSync(fd: FormData) {
   await staff.runSync(token, s(fd, "source", 100) || "__all");
   revalidatePath("/staff", "layout");
 }
+
+/* ---------------- maintainers ---------------- */
+
+/**
+ * Seats the first maintainers of a repository, and the steering group. Everything after that happens
+ * between maintainers under /maintainers, as the governance page describes.
+ */
+export async function seatMaintainer(_: StaffFormState, fd: FormData): Promise<StaffFormState> {
+  const { token } = await requireStaff("/staff/maintainers");
+  const role = s(fd, "role", 20);
+  const result = await staff.seatMaintainer(token, {
+    handle: s(fd, "handle", 40), role, ...(role === "steering" ? {} : { repo: s(fd, "repo", 201) }),
+  });
+  if (!result.ok) return { error: result.message };
+  revalidatePath("/staff", "layout");
+  return {};
+}
+
+export async function unseatMaintainer(fd: FormData) {
+  const { token } = await requireStaff("/staff/maintainers");
+  await staff.unseatMaintainer(token, s(fd, "id", 80), s(fd, "note", 500));
+  revalidatePath("/staff", "layout");
+}

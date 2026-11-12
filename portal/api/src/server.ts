@@ -3,6 +3,7 @@ import { createApp } from "./app.js";
 import { CmsClient } from "./cms.js";
 import { loadConfig } from "./config.js";
 import { HOUSE } from "./content/house.js";
+import { startJobs } from "./jobs.js";
 import { initPortalStore, storageStatus } from "./portal/store.js";
 import { registerSchemaWithRetry } from "./register.js";
 
@@ -19,12 +20,14 @@ initPortalStore(config);
 
 const cms = new CmsClient(config);
 registerSchemaWithRetry(config, cms);
+const jobs = startJobs(config, cms);
 
 const server = createApp({ config, cms }).listen(config.port, () => {
   console.log(`[api] ${HOUSE.space} api listening on :${config.port} (${config.production ? "production" : "development"}; cms ${config.cms.url})`);
 });
 
 const shutdown = () => {
+  jobs.stop();
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(0), 5000).unref();
 };

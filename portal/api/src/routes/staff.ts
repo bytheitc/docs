@@ -3,9 +3,11 @@
 //
 // Editors read. Publishers verify work, hide it, release claims and run sync. Admins disable people.
 // Every change is written to the portal's own audit log, because this api owns the data it changes.
+import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import { HttpError, badRequest, body, notFound, rateLimit, str } from "../http.js";
 import { getSources } from "../portal/content.js";
+import { ANY_REPO, isRepo } from "../portal/maintainers.js";
 import { atLeast, needsDatabase, needsStaff } from "../portal/guard.js";
 import { requirePortalStore } from "../portal/store.js";
 import { syncSource } from "../portal/sync.js";
@@ -172,6 +174,59 @@ export function staffRoutes({ cms, config }: Ctx): Router {
       .join("; ");
     await audit(req, "portal.sync.run", all ? "all sources" : `source/${which}`, summary.slice(0, 500));
     res.json({ ok: true, runs });
+  });
+
+  /* ---------------- maintainers ---------------- */
+
+  // The governance page has maintainers nominate each other, which needs someone to already be one.
+  // Portal staff seat the first maintainers of a repo and the steering group; everything after that
+  // happens between maintainers, under /maintainers.
+  r.get("/staff/maintainers", async (_req, res) => {
+    const store = requirePortalStore();
+    const [rows, nominations, contributors] = await Promise.all([
+      store.listMaintainerships({ includeEnded: true }),
+      store.listNominations({}),
+      store.listContributors(),
+    ]);
+    const people: Record<string, { handle: string; displayName: string }> = {};
+    for (const c of contributors) people[c.id] = { handle: c.handle, displayName: c.displayName };
+    res.json({ maintainerships: rows, nominations, people });
+  });
+
+  r.post("/staff/maintainers", atLeast("admin"), async (req, res) => {
+    const store = requirePortalStore();
+    const b = body(req);
+    const handle = str(b, "handle", { required: true, max: 40 }).toLowerCase();
+    const role = str(b, "role", { required: true, max: 20 });
+    if (!["maintainer", "reviewer", "steering"].includes(role)) {
+      throw badRequest('Role must be "maintainer", "reviewer" or "steering".', { role: "Unknown role." });
+    }
+    // A steering seat is collective-wide; the others belong to one repository.
+    const repo = role === "steering" ? ANY_REPO : str(b, "repo", { required: true, max: 201 });
+    if (role !== "steering" && !isRepo(repo)) throw badRequest("That isn't a repository name.", { repo: "Use owner/name." });
+
+    const person = await store.getContributorByHandle(handle);
+    if (!person) throw notFound(`Nobody here has the handle "${handle}".`);
+    const held = await store.listMaintainerships({ contributorId: person.id, repo });
+    if (held.some((m) => m.role === role)) throw badRequest(`${person.handle} already holds that.`);
+
+    await store.addMaintainership({
+      id: randomUUID(), contributorId: person.id, repo, provider: str(b, "provider", { max: 40 }) || "github",
+      role: role as "maintainer" | "reviewer" | "steering", since: new Date(), by: null,
+    });
+    await audit(req, "maintainers.seat", repo, `${person.handle} as ${role}`);
+    res.status(201).json({ ok: true });
+  });
+
+  r.post("/staff/maintainers/:id/end", atLeast("admin"), async (req, res) => {
+    const store = requirePortalStore();
+    const row = await store.getMaintainership(String(req.params.id));
+    if (!row || row.endedAt) throw notFound("No maintainership with that id.");
+    const note = str(body(req), "note", { max: 500 });
+    await store.endMaintainership(row.id, { endedAt: new Date(), endedReason: "removed", endedNote: note || undefined });
+    const who = await store.getContributor(row.contributorId);
+    await audit(req, "maintainers.unseat", row.repo, `${who?.handle ?? row.contributorId}${note ? `: ${note}` : ""}`);
+    res.json({ ok: true });
   });
 
   /* ---------------- providers and the audit log ---------------- */

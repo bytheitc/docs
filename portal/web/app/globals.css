@@ -216,6 +216,18 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2.5
 .cb-fine { max-width: var(--max); margin: 20px auto 0; font-size: 13px; opacity: .78; }
 .collective-bar :focus-visible { outline-color: var(--gold-soft); }
 
+/* ---------- maintainers ---------- */
+/* Actions that belong to one row of a list, not to the page. */
+.row-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.inline-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.inline-form input[type="text"] {
+  flex: 1 1 240px; min-width: 0; padding: 7px 12px; font: inherit; font-size: 14px;
+  border: 1px solid var(--line-strong); border-radius: 10px; background: var(--paper); color: inherit;
+}
+.inline-form input[type="text"]:focus-visible { outline: 2px solid var(--emerald); outline-offset: 1px; }
+.inline-form .flash { flex: 1 1 100%; }
+.field-err { color: var(--danger); font-size: 13px; margin-top: 4px; }
+
 @media (max-width: 960px) {
   .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero-grid, .promise { grid-template-columns: 1fr; }

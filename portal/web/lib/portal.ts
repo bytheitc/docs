@@ -1,6 +1,6 @@
 // This web's client for portal/api. Every call runs on the server and carries the contributor's
 // session token as a bearer; nothing here reaches a browser.
-import type { Claim, Contribution, Contributor, LinkedAccount, SyncRun } from "@/lib/types";
+import type { Claim, Contribution, Contributor, LinkedAccount, Maintainership, Nomination, People, ReviewerInvitation, SyncRun } from "@/lib/types";
 import type { MilestoneDef } from "@/lib/content-types";
 
 const API_URL = (process.env.API_URL ?? "http://localhost:4006").replace(/\/+$/, "");
@@ -133,6 +133,53 @@ export interface PublicProfileView {
 export const getPublicProfile = (handle: string) =>
   orNull<PublicProfileView>(call(`/public/contributors/${encodeURIComponent(handle)}`, { revalidate: 60, tags: ["profiles"] }));
 
+/* ---------------- maintainers ---------------- */
+
+export interface MaintainerHome {
+  maintainerships: Maintainership[];
+  steering: boolean;
+  invitations: ReviewerInvitation[];
+  nominationsAboutMe: Nomination[];
+  nominationsToConsider: Nomination[];
+  people: People;
+}
+
+export interface RepoGovernance {
+  repo: string;
+  maintainers: Maintainership[];
+  past: Maintainership[];
+  nominations: Nomination[];
+  people: People;
+}
+
+export const getMaintainerHome = (t: string) => orNull<MaintainerHome>(call("/maintainers/me", { token: t }));
+export const getRepoGovernance = (t: string, repo: string) =>
+  orNull<RepoGovernance>(call(`/maintainers/repos/${repo.split("/").map(encodeURIComponent).join("/")}`, { token: t }));
+
+export const inviteReviewer = (t: string, payload: { repo: string; handle: string; note: string }) =>
+  call<Record<string, never>>("/maintainers/invitations", { method: "POST", token: t, body: payload });
+export const respondToInvitation = (t: string, id: string, accept: boolean) =>
+  call<Record<string, never>>(`/maintainers/invitations/${encodeURIComponent(id)}/respond`, { method: "POST", token: t, body: { accept } });
+export const withdrawInvitation = (t: string, id: string) =>
+  call<Record<string, never>>(`/maintainers/invitations/${encodeURIComponent(id)}/withdraw`, { method: "POST", token: t });
+
+export const nominate = (t: string, payload: { repo: string; handle: string; issueUrl: string; reason: string }) =>
+  call<Record<string, never>>("/maintainers/nominations", { method: "POST", token: t, body: payload });
+export const objectToNomination = (t: string, id: string, note: string) =>
+  call<Record<string, never>>(`/maintainers/nominations/${encodeURIComponent(id)}/object`, { method: "POST", token: t, body: { note } });
+export const withdrawNomination = (t: string, id: string) =>
+  call<Record<string, never>>(`/maintainers/nominations/${encodeURIComponent(id)}/withdraw`, { method: "POST", token: t });
+
+export const getMaintainerClaims = (t: string) =>
+  orNull<{ claims: Claim[]; people: People }>(call("/maintainers/claims", { token: t }));
+export const releaseClaimAsMaintainer = (t: string, id: string) =>
+  call<Record<string, never>>(`/maintainers/claims/${encodeURIComponent(id)}/release`, { method: "POST", token: t });
+
+export const stepDown = (t: string, repo: string) =>
+  call<Record<string, never>>("/maintainers/step-down", { method: "POST", token: t, body: { repo } });
+export const removeMaintainer = (t: string, id: string, note: string) =>
+  call<Record<string, never>>(`/maintainers/${encodeURIComponent(id)}/remove`, { method: "POST", token: t, body: { note } });
+
 /* ---------------- staff tools ---------------- */
 
 /** Signs a staff member in with their CMS account, through portal/api. */
@@ -189,5 +236,10 @@ export const staff = {
   sync: (t: string) => call<{ sources: StaffSource[]; runs: SyncRun[]; syncable: string[] }>("/staff/sync", { token: t }),
   runSync: (t: string, source: string) => call<{ runs: SyncRun[] }>("/staff/sync", { method: "POST", token: t, body: { source } }),
   providers: (t: string) => call<{ callbackBase: string; devEnabled: boolean; providers: StaffProvider[] }>("/staff/providers", { token: t }),
+  maintainers: (t: string) => call<{ maintainerships: Maintainership[]; nominations: Nomination[]; people: People }>("/staff/maintainers", { token: t }),
+  seatMaintainer: (t: string, payload: { handle: string; role: string; repo?: string }) =>
+    call<Record<string, never>>("/staff/maintainers", { method: "POST", token: t, body: payload }),
+  unseatMaintainer: (t: string, id: string, note: string) =>
+    call<Record<string, never>>(`/staff/maintainers/${encodeURIComponent(id)}/end`, { method: "POST", token: t, body: { note } }),
   audit: (t: string) => call<{ events: { at: string; actor: string; action: string; target?: string; detail?: string }[] }>("/staff/audit", { token: t }),
 };

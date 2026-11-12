@@ -9,6 +9,9 @@
 //   MONGODB_URI         the portal's own database (itc_portal). Only this api touches it.
 //   PORTAL_DB_NAME      database name (itc_portal)
 //   PORTAL_DB           which database to use: "mongodb" (default)
+//   CLAIM_SWEEP_MINUTES   how often to release claims past their date (15; 0 = off)
+//   SYNC_INTERVAL_MINUTES how often to sync every active source (0 = off)
+//   GOVERNANCE_SWEEP_MINUTES  how often to carry nominations and retire inactive maintainers (60)
 //   CONTENT_TTL         seconds to hold a content response in memory (60)
 //   REGISTER_SCHEMA     "off" skips schema registration on boot (useful in tests)
 //   API_LOG             "off" silences request logs
@@ -26,6 +29,8 @@ export interface Config {
   /** The portal's own data. No other api may read it (ARCHITECTURE.md, rule 2). */
   db: { kind: string; uri?: string; name: string };
   contentTtlMs: number;
+  /** Work this api does on its own clock. One instance should run it; set both to 0 on the others. */
+  jobs: { claimSweepMs: number; syncIntervalMs: number; governanceSweepMs: number };
   registerSchema: boolean;
   log: boolean;
 }
@@ -49,6 +54,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     },
     db: { kind: (env.PORTAL_DB ?? "mongodb").toLowerCase(), uri: env.MONGODB_URI, name: env.PORTAL_DB_NAME || "itc_portal" },
     contentTtlMs: (Number(env.CONTENT_TTL) || 60) * 1000,
+    jobs: {
+      claimSweepMs: (env.CLAIM_SWEEP_MINUTES === undefined ? 15 : Number(env.CLAIM_SWEEP_MINUTES) || 0) * 60_000,
+      syncIntervalMs: (Number(env.SYNC_INTERVAL_MINUTES) || 0) * 60_000,
+      governanceSweepMs: (env.GOVERNANCE_SWEEP_MINUTES === undefined ? 60 : Number(env.GOVERNANCE_SWEEP_MINUTES) || 0) * 60_000,
+    },
     registerSchema: env.REGISTER_SCHEMA !== "off",
     log: env.API_LOG !== "off",
   };

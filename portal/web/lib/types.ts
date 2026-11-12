@@ -133,3 +133,57 @@ export interface ContributionFilter {
   unmatchedOnly?: boolean;
   limit?: number;
 }
+
+/* ------------------------------------------------------------------ */
+/* Maintainers: the governance path, as portal/api sends it            */
+/* ------------------------------------------------------------------ */
+
+/** Steering is collective-wide, and uses this in place of a repository. */
+export const ANY_REPO = "*";
+
+export type MaintainerRole = "reviewer" | "maintainer" | "emeritus" | "steering";
+
+export interface Maintainership {
+  id: string;
+  contributorId: string;
+  repo: string;
+  provider: string;
+  role: MaintainerRole;
+  since: string;
+  by: string | null;
+  endedAt?: string;
+  endedReason?: "emeritus" | "removed" | "stepped-down";
+  endedNote?: string;
+}
+
+export interface Objection { by: string; at: string; note: string }
+
+export interface Nomination {
+  id: string;
+  repo: string;
+  provider: string;
+  candidateId: string;
+  nominatedBy: string;
+  issueUrl: string;
+  reason: string;
+  openedAt: string;
+  closesAt: string;
+  status: "open" | "carried" | "objected" | "withdrawn";
+  objections: Objection[];
+  decidedAt?: string;
+}
+
+export interface ReviewerInvitation {
+  id: string;
+  repo: string;
+  provider: string;
+  contributorId: string;
+  invitedBy: string;
+  note: string;
+  createdAt: string;
+  status: "open" | "accepted" | "declined" | "withdrawn";
+  respondedAt?: string;
+}
+
+/** handle and display name, keyed by contributor id, so pages show people rather than ids. */
+export type People = Record<string, { handle: string; displayName: string }>;
