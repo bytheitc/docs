@@ -1,0 +1,27 @@
+{
+  "name": "itc-status-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Status pages for one or many domains: runs the checks, keeps the history, and serves the deliberately narrow public view behind status.<domain>.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env.local src/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node --env-file-if-exists=.env.local dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "express": "5.3.0",
+    "mongodb": "7.8.0"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "^24.0.0",
+    "tsx": "4.23.15",
+    "typescript": "^5.9.3"
+  }
+}

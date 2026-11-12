@@ -24,12 +24,14 @@ editors ──> cms/web ──> cms/api
 | Research | `research/web` · 3005 | `research/api` · 4005 |
 | Contributor portal | `portal/web` · 3006 | `portal/api` · 4006 |
 | **CMS** | `cms/web` · 3100 | `cms/api` · 4100 |
+| **Status** | — | `status/api` · 4008 |
 
 A space id is the house id: `site`, `ai`, `engineering`, `institute`, `oss`, `research`, `portal`.
 
 ## Rules
 1. **A web never touches a database.** It talks only to its own api, server-side, over HTTP.
 2. **An api never touches another api's database.** Only `cms/api` holds content, and only `portal/api` holds portal data.
+   `status/api` holds its own, and deliberately depends on nothing it watches: see `status/README.md`.
 3. **Browsers never hold service credentials.** Space keys and api tokens live on servers. Session cookies are httpOnly, on the web's
    own origin, and hold opaque tokens that the web forwards to its api as `Authorization: Bearer …`.
 4. **Content models belong to the houses.** Each house api *registers* its schema (collections, fields, seed content, forms) with the
@@ -148,7 +150,8 @@ Phase 2 is done: all seven houses are split. A few details settled during the wo
 - `<house>/web`: `API_URL`, `REVALIDATE_SECRET`, and the `NEXT_PUBLIC_ITC_*_URL` links. `portal/web` also takes
   `NEXT_PUBLIC_CMS_WEB_URL`, so its staff tools can link into the Studio.
 
-Databases: one MongoDB cluster (Atlas). `cms/api` uses `itc_cms`; `portal/api` uses `itc_portal`. Other databases can be supported
+Databases: one MongoDB cluster (Atlas). `cms/api` uses `itc_cms`; `portal/api` uses `itc_portal`. `status/api` uses `itc_status`,
+and should be given separate hosting — ideally a separate cluster — since a status page that fails with everything else is useless. Other databases can be supported
 behind the storage-adapter interface in `cms/api`.
 
 ## Databases and secrets (provisioned)
