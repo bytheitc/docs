@@ -183,6 +183,16 @@ export interface Session {
 export type SubmissionStatus = "new" | "in-progress" | "done" | "spam";
 export const SUBMISSION_STATUSES: SubmissionStatus[] = ["new", "in-progress", "done", "spam"];
 
+/** A reply an editor sent about a submission. Kept so the next person can see what was said. */
+export interface SubmissionReply {
+  at: Date;
+  /** The editor who sent it, by email. */
+  by: string;
+  to: string;
+  subject: string;
+  body: string;
+}
+
 export interface Submission {
   space: string;
   id: string;
@@ -190,6 +200,7 @@ export interface Submission {
   data: Record<string, string>;
   status: SubmissionStatus;
   note?: string;
+  replies?: SubmissionReply[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -256,6 +267,8 @@ export interface StorageAdapter {
   listSubmissions(space: string, opts?: { form?: string; status?: SubmissionStatus }): Promise<Submission[]>;
   getSubmission(space: string, id: string): Promise<Submission | null>;
   updateSubmission(space: string, id: string, patch: Partial<Pick<Submission, "status" | "note">>): Promise<void>;
+  /** Appends a reply to a submission's record. */
+  addSubmissionReply(space: string, id: string, reply: SubmissionReply): Promise<void>;
   countSubmissions(space: string, opts?: { status?: SubmissionStatus }): Promise<number>;
 
   // audit log

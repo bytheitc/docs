@@ -3,16 +3,21 @@
 import express, { type RequestHandler } from "express";
 import type { CmsClient } from "./cms.js";
 import type { Config } from "./config.js";
+import type { Mailer } from "./mail.js";
+import { getNewsletterStore } from "./newsletter/store.js";
 import { COLLECTIONS, FORMS } from "./content/collections.js";
 import { HOUSE } from "./content/house.js";
 import { errorHandler, notFoundHandler, requestLog } from "./http.js";
 import { contentRoutes } from "./routes/content.js";
 import { formRoutes } from "./routes/forms.js";
+import { newsletterRoutes } from "./routes/newsletter.js";
 import { webhookRoutes } from "./routes/webhook.js";
 
 export interface Ctx {
   config: Config;
   cms: CmsClient;
+  /** Confirmation and welcome emails for the newsletter. */
+  mailer: Mailer;
 }
 
 const BODY_LIMIT = "256kb";
@@ -44,11 +49,13 @@ export function createApp(ctx: Ctx) {
       contentSource: reachable ? "cms" : "seed",
       collections: COLLECTIONS.map((c) => c.name),
       forms: Object.keys(FORMS),
+      newsletter: { database: Boolean(getNewsletterStore()), mail: ctx.mailer.kind, delivers: ctx.mailer.delivers },
     });
   });
 
   app.use(contentRoutes(ctx));
   app.use(formRoutes(ctx));
+  app.use(newsletterRoutes(ctx));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

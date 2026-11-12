@@ -4,14 +4,15 @@
 import { Router, type Request } from "express";
 import { can, canAccess, requireRole, requireSpace, userAuth } from "../auth.js";
 import {
-  badRequest, body, conflict, forbidden, invalid, notFound, oneOf, str,
+  HttpError, badRequest, body, conflict, forbidden, invalid, notFound, oneOf, str,
 } from "../http.js";
 import type { Ctx } from "../app.js";
 import {
-  DuplicateIdError, SUBMISSION_STATUSES, type CollectionDef, type Entry, type SpaceRecord, type Status, type SubmissionStatus,
-  type User,
+  DuplicateIdError, SUBMISSION_STATUSES, type CollectionDef, type Entry, type SpaceRecord, type Status, type Submission,
+  type SubmissionStatus, type SubmissionReply, type User,
 } from "../types.js";
 import { validateEntry } from "../validate.js";
+import { isAddress } from "../mail.js";
 import { fireWebhook, type WebhookEvent } from "../webhooks.js";
 
 type Intent = "save" | "submit" | "publish";
@@ -19,7 +20,7 @@ const INTENTS: Intent[] = ["save", "submit", "publish"];
 const STATUS_TARGETS = ["review", "published", "draft", "archived", "publish-pending", "discard-pending"] as const;
 type StatusTarget = (typeof STATUS_TARGETS)[number];
 
-export function manageRoutes({ config, store }: Ctx): Router {
+export function manageRoutes({ config, store, mailer }: Ctx): Router {
   const r = Router();
   r.use("/v1/spaces", userAuth(store));
 
@@ -290,5 +291,44 @@ export function manageRoutes({ config, store }: Ctx): Router {
     res.json({ submission: await store.getSubmission(space.id, sub.id) });
   });
 
+  /**
+   * Replies to a submission by email. The CMS stays generic: it does not know what any form means,
+   * so the address is simply the submission's own "email" field, or the first field that holds one.
+   * The reply is stored with the submission, so the next editor can see what was already said.
+   */
+  r.post("/v1/spaces/:space/inbox/:id/reply", async (req, res) => {
+    const space = await requireSpace(store, req, req.params.space as string);
+    const user = req.user!;
+    const sub = await store.getSubmission(space.id, req.params.id as string);
+    if (!sub) throw notFound("That submission doesn't exist.");
+
+    const to = replyAddress(sub);
+    if (!to) throw badRequest("This submission left no email address, so there is nobody to reply to.", { to: "No address." });
+
+    const b = body(req);
+    const subject = str(b, "subject", { max: 200 }) || `Re: ${space.forms[sub.form] ?? sub.form}`;
+    const text = str(b, "body", { required: true, max: 20_000 });
+
+    const sent = await mailer.send({ to, subject, text, replyTo: user.email });
+    if (!sent.ok) throw new HttpError(502, "unavailable", `The reply could not be sent. ${sent.error}`);
+
+    const reply: SubmissionReply = { at: new Date(), by: user.email, to, subject, body: text };
+    await store.addSubmissionReply(space.id, sub.id, reply);
+    // Replying is the work: a submission nobody has answered is the one that still needs attention.
+    if (sub.status === "new") await store.updateSubmission(space.id, sub.id, { status: "in-progress" });
+    await audit(space.id, user, "inbox.reply", sub.id, to);
+
+    res.json({ submission: await store.getSubmission(space.id, sub.id), delivered: mailer.delivers });
+  });
+
   return r;
 }
+
+/** The address to answer a submission at, or null. */
+function replyAddress(sub: Submission): string | null {
+  const named = sub.data.email ?? sub.data.Email;
+  if (named && isAddress(named)) return named.trim();
+  for (const v of Object.values(sub.data)) if (isAddress(v)) return v.trim();
+  return null;
+}
+

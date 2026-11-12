@@ -85,3 +85,51 @@ export async function submitForm(form: string, fields: Record<string, unknown>, 
     return { ok: false, reason: "unavailable" };
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Newsletter                                                         */
+/* ------------------------------------------------------------------ */
+
+export interface NewsletterList { id: string; label: string }
+
+export type NewsletterResult<T> = ({ ok: true } & T) | { ok: false; status: number; message: string; errors?: Record<string, string> };
+
+async function newsletter<T>(path: string, init?: { method: string; body: unknown }): Promise<NewsletterResult<T>> {
+  try {
+    const res = await fetch(`${API_URL}${path}`, {
+      method: init?.method ?? "GET",
+      headers: { accept: "application/json", ...(init ? { "content-type": "application/json" } : {}) },
+      ...(init ? { body: JSON.stringify(init.body) } : {}),
+      cache: "no-store",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    const text = await res.text();
+    const parsed = (text ? JSON.parse(text) : {}) as Record<string, unknown>;
+    if (!res.ok) {
+      const err = parsed.error as { message?: string; fields?: Record<string, string> } | undefined;
+      return { ok: false, status: res.status, message: err?.message ?? "That didn't work.", errors: err?.fields };
+    }
+    return { ok: true, ...(parsed as T) };
+  } catch (e) {
+    console.error(`[web] newsletter ${path} failed: ${(e as Error).message}`);
+    return { ok: false, status: 503, message: "We couldn't reach the newsletter service." };
+  }
+}
+
+/** The lists someone can choose, and whether subscribing works at all right now. */
+export async function getNewsletterLists(): Promise<{ lists: NewsletterList[]; available: boolean }> {
+  const r = await newsletter<{ lists: NewsletterList[]; available: boolean }>("/newsletter/lists");
+  return r.ok ? { lists: r.lists, available: r.available } : { lists: [], available: false };
+}
+
+export const subscribeToNewsletter = (email: string, lists: string[], honeypot?: string) =>
+  newsletter<Record<string, never>>("/newsletter/subscribe", { method: "POST", body: { email, lists, honeypot } });
+
+export const confirmNewsletter = (token: string) =>
+  newsletter<{ lists: string[] }>("/newsletter/confirm", { method: "POST", body: { token } });
+
+export const getNewsletterPreferences = (token: string) =>
+  newsletter<{ email: string; status: string; lists: string[]; allLists: NewsletterList[] }>(`/newsletter/preferences?token=${encodeURIComponent(token)}`);
+
+export const saveNewsletterPreferences = (token: string, lists: string[]) =>
+  newsletter<{ status: string; lists: string[] }>("/newsletter/preferences", { method: "POST", body: { token, lists } });

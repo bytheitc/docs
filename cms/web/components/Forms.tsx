@@ -2,7 +2,7 @@
 // Small action-backed forms (ported from the per-app kit; accounts now carry spaces).
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { changePassword, createUser, login, setup, type FormState } from "@/app/actions";
+import { changePassword, createUser, login, replyToSubmission, setup, type FormState } from "@/app/actions";
 import { ROLES } from "@/lib/types";
 
 function Submit({ children, className = "cms-btn primary" }: { children: React.ReactNode; className?: string }) {
@@ -106,6 +106,50 @@ export function PasswordForm() {
       <Input name="current" label="Current password" type="password" autoComplete="current-password" state={state} />
       <Input name="next" label="New password" type="password" autoComplete="new-password" state={state} help="At least 12 characters." />
       <Submit>Change password</Submit>
+    </form>
+  );
+}
+
+/**
+ * Replies to an inbox submission. The address comes from the submission itself, so it is shown
+ * rather than typed: an editor can see who they are about to write to.
+ */
+export function ReplyForm({ space, id, to, defaultSubject, delivers }: {
+  space: string;
+  id: string;
+  to: string;
+  defaultSubject: string;
+  /** False when MAIL_PROVIDER is "log" or "none": the reply is recorded but goes nowhere. */
+  delivers: boolean;
+}) {
+  const [state, action] = useActionState<FormState, FormData>(replyToSubmission, {});
+  const err = state.errors?.body;
+  return (
+    <form action={action} className="cms-panel">
+      <h2>Reply</h2>
+      <Flash state={state} />
+      {!delivers && (
+        <p className="cms-flash bad" role="alert">
+          No mail provider is configured, so this reply will be recorded but not delivered. Set MAIL_PROVIDER
+          and MAIL_API_KEY on the CMS api.
+        </p>
+      )}
+      <input type="hidden" name="space" value={space} />
+      <input type="hidden" name="id" value={id} />
+      <p className="cms-help">To <strong>{to}</strong>. Replies come back to your own address.</p>
+      <div className="cms-field">
+        <label className="cms-label" htmlFor="reply-subject">Subject</label>
+        <input id="reply-subject" name="subject" type="text" defaultValue={defaultSubject} maxLength={200} />
+      </div>
+      <div className="cms-field">
+        <label className="cms-label" htmlFor="reply-body">Message</label>
+        <textarea
+          id="reply-body" name="body" rows={8} required maxLength={20000}
+          aria-invalid={err ? true : undefined} aria-describedby={err ? "reply-body-err" : undefined}
+        />
+        {err && <p id="reply-body-err" className="cms-err">{err}</p>}
+      </div>
+      <Submit>Send reply</Submit>
     </form>
   );
 }

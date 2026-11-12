@@ -178,6 +178,12 @@ export function createMongoAdapter(uri: string, dbName: string): StorageAdapter 
     async getSubmission(space, id) {
       return strip(await (await col<Submission>("cms_submissions")).findOne({ space, id }));
     },
+    async addSubmissionReply(space, id, reply) {
+      await (await col<Submission>("cms_submissions")).updateOne(
+        { space, id },
+        { $push: { replies: reply }, $set: { updatedAt: new Date() } },
+      );
+    },
     async updateSubmission(space, id, patch) {
       const set: Record<string, unknown> = { updatedAt: new Date() };
       if (patch.status) set.status = patch.status;

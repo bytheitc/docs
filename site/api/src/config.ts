@@ -6,6 +6,9 @@
 //   API_PUBLIC_URL      this api's address as the CMS sees it, for the content webhook
 //   WEB_URL             base URL of this house's web, for cache revalidation
 //   REVALIDATE_SECRET   shared with the web; sent as x-revalidate-secret
+//   MONGODB_URI         this house's own database (itc_site), for the newsletter
+//   SITE_DB_NAME        database name (itc_site)
+//   SITE_DB             which database to use: "mongodb" (default)
 //   CONTENT_TTL         seconds to hold a content response in memory (60)
 //   REGISTER_SCHEMA     "off" skips schema registration on boot (useful in tests)
 //   API_LOG             "off" silences request logs
@@ -20,6 +23,8 @@ export interface Config {
   /** This api's own public address; the CMS posts content webhooks to `${publicUrl}/cms/webhook`. */
   publicUrl: string;
   web: { url: string; revalidateSecret: string };
+  /** This house's own data: the newsletter's subscribers. No other api reads it (rule 2). */
+  db: { kind: string; uri?: string; name: string };
   contentTtlMs: number;
   registerSchema: boolean;
   log: boolean;
@@ -42,6 +47,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       url: (env.WEB_URL || `http://localhost:${HOUSE.webPort}`).replace(/\/+$/, ""),
       revalidateSecret: env.REVALIDATE_SECRET || "",
     },
+    db: { kind: (env.SITE_DB ?? "mongodb").toLowerCase(), uri: env.MONGODB_URI, name: env.SITE_DB_NAME || "itc_site" },
     contentTtlMs: (Number(env.CONTENT_TTL) || 60) * 1000,
     registerSchema: env.REGISTER_SCHEMA !== "off",
     log: env.API_LOG !== "off",

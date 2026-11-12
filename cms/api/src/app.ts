@@ -1,6 +1,7 @@
 // The Express app. Built from a config and a storage adapter so tests can run several instances side by side.
 import express, { type RequestHandler } from "express";
 import type { Config } from "./config.js";
+import type { Mailer } from "./mail.js";
 import { errorHandler, notFoundHandler, requestLog } from "./http.js";
 import { adminRoutes } from "./routes/admin.js";
 import { authRoutes } from "./routes/auth.js";
@@ -11,6 +12,8 @@ import type { StorageAdapter } from "./types.js";
 export interface Ctx {
   config: Config;
   store: StorageAdapter;
+  /** Used to reply to an inbox submission. The log provider is the development default. */
+  mailer: Mailer;
 }
 
 const BODY_LIMIT = "256kb";
@@ -37,9 +40,9 @@ export function createApp(ctx: Ctx) {
   app.get("/health", async (_req, res) => {
     try {
       await ctx.store.ping();
-      res.json({ ok: true, database: { kind: ctx.store.kind, reachable: true } });
+      res.json({ ok: true, database: { kind: ctx.store.kind, reachable: true }, mail: { provider: ctx.mailer.kind, delivers: ctx.mailer.delivers } });
     } catch {
-      res.status(503).json({ ok: false, database: { kind: ctx.store.kind, reachable: false } });
+      res.status(503).json({ ok: false, database: { kind: ctx.store.kind, reachable: false }, mail: { provider: ctx.mailer.kind, delivers: ctx.mailer.delivers } });
     }
   });
 

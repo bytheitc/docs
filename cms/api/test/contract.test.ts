@@ -10,6 +10,7 @@ import { after, before, describe, test } from "node:test";
 import { MongoClient } from "mongodb";
 import { createApp } from "../src/app.js";
 import { loadConfig } from "../src/config.js";
+import { Mailer, loadMailConfig } from "../src/mail.js";
 import { createStorage } from "../src/storage.js";
 import type { StorageAdapter } from "../src/types.js";
 
@@ -38,7 +39,9 @@ function start(env: Record<string, string>): Promise<string> {
   const config = loadConfig({ MONGODB_URI: MONGO, CMS_DB_NAME: DB, CMS_LOG: "off", CMS_LOGIN_LIMIT: "200", ...env });
   const store = createStorage(config);
   stores.push(store);
-  const server = createApp({ config, store }).listen(0);
+  // The "none" provider accepts and discards: tests never reach a real mail provider.
+  const mailer = new Mailer(loadMailConfig({ MAIL_PROVIDER: "none", MAIL_FROM: "tests <tests@localhost>" } as NodeJS.ProcessEnv));
+  const server = createApp({ config, store, mailer }).listen(0);
   servers.push(server);
   return new Promise((r) => server.once("listening", () => r(`http://127.0.0.1:${(server.address() as AddressInfo).port}`)));
 }

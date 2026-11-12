@@ -1,7 +1,7 @@
 "use server";
 // Server actions behind the Collective's public forms. Each hands the submission to site/api,
 // which forwards it to the CMS inbox (cms/web → space "site" → Inbox).
-import { submitForm, type SubmitResult } from "@/lib/api";
+import { saveNewsletterPreferences, submitForm, subscribeToNewsletter, type SubmitResult } from "@/lib/api";
 
 /** Name of the hidden honeypot field rendered by every public form. */
 const HONEYPOT = "website";
@@ -34,4 +34,20 @@ export async function sendSuggestion(fd: FormData) {
 /** /contact: general message. Form id "contact". */
 export async function sendContact(fd: FormData) {
   return record("contact", fd, ["name", "email", "topic", "message"]);
+}
+
+/* ---------------- Newsletter ---------------- */
+
+/** Double opt-in: this only ever asks the api to send one confirmation email. */
+export async function subscribe(fd: FormData) {
+  const email = String(fd.get("email") ?? "").trim();
+  const lists = fd.getAll("lists").map(String);
+  const result = await subscribeToNewsletter(email, lists, String(fd.get(HONEYPOT) ?? ""));
+  return result.ok ? { ok: true as const } : { ok: false as const, message: result.message, errors: result.errors };
+}
+
+/** Changes which lists an unsubscribe token is on. An empty list unsubscribes. */
+export async function savePreferences(token: string, lists: string[]) {
+  const result = await saveNewsletterPreferences(token, lists);
+  return result.ok ? { ok: true as const, status: result.status, lists: result.lists } : { ok: false as const, message: result.message };
 }

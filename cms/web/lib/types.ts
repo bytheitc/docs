@@ -96,12 +96,22 @@ export interface Revision {
   note?: string;
 }
 
+/** A reply an editor already sent about a submission. */
+export interface SubmissionReply {
+  at: string;
+  by: string;
+  to: string;
+  subject: string;
+  body: string;
+}
+
 export interface Submission {
   id: string;
   form: string;
   data: Record<string, string>;
   status: SubmissionStatus;
   note?: string;
+  replies?: SubmissionReply[];
   createdAt: string;
   updatedAt: string;
 }

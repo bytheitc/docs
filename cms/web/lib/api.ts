@@ -40,3 +40,13 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
   }
   return json as T;
 }
+
+/** Whether the api can actually deliver email. Used to warn before an editor writes a reply nobody gets. */
+export async function mailDelivers(): Promise<boolean> {
+  try {
+    const health = await api<{ mail?: { delivers?: boolean } }>("/health");
+    return health.mail?.delivers === true;
+  } catch {
+    return false;
+  }
+}

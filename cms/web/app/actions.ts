@@ -165,6 +165,25 @@ export async function updateSubmission(fd: FormData) {
   redirect(back(page, flash));
 }
 
+/**
+ * Replies to a submission by email. The api finds the address on the submission itself and records
+ * what was sent, so the next editor can see the conversation.
+ */
+export async function replyToSubmission(_: FormState, fd: FormData): Promise<FormState> {
+  const space = s(fd, "space"), id = s(fd, "id");
+  const body = s(fd, "body");
+  if (body.trim().length < 2) return { errors: { body: "Write something first." } };
+  try {
+    await authed(`/v1/spaces/${enc(space)}/inbox/${enc(id)}/reply`, {
+      method: "POST",
+      body: { subject: s(fd, "subject"), body },
+    });
+  } catch (e) {
+    return toState(e);
+  }
+  redirect(back(`/spaces/${enc(space)}/inbox/${enc(id)}`, { replied: "1" }));
+}
+
 /* ------------------------------------------------------------------ */
 /* Accounts (admins)                                                  */
 /* ------------------------------------------------------------------ */

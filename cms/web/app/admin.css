@@ -239,3 +239,9 @@ body { background: #F3EDE0; }
 @media (prefers-reduced-motion: reduce) {
   .cms *, .cms *::before { transition: none !important; }
 }
+
+/* A reply already sent: the editor's own words, wrapped as they typed them. */
+.cms-pre {
+  margin-top: 6px; white-space: pre-wrap; overflow-wrap: anywhere;
+  font-size: 14px; color: var(--cms-muted); border-left: 2px solid var(--cms-line); padding-left: 12px;
+}
