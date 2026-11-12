@@ -21,7 +21,7 @@ export function CollectiveBar({ current, title = "Part of the Islamic Tech Colle
         </nav>
       </div>
       <p className="cb-fine">
-        © {new Date().getFullYear()} Islamic Tech Collective · <a href={`${site}/privacy`}>Privacy</a> · <a href={`${site}/terms`}>Terms</a> · Content shown is placeholder.
+        © {new Date().getFullYear()} Islamic Tech Collective · <a href={`${site}/privacy`}>Privacy</a> · <a href={`${site}/terms`}>Terms</a>
       </p>
     </footer>
   );
