@@ -12,7 +12,7 @@ export default async function Wall({ searchParams }: { searchParams: Promise<{ o
   const byJoin = order === "joined";
   // portal/api returns the wall A–Z; "joined" re-sorts it. Never ordered by volume.
   const people = await getWall();
-  const sorted = byJoin ? [...people].sort((a, b) => a.joined.localeCompare(b.joined)) : people;
+  const sorted = people && byJoin ? [...people].sort((a, b) => a.joined.localeCompare(b.joined)) : people;
   const copy = await getLanding();
 
   return (
@@ -23,13 +23,19 @@ export default async function Wall({ searchParams }: { searchParams: Promise<{ o
           <p className="kicker">Contributors wall</p>
           <h1>The people who carry the work</h1>
           <p>{copy.wallIntro}</p>
+          {sorted !== null && sorted.length > 1 && (
           <p className="sortbar" aria-label="Order">
             <span className="muted">Order:</span>
             <Link href="/contributors" aria-current={!byJoin ? "true" : undefined}>A–Z</Link>
             <Link href="/contributors?order=joined" aria-current={byJoin ? "true" : undefined}>Joining date</Link>
           </p>
+          )}
         </header>
-        {sorted.length ? (
+        {sorted === null ? (
+          <p className="flash bad" role="alert" style={{ marginBottom: 56 }}>
+            The wall couldn&rsquo;t be loaded just now. Please try again in a moment.
+          </p>
+        ) : sorted.length ? (
           <ul className="wall">
             {sorted.map((p) => (
               <li key={p.handle}>

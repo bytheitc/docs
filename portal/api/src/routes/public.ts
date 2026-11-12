@@ -14,7 +14,8 @@ export function publicRoutes({ config }: Ctx): Router {
   const profileUrl = (handle: string) => `${config.web.url}/u/${encodeURIComponent(handle)}`;
 
   r.get("/public/contributors", needsDatabase, async (_req, res) => {
-    const people = await requirePortalStore().listContributors({ publicWall: true }).catch(() => []);
+    // Deliberately not caught: an empty wall and an unreadable one must not look alike.
+    const people = await requirePortalStore().listContributors({ publicWall: true });
     res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=60");
     res.json({
       contributors: people

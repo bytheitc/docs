@@ -52,10 +52,14 @@ export function createPortalMongoStore(uri: string, dbName: string): PortalStore
         d.collection("portal_audit").createIndex({ at: -1 }),
         d.collection("portal_maintainers").createIndex({ id: 1 }, { unique: true }),
         d.collection("portal_maintainers").createIndex({ contributorId: 1, endedAt: 1 }),
-        // One live maintainership per person per repo per role.
+        // One live maintainership per person per repo per role. A partial index cannot filter on
+        // $exists: false — Mongo refuses the whole index, and because every store call waits on this
+        // bootstrap, one bad definition takes the entire database layer down with it. Matching null
+        // covers rows with no endedAt as well, so an ended row leaves the index and that person can
+        // be seated again.
         d.collection("portal_maintainers").createIndex(
           { contributorId: 1, repo: 1, role: 1 },
-          { unique: true, partialFilterExpression: { endedAt: { $exists: false } } },
+          { unique: true, partialFilterExpression: { endedAt: null } },
         ),
         d.collection("portal_nominations").createIndex({ id: 1 }, { unique: true }),
         d.collection("portal_nominations").createIndex({ status: 1, closesAt: 1 }),

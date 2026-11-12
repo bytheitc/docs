@@ -115,8 +115,10 @@ export const signOutEverywhere = (token: string | null) => call<Record<string, n
 
 export interface WallEntry { handle: string; name: string; avatarUrl: string | null; profileUrl: string; joined: string }
 
-export const getWall = async () =>
-  (await orNull<{ contributors: WallEntry[] }>(call("/public/contributors", { revalidate: 60, tags: ["wall"] })))?.contributors ?? [];
+/** The opt-in wall, or null when the portal could not be read. An empty wall is `[]`, not null: the
+ *  page must never tell visitors that nobody has opted in when the truth is that it couldn't look. */
+export const getWall = async (): Promise<WallEntry[] | null> =>
+  (await orNull<{ contributors: WallEntry[] }>(call("/public/contributors", { revalidate: 60, tags: ["wall"] })))?.contributors ?? null;
 
 export interface PublicProfileView {
   contributor: { handle: string; name: string; avatarUrl: string | null; bio: string; website: string; joined: string };

@@ -3,7 +3,7 @@ import { Avatar } from "@/components/portal/Avatar";
 import { ContributionItem } from "@/components/portal/ContributionItem";
 import { TopBar } from "@/components/portal/TopBar";
 import { getPublicProfile } from "@/lib/portal";
-import { HANDLE, houseName, httpUrl, providerName } from "@/lib/util";
+import { HANDLE, fmtDate, houseName, httpUrl, providerName } from "@/lib/util";
 
 type Props = { params: Promise<{ handle: string }> };
 
@@ -30,6 +30,10 @@ export default async function PublicProfile({ params }: Props) {
           <Avatar name={c.name} url={c.avatarUrl ?? undefined} />
           <div>
             <h1>{c.name}</h1>
+            {/* Everything below the name is optional, and most of it is switched off by default.
+                The handle and the joining date are the two facts being listed at all implies, so
+                a profile is never just a name on an empty page. */}
+            <p className="profile-meta">@{c.handle} · Contributing since {fmtDate(c.joined)}</p>
             {c.bio && <p>{c.bio}</p>}
             {website && <p><a href={website} rel="noopener noreferrer nofollow">{website.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a></p>}
           </div>
