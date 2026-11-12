@@ -77,6 +77,52 @@ function incidentBlock(i: PublicIncident): string {
   </article>`;
 }
 
+/**
+ * The subscribe form. A plain HTML form that posts to this same service, so it works with
+ * JavaScript switched off; the small script only replaces the page-reload with a message in place.
+ * Drawn only when the deployment can actually deliver email — a form that silently goes nowhere is
+ * worse than no form.
+ */
+function subscribeBox(status: PublicStatus, days: number): string {
+  if (!status.subscriptions) return "";
+  void days;
+  return `<section class="sub" aria-labelledby="sub-h">
+    <h2 id="sub-h">Get told when this changes</h2>
+    <p>One email when an incident is opened, updated or resolved. Nothing else, and you can leave from any message.</p>
+    <form method="post" action="/subscribe" id="sub-f">
+      <input type="hidden" name="tenant" value="${esc(status.tenant.id)}">
+      <label class="sr" for="sub-e">Email address</label>
+      <input id="sub-e" type="email" name="email" placeholder="you@example.org" required autocomplete="email">
+      <input type="text" name="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
+      <button type="submit">Subscribe</button>
+    </form>
+    <p class="said" id="sub-m" role="status"></p>
+    <script>
+    (function () {
+      var f = document.getElementById("sub-f"), m = document.getElementById("sub-m");
+      if (!f) return;
+      f.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var data = Object.fromEntries(new FormData(f).entries());
+        m.textContent = "Sending\u2026";
+        fetch("/subscribe", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(data)
+        }).then(function (r) {
+          // The answer is the same whether or not the address was already on the list, so this
+          // message cannot be used to find out who is subscribed.
+          m.textContent = r.ok
+            ? "Check your email for a confirmation link."
+            : "That didn't work. Check the address and try again.";
+          if (r.ok) f.reset();
+        }).catch(function () { m.textContent = "That didn't work. Try again in a moment."; });
+      });
+    })();
+    </script>
+  </section>`;
+}
+
 export interface PageOpts {
   status: PublicStatus;
   /** This service's public address, for the JSON link and the embed snippet. */
@@ -183,6 +229,17 @@ export function renderPage({ status, publicUrl, days }: PageOpts): string {
   footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--soft); font-size: 13px; display: flex; flex-wrap: wrap; gap: 8px 18px; }
   footer a { color: var(--accent); }
   .stale { background: var(--card); border: 1px solid var(--warn); color: var(--warn); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
+  .sub { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-top: 26px; }
+  .sub h2 { margin: 0 0 4px; font-size: 16px; font-weight: 650; text-transform: none; letter-spacing: 0; color: var(--ink); }
+  .sub p { margin: 0 0 12px; color: var(--soft); font-size: 14px; }
+  .sub form { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sub input[type="email"] {
+    flex: 1 1 240px; min-width: 0; padding: 9px 13px; font: inherit; font-size: 15px;
+    border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink);
+  }
+  .sub input[type="email"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .sub button { font: inherit; font-weight: 600; padding: 9px 18px; border-radius: 10px; border: 0; background: var(--accent); color: #fff; cursor: pointer; }
+  .sub .said { margin: 10px 0 0; font-size: 14px; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   @media (max-width: 560px) {
     .svc-head { flex-direction: column; gap: 8px; }
@@ -212,6 +269,8 @@ export function renderPage({ status, publicUrl, days }: PageOpts): string {
   ${status.services.length ? groupHtml : `<p class="checked">No services are being monitored yet.</p>`}
 
   ${past.length ? `<h2 class="section">Past incidents</h2>${past.map(incidentBlock).join("")}` : ""}
+
+  ${subscribeBox(status, days)}
 
   <footer>
     <span>Last ${days} days</span>

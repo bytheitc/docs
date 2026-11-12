@@ -1,6 +1,7 @@
 // Entry point: read the environment, open the database, start the clock, listen.
 import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
+import { loadMailConfig } from "./mail.js";
 import { startScheduler } from "./scheduler.js";
 import { initStore } from "./store/index.js";
 
@@ -13,6 +14,12 @@ if (!config.db.uri) {
 }
 if (config.setupToken) {
   console.warn("[status] SETUP_TOKEN is set, so tenant creation is open. Unset it once the tenants exist.");
+}
+
+if (!config.subscribeSecret) {
+  console.warn("[status] SUBSCRIBE_SECRET is not set: subscriptions are off. Mail that cannot be unsubscribed from should not be sent.");
+} else if (loadMailConfig().provider === "log") {
+  console.warn('[status] MAIL_PROVIDER is "log": confirmation links are printed to this log and nothing is delivered.');
 }
 
 const scheduler = startScheduler(config);

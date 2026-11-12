@@ -1,12 +1,26 @@
 // This service's own database. It must not be the database of anything it watches.
 import { MongoClient, type Db } from "mongodb";
 import type {
-  CheckResult, DayBucket, Incident, Service, StatusStore, Tenant,
+  CheckResult, DayBucket, Incident, Service, StatusStore, Subscriber, Tenant,
 } from "../types.js";
 import { dayOf } from "../util.js";
 
 let client: MongoClient | null = null;
 const connect = async (uri: string) => (client ??= await new MongoClient(uri, { serverSelectionTimeoutMS: 5000 }).connect());
+
+/** Mongo hands dates back as Dates, but a stored document read through a generic type is not typed
+ *  that way; this keeps the rest of the code from having to care. */
+function dates(s: Subscriber): Subscriber {
+  return {
+    ...s,
+    createdAt: new Date(s.createdAt),
+    updatedAt: new Date(s.updatedAt),
+    ...(s.confirmExpiresAt ? { confirmExpiresAt: new Date(s.confirmExpiresAt) } : {}),
+    ...(s.confirmedAt ? { confirmedAt: new Date(s.confirmedAt) } : {}),
+    ...(s.unsubscribedAt ? { unsubscribedAt: new Date(s.unsubscribedAt) } : {}),
+    ...(s.lastConfirmSentAt ? { lastConfirmSentAt: new Date(s.lastConfirmSentAt) } : {}),
+  };
+}
 
 function strip<T>(doc: unknown): T {
   const { _id, ...rest } = doc as Record<string, unknown>;
@@ -28,6 +42,10 @@ export function createMongoStore(uri: string, dbName: string): StatusStore {
         d.collection("status_results").createIndex({ tenantId: 1, at: -1 }),
         d.collection("status_buckets").createIndex({ serviceId: 1, day: 1 }, { unique: true }),
         d.collection("status_buckets").createIndex({ tenantId: 1, day: 1 }),
+        d.collection("status_subscribers").createIndex({ tenantId: 1, email: 1 }, { unique: true }),
+        d.collection("status_subscribers").createIndex({ id: 1 }, { unique: true }),
+        d.collection("status_subscribers").createIndex({ confirmTokenHash: 1 }),
+        d.collection("status_subscribers").createIndex({ tenantId: 1, status: 1 }),
         d.collection("status_incidents").createIndex({ id: 1 }, { unique: true }),
         d.collection("status_incidents").createIndex({ tenantId: 1, startedAt: -1 }),
       ]);
@@ -127,6 +145,46 @@ export function createMongoStore(uri: string, dbName: string): StatusStore {
     async prune(before) {
       const r = await (await col<CheckResult>("status_results")).deleteMany({ at: { $lt: before } });
       return r.deletedCount ?? 0;
+    },
+
+    /* ---------------- subscribers ---------------- */
+
+    async getSubscriber(tenantId, email) {
+      const d = await (await col<Subscriber>("status_subscribers")).findOne({ tenantId, email });
+      return d ? dates(strip<Subscriber>(d)) : null;
+    },
+    async putSubscriber(sub) {
+      await (await col<Subscriber>("status_subscribers")).updateOne(
+        { tenantId: sub.tenantId, email: sub.email },
+        { $set: { ...sub } },
+        { upsert: true },
+      );
+    },
+    async patchSubscriber(tenantId, email, patch) {
+      await (await col<Subscriber>("status_subscribers")).updateOne({ tenantId, email }, { $set: patch });
+    },
+    async subscriberById(id) {
+      if (!id) return null;
+      const d = await (await col<Subscriber>("status_subscribers")).findOne({ id });
+      return d ? dates(strip<Subscriber>(d)) : null;
+    },
+    async subscriberByConfirmHash(hash) {
+      if (!hash) return null;
+      const d = await (await col<Subscriber>("status_subscribers")).findOne({ confirmTokenHash: hash });
+      return d ? dates(strip<Subscriber>(d)) : null;
+    },
+    async listConfirmedSubscribers(tenantId) {
+      return (await (await col<Subscriber>("status_subscribers")).find({ tenantId, status: "confirmed" }).limit(50_000).toArray())
+        .map((d) => dates(strip<Subscriber>(d)));
+    },
+    async subscriberCounts(tenantId) {
+      const c = await col<Subscriber>("status_subscribers");
+      const [pending, confirmed, unsubscribed] = await Promise.all([
+        c.countDocuments({ tenantId, status: "pending" }),
+        c.countDocuments({ tenantId, status: "confirmed" }),
+        c.countDocuments({ tenantId, status: "unsubscribed" }),
+      ]);
+      return { pending, confirmed, unsubscribed };
     },
 
     async listIncidents(tenantId, opts) {

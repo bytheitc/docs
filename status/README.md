@@ -125,6 +125,49 @@ cannot be reached it says "Status unavailable" rather than disappearing.
 
 `GET /embed` serves these snippets with the tenant id already filled in.
 
+## Subscriptions
+
+People can ask to be emailed when an incident is opened, updated or resolved. Double opt-in, the
+same shape the Collective's newsletter uses: an address is **pending** until the person clicks the
+link, and nothing is ever sent to a pending address except that one link.
+
+Two settings switch it on. Without `SUBSCRIBE_SECRET` the feature stays off entirely — mail that
+cannot be unsubscribed from should not be sent at all — and in production a provider that actually
+delivers is required too, because a form that takes an address and silently goes nowhere is worse
+than no form. In development the `log` provider counts, since printing the confirmation link to the
+server log is exactly how you try the flow without a vendor.
+
+```
+SUBSCRIBE_SECRET=…        # openssl rand -base64 48
+MAIL_PROVIDER=log         # or resend / postmark, with MAIL_API_KEY
+```
+
+**The unsubscribe link is derived, not stored.** The newsletter mints one at confirmation, mails it
+once and tells the reader to keep it; a status page sends far more often, so every message has to
+carry a working link. The token is an opaque per-subscriber id signed with `SUBSCRIBE_SECRET`:
+deterministic, so any email can carry it; unforgeable without the secret; and a leaked database
+yields only ids, which are worthless on their own. The confirmation token is different — random,
+single-use and stored only as a SHA-256 digest, because a leaked database must not let anyone
+confirm an address they do not own.
+
+A few rules that are easy to get wrong, and are tested:
+
+- **Subscribing answers the same way whether or not the address is already on the list.** Otherwise
+  the endpoint becomes a way to find out who is subscribed.
+- **An address already confirmed is mailed nothing.** Otherwise it becomes a way to pester someone.
+- **A `GET` on an unsubscribe link only ever shows a button.** Mail clients, link scanners and
+  corporate proxies follow links on their own, and an unsubscribe that happened because a scanner
+  looked at it is a bug. The `POST` does the work.
+- **Sending never blocks recording.** An incident is written first and the emails go after, so a
+  mail provider that is down — or slow, which is likelier — cannot stop a tenant from publishing.
+
+The form on the page is a plain HTML form that posts to this service, so it works with JavaScript
+switched off; the small inline script only replaces the page reload with a message in place.
+
+`GET /v1/admin/subscribers` returns counts. There is no endpoint that lists addresses: a tenant's
+admin has no business reading them out of an api, and nothing needs them, since sending happens
+inside this service.
+
 ## Endpoints
 
 **Public** — no authentication.
@@ -136,6 +179,9 @@ cannot be reached it says "Status unavailable" rather than disappearing.
 | `GET /v1/status/:tenant` | the JSON feed |
 | `GET /v1/status/:tenant/badge.svg` | the badge. `?label=` renames the left half |
 | `GET /embed.js`, `GET /embed` | the widget, and how to use it |
+| `POST /subscribe` | `{ email }` → 202, and one confirmation email |
+| `GET /confirm?token=…` | confirms an address |
+| `GET` · `POST /unsubscribe` | the button, and the action behind it |
 | `GET /health` | this service's own health, which is a different question from what it watches |
 
 `?days=` sets the history window on the page and the feed, between 7 and 90.
@@ -147,7 +193,8 @@ cannot be reached it says "Status unavailable" rather than disappearing.
 | `POST /v1/admin/tenants` | create a tenant. Needs `SETUP_TOKEN` |
 | `GET /v1/admin/me` · `PATCH /v1/admin/tenant` | this tenant and its services |
 | `POST` · `PATCH` · `DELETE /v1/admin/services[/:id]` | services |
-| `GET` · `POST /v1/admin/incidents` | incidents |
+| `GET` · `POST /v1/admin/incidents` | incidents. Opening one notifies subscribers |
+| `GET /v1/admin/subscribers` | counts only, never addresses |
 | `POST /v1/admin/incidents/:id/updates` | add an update; `resolved` closes it |
 | `POST /v1/admin/run` | probe everything now |
 

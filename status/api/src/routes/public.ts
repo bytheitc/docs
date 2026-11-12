@@ -18,7 +18,7 @@ const days = (req: Request): number => {
   return Number.isFinite(n) && n >= 7 && n <= MAX_DAYS ? Math.floor(n) : DEFAULT_DAYS;
 };
 
-export function publicRoutes(config: Config): Router {
+export function publicRoutes(config: Config, subscriptions = false): Router {
   const r = Router();
 
   /** Resolve the tenant from the Host header, falling back to ?t= and then ROOT_TENANT. */
@@ -80,7 +80,7 @@ export function publicRoutes(config: Config): Router {
         store.buckets(tenant.id, since),
         store.listIncidents(tenant.id, { limit: 30 }),
       ]);
-      const status = project({ tenant, services, latest, buckets, incidents, days: window });
+      const status = { ...project({ tenant, services, latest, buckets, incidents, days: window }), subscriptions };
       remember(tenant.id, status);
       return status;
     } catch (e) {
@@ -96,6 +96,7 @@ export function publicRoutes(config: Config): Router {
     services: [],
     incidents: [],
     updatedAt: new Date().toISOString(),
+    subscriptions,
   });
 
   const notFoundPage = (res: import("express").Response) =>

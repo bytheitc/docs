@@ -160,9 +160,41 @@ export interface PublicStatus {
   updatedAt: string;
   /** True when this was served from the last good copy because the database was unreachable. */
   stale?: boolean;
+  /** Whether this deployment can actually deliver email. The page hides the form when it cannot. */
+  subscriptions?: boolean;
 }
 
 /* ------------------------------------------------------------------ */
+/* Subscribers                                                         */
+/* ------------------------------------------------------------------ */
+
+export type SubscriberStatus = "pending" | "confirmed" | "unsubscribed";
+
+/**
+ * Someone who asked to be told when this tenant's status changes.
+ *
+ * Double opt-in, the same shape the Collective's newsletter uses: an address is "pending" until the
+ * person clicks the link, and nothing is ever sent to a pending address except that one link.
+ * A status page is a tempting way to mail a stranger repeatedly, so the counters matter here too.
+ */
+export interface Subscriber {
+  /** Opaque, random, and the only thing an unsubscribe link carries. Useless without the secret. */
+  id: string;
+  /** Lower-cased. One record per address per tenant: lists do not cross tenants. */
+  email: string;
+  tenantId: string;
+  status: SubscriberStatus;
+  /** SHA-256 of the confirmation token. The token itself only ever exists in the email. */
+  confirmTokenHash?: string;
+  confirmExpiresAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  confirmedAt?: Date;
+  unsubscribedAt?: Date;
+  /** How many confirmation emails have gone to this address, so we cannot be used to pester it. */
+  confirmSends: number;
+  lastConfirmSentAt?: Date;
+}
 
 export interface StatusStore {
   kind: string;
@@ -186,6 +218,15 @@ export interface StatusStore {
   buckets(tenantId: string, sinceDay: string): Promise<DayBucket[]>;
   /** Probes older than this are dropped; the day buckets keep the history. */
   prune(before: Date): Promise<number>;
+
+  getSubscriber(tenantId: string, email: string): Promise<Subscriber | null>;
+  putSubscriber(sub: Subscriber): Promise<void>;
+  patchSubscriber(tenantId: string, email: string, patch: Partial<Subscriber>): Promise<void>;
+  subscriberById(id: string): Promise<Subscriber | null>;
+  subscriberByConfirmHash(hash: string): Promise<Subscriber | null>;
+  /** Confirmed addresses for a tenant, which is who a notification goes to. */
+  listConfirmedSubscribers(tenantId: string): Promise<Subscriber[]>;
+  subscriberCounts(tenantId: string): Promise<{ pending: number; confirmed: number; unsubscribed: number }>;
 
   listIncidents(tenantId: string, opts?: { openOnly?: boolean; limit?: number }): Promise<Incident[]>;
   getIncident(id: string): Promise<Incident | null>;

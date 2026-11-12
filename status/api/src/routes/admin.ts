@@ -6,6 +6,7 @@ import { Router, type Request } from "express";
 import type { Config } from "../config.js";
 import { defaultCheck } from "../checks.js";
 import { HttpError, badRequest, body, notFound, str, unauthorized } from "../http.js";
+import type { Notifier } from "../notify.js";
 import type { Scheduler } from "../scheduler.js";
 import { getStore } from "../store/index.js";
 import type { Check, Incident, IncidentStatus, Impact, Service, Tenant } from "../types.js";
@@ -19,7 +20,7 @@ const bearer = (req: Request): string => {
   return h.toLowerCase().startsWith("bearer ") ? h.slice(7).trim() : "";
 };
 
-export function adminRoutes(config: Config, scheduler: Scheduler): Router {
+export function adminRoutes(config: Config, scheduler: Scheduler, notifier: Notifier): Router {
   const r = Router();
 
   const store = () => {
@@ -204,7 +205,10 @@ export function adminRoutes(config: Config, scheduler: Scheduler): Router {
       ...(impact === "maintenance" ? { scheduled: true } : {}),
     };
     await store().addIncident(incident);
-    res.status(201).json({ ok: true, incident });
+    // Recorded first, then announced: a slow or broken mail provider must never stop a tenant
+    // from publishing. The send happens after this response and is logged, not awaited.
+    notifier.incident(t, incident, "opened");
+    res.status(201).json({ ok: true, incident, notifying: notifier.enabled });
   });
 
   r.post("/v1/admin/incidents/:id/updates", async (req, res) => {
@@ -216,13 +220,23 @@ export function adminRoutes(config: Config, scheduler: Scheduler): Router {
     if (!STATUSES.includes(status)) throw badRequest(`Status must be one of ${STATUSES.join(", ")}.`, { status: "Unknown status." });
 
     const now = new Date();
+    const update = { at: now, status, body: str(b, "body", { required: true, max: 4000 }) };
+    const updates = [...incident.updates, update];
     await store().updateIncident(incident.id, {
       status,
-      updates: [...incident.updates, { at: now, status, body: str(b, "body", { required: true, max: 4000 }) }],
+      updates,
       // Resolving is the one status change that also closes the clock.
       ...(status === "resolved" ? { resolvedAt: now } : { resolvedAt: undefined }),
     });
-    res.json({ ok: true });
+    notifier.incident(t, { ...incident, status, updates, ...(status === "resolved" ? { resolvedAt: now } : {}) }, status === "resolved" ? "resolved" : "updated");
+    res.json({ ok: true, notifying: notifier.enabled });
+  });
+
+  // Counts only. A tenant's admin has no business reading other people's addresses out of an api,
+  // and nothing here needs them: sending happens inside this service.
+  r.get("/v1/admin/subscribers", async (req, res) => {
+    const t = await caller(req);
+    res.json({ counts: await store().subscriberCounts(t.id), notifying: notifier.enabled });
   });
 
   r.get("/v1/admin/incidents", async (req, res) => {

@@ -9,11 +9,19 @@
 //   CHECK_INTERVAL_SECONDS  how often each service is probed (60; 0 switches checking off)
 //   PRUNE_DAYS        days of individual probes to keep; day buckets keep the long history (14)
 //   SETUP_TOKEN       creates the first tenant, once. Unset in normal running.
+//   SUBSCRIBE_SECRET  signs unsubscribe links. Without it, subscriptions stay switched off: a
+//                     default secret would be worse than no feature, since anyone could forge a link
+//   MAIL_PROVIDER     log (default) | resend | postmark | none. See mail.ts
+//   SUBSCRIBE_LIMIT   subscribe attempts allowed per IP per 10 minutes (10). The tests raise it;
+//                     cms/api exposes CMS_LOGIN_LIMIT for the same reason
 //   TRUST_PROXY       "on" when behind a load balancer, so the Host header is read correctly
 //   API_LOG           "off" silences request logs
 export interface Config {
   production: boolean;
   port: number;
+  /** Signs unsubscribe links. Empty means subscriptions are off. */
+  subscribeSecret: string;
+  subscribeLimit: number;
   db: { uri?: string; name: string };
   publicUrl: string;
   rootTenant: string;
@@ -36,6 +44,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     checkIntervalMs: (env.CHECK_INTERVAL_SECONDS === undefined ? 60 : Number(env.CHECK_INTERVAL_SECONDS) || 0) * 1000,
     pruneDays: Number(env.PRUNE_DAYS) || 14,
     setupToken: env.SETUP_TOKEN || "",
+    subscribeSecret: env.SUBSCRIBE_SECRET || "",
+    subscribeLimit: Number(env.SUBSCRIBE_LIMIT) || 10,
     trustProxy: (env.TRUST_PROXY ?? "").toLowerCase() === "on",
     log: (env.API_LOG ?? "").toLowerCase() !== "off",
   };
