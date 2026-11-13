@@ -831,3 +831,57 @@ a.event:hover h3 { color: var(--emerald); }
   .channel-list li { grid-template-columns: 28px 1fr; }
   .channel-list .ch-site { grid-column: 2; grid-row: auto; }
 }
+
+/* ---------- BRAND / LOGO ---------- */
+.mark-show { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 16px; align-items: stretch; }
+.ms-panel { border: 1px solid var(--line); border-radius: 22px; display: grid; place-items: center; gap: 18px; padding: 44px 24px; }
+.ms-panel img { width: 160px; height: 160px; }
+.ms-panel p { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.ms-light { background: var(--parchment); }
+.ms-light p { color: var(--ink-soft); }
+.ms-dark { background: var(--ink); border-color: transparent; }
+.ms-dark p { color: rgba(243, 237, 224, .62); }
+.ms-specs { border: 1px solid var(--line); border-radius: 22px; padding: 10px 28px; align-self: stretch; display: grid; align-content: center; }
+.ms-specs > div { display: flex; justify-content: space-between; gap: 18px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.ms-specs > div:last-child { border-bottom: 0; }
+.ms-specs dt { font-size: 14px; color: var(--ink-soft); }
+.ms-specs dd { font-size: 14px; text-align: right; font-variant-numeric: tabular-nums; }
+.ms-note { max-width: 680px; margin-top: 20px; font-size: 14px; color: var(--ink-soft); }
+
+.lockups { list-style: none; display: grid; gap: 16px; }
+.lockups > li { border: 1px solid var(--line); border-radius: 22px; padding: 22px 24px 20px; background: rgba(255,255,255,.6); }
+.lk-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.lk-head h3 { font-family: var(--display); font-size: 22px; font-weight: 500; }
+.lk-files { display: flex; gap: 14px; }
+.lk-files a { font-size: 13px; color: var(--emerald); font-family: var(--body); }
+.lk-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.lk-cell { border-radius: 14px; border: 1px solid var(--line); padding: 20px 24px; display: flex; align-items: center; min-height: 86px; overflow: hidden; }
+.lk-cell img { height: 44px; width: auto; max-width: 100%; }
+.lk-colors { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 14px; }
+.lk-colors li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-soft); }
+.lk-chip { width: 15px; height: 15px; border-radius: 5px; border: 1px solid var(--line); flex: none; }
+.lk-colors code { font-size: 12px; }
+
+.brand-rules { counter-reset: br; list-style: none; display: grid; gap: 2px; max-width: 760px; }
+.brand-rules li { counter-increment: br; position: relative; padding: 18px 0 18px 46px; border-bottom: 1px solid var(--line); font-size: 17px; }
+.brand-rules li:first-child { border-top: 1px solid var(--line); }
+.brand-rules li::before { content: counter(br); position: absolute; left: 0; top: 18px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; color: var(--emerald); }
+
+@media (max-width: 860px) {
+  .mark-show { grid-template-columns: 1fr 1fr; }
+  .ms-specs { grid-column: 1 / -1; }
+}
+@media (max-width: 620px) {
+  .mark-show { grid-template-columns: 1fr; }
+  .lk-pair { grid-template-columns: 1fr; }
+}
+
+.mono-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.mono-cell { border: 1px solid var(--line); border-radius: 22px; padding: 34px 32px; display: flex; align-items: center; gap: 30px; flex-wrap: wrap; min-height: 150px; }
+.mono-cell img { height: 40px; width: auto; }
+.mono-cell img:first-child { width: 72px; height: 72px; }
+.mono-photo { border-color: transparent; background: linear-gradient(118deg, #0F5C4D, #14201B 62%, #2A1A1C); }
+.mono-photo p { color: rgba(243, 237, 224, .66); font-size: 14px; max-width: 190px; }
+/* Masking is how an external one-colour SVG takes a colour: the knockout stays transparent. */
+.mono-masked { width: 72px; height: 72px; flex: none; background: var(--parchment); -webkit-mask: url(/mark-mono.svg) center / contain no-repeat; mask: url(/mark-mono.svg) center / contain no-repeat; }
+@media (max-width: 620px) { .mono-row { grid-template-columns: 1fr; } }

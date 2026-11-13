@@ -9,6 +9,27 @@ see that it belongs to ITC.
 
 ## 1. Constants (shared by every property)
 
+### The logo: the *nūn*
+The logo is the Arabic letter **nūn** (ن), a single bowl and a single dot, set in a disc. It is the
+real artwork, supplied as `itc-logo.png` at the repo root; the vector trace of it lives in
+`brand/itc-mark.svg` and every other logo file in the repo is generated from that one file by
+`brand/generate.py`.
+
+Each property pairs the mark with its own name — set in Clash Display Medium and converted to
+outlines — in its own colours. Every project carries six files in its `web/public/`:
+`itc-mark.svg` (the collective mark, identical everywhere), `logo.svg` and `logo-inverse.svg`
+(its lockup, in both colourways), `mark.svg` (the mark alone, in its colours), and
+`logo-mono.svg` / `mark-mono.svg` (one colour, the nūn knocked out of the disc).
+
+See `brand/README.md` for the geometry, the regeneration step and the usage rules, and the
+Collective's `/brand` page for all of it rendered.
+
+> **Open question.** The section below describes an eight-pointed *khātam* as the mark, and that
+> is still what `components/Khatam.tsx` draws in every header, hero and press kit across all eight
+> apps. The nūn is the supplied logo. Both are currently in use and these documents disagree about
+> which is *the* mark. Nothing has been changed to resolve it: whether the nūn replaces the khātam,
+> or the khātam stays as a secondary geometric device, is a decision still to be made.
+
 ### The mark: *Khatam*
 An eight-pointed star made of two overlapping squares (the *khātam*, as in Rub el Hizb). It is one of
 the oldest motifs in Islamic geometric art and is built only with a compass and straightedge. That fits

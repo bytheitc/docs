@@ -108,8 +108,9 @@ export default async function PressPage() {
         <h2>Brand guidelines</h2>
         {guidelines && <p>{guidelines}</p>}
         <div className="hero-ctas">
-          {/* TODO: link to the published guidelines PDF and a zip of SVG marks once they exist. */}
-          <a className="btn" href={`mailto:${email}?subject=Brand%20guidelines%20request`}>Request the guidelines</a>
+          {/* TODO: link to the published guidelines PDF once it exists. The logo files are at /brand. */}
+          <a className="btn" href="/brand">The logo and its files</a>
+          <a className="btn btn-ghost" href={`mailto:${email}?subject=Brand%20guidelines%20request`}>Request the guidelines</a>
           <a className="btn btn-ghost" href={`mailto:${email}`}>Press enquiries →</a>
         </div>
       </section>
