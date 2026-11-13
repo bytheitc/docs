@@ -1,18 +1,12 @@
-// Entry point: read the environment, register the schema, listen.
-import { createApp } from "./app.js";
-import { CmsClient } from "./cms.js";
-import { loadConfig } from "./config.js";
+// Long-running entry point, for hosts that aren't invoking app.ts directly per request.
+// Forces app.ts's lazy composition root to build now (config and schema registration) instead
+// of waiting for the first request.
+import { createServer } from "node:http";
+import handler, { getConfig } from "./app.js";
 import { HOUSE } from "./content/house.js";
-import { registerSchemaWithRetry } from "./register.js";
 
-const config = loadConfig();
-if (config.production && !config.cms.key) console.warn(`[api] CMS_SPACE_KEY is not set: ${HOUSE.space} will serve seed content only.`);
-if (config.production && !config.web.revalidateSecret) console.warn("[api] REVALIDATE_SECRET is not set: the web won't be told about changes.");
-
-const cms = new CmsClient(config);
-registerSchemaWithRetry(config, cms);
-
-const server = createApp({ config, cms }).listen(config.port, () => {
+const config = getConfig();
+const server = createServer(handler).listen(config.port, () => {
   console.log(`[api] ${HOUSE.space} api listening on :${config.port} (${config.production ? "production" : "development"}; cms ${config.cms.url})`);
 });
 

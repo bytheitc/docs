@@ -1,11 +1,13 @@
 // The Express app for this house's api. Built from a config and a CMS client so tests can run
 // several instances side by side.
-import express, { type RequestHandler } from "express";
-import type { CmsClient } from "./cms.js";
-import type { Config } from "./config.js";
+import express, { type Request, type RequestHandler, type Response } from "express";
+import type { IncomingMessage, ServerResponse } from "node:http";
+import { CmsClient } from "./cms.js";
+import { loadConfig, type Config } from "./config.js";
 import { COLLECTIONS, FORMS } from "./content/collections.js";
 import { HOUSE } from "./content/house.js";
 import { errorHandler, notFoundHandler, requestLog } from "./http.js";
+import { registerSchemaWithRetry } from "./register.js";
 import { contentRoutes } from "./routes/content.js";
 import { formRoutes } from "./routes/forms.js";
 import { portalRoutes } from "./routes/portal.js";
@@ -55,4 +57,38 @@ export function createApp(ctx: Ctx) {
   app.use(notFoundHandler);
   app.use(errorHandler);
   return app;
+}
+
+// Composition root: this module's default export is what the host (serverless or otherwise)
+// invokes directly. The instance is built lazily, on first request rather than on import, so
+// importing this module for its createApp factory (as tests do, with their own ctx) never
+// connects to the CMS or registers a schema. server.ts (the long-running-process entry point)
+// forces that first build at startup instead of waiting for a request.
+interface Instance {
+  app: ReturnType<typeof createApp>;
+  config: Config;
+}
+let instance: Instance | undefined;
+
+function getInstance(): Instance {
+  if (!instance) {
+    const config = loadConfig();
+    if (config.production && !config.cms.key) console.warn(`[api] CMS_SPACE_KEY is not set: ${HOUSE.space} will serve seed content only.`);
+    if (config.production && !config.web.revalidateSecret) console.warn("[api] REVALIDATE_SECRET is not set: the web won't be told about changes.");
+
+    const cms = new CmsClient(config);
+    registerSchemaWithRetry(config, cms);
+    instance = { app: createApp({ config, cms }), config };
+  }
+  return instance;
+}
+
+export function getConfig(): Config {
+  return getInstance().config;
+}
+
+// Typed as the plain Node listener shape so this can be passed straight to http.createServer;
+// Express's own types (req, res) extend these at runtime, which is all app() actually needs.
+export default function handler(req: IncomingMessage, res: ServerResponse) {
+  getInstance().app(req as Request, res as Response, () => {});
 }
