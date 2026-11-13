@@ -1,6 +1,6 @@
-// ITC brand constant: the six properties of the collective.
+// ITC brand constant: the seven properties of the collective.
 // Each URL can be overridden per environment, e.g. NEXT_PUBLIC_ITC_AI_URL=https://ai.itc.org
-export type HouseId = "site" | "ai" | "engineering" | "institute" | "oss" | "research";
+export type HouseId = "site" | "ai" | "engineering" | "health" | "institute" | "oss" | "research";
 
 export interface House {
   id: HouseId;
@@ -15,6 +15,7 @@ export const HOUSES: House[] = [
   { id: "site", name: "Collective", arabic: "جماعة", transliteration: "jamāʿa", sense: "the collective", url: process.env.NEXT_PUBLIC_ITC_SITE_URL ?? "http://localhost:3000" },
   { id: "ai", name: "AI", arabic: "ذكاء", transliteration: "dhakāʾ", sense: "intelligence", url: process.env.NEXT_PUBLIC_ITC_AI_URL ?? "http://localhost:3001" },
   { id: "engineering", name: "Engineering", arabic: "هندسة", transliteration: "handasa", sense: "engineering · geometry", url: process.env.NEXT_PUBLIC_ITC_ENGINEERING_URL ?? "http://localhost:3002" },
+  { id: "health", name: "Health", arabic: "عافية", transliteration: "ʿāfiya", sense: "wellbeing: soundness of body and soul", url: process.env.NEXT_PUBLIC_ITC_HEALTH_URL ?? "http://localhost:3007" },
   { id: "institute", name: "Institute", arabic: "معهد", transliteration: "maʿhad", sense: "institute", url: process.env.NEXT_PUBLIC_ITC_INSTITUTE_URL ?? "http://localhost:3003" },
   { id: "oss", name: "Open Source", arabic: "مشاع", transliteration: "mashāʿ", sense: "the commons", url: process.env.NEXT_PUBLIC_ITC_OSS_URL ?? "http://localhost:3004" },
   { id: "research", name: "Research", arabic: "بحث", transliteration: "baḥth", sense: "inquiry", url: process.env.NEXT_PUBLIC_ITC_RESEARCH_URL ?? "http://localhost:3005" },

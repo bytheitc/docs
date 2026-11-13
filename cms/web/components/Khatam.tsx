@@ -5,7 +5,7 @@ import type { SVGProps } from "react";
 export const KHATAM_POINTS =
   "50,7.57 62.43,20 80,20 80,37.57 92.43,50 80,62.43 80,80 62.43,80 50,92.43 37.57,80 20,80 20,62.43 7.57,50 20,37.57 20,20 37.57,20";
 
-export type KhatamVariant = "site" | "ai" | "engineering" | "institute" | "oss" | "research";
+export type KhatamVariant = "site" | "ai" | "engineering" | "health" | "institute" | "oss" | "research";
 
 interface Props extends SVGProps<SVGSVGElement> {
   variant: KhatamVariant;
@@ -38,6 +38,11 @@ export function Khatam({ variant, strokeWidth = 5, accent = "currentColor", ...r
           <path d="M50 30 V43 M50 57 V70 M30 50 H43 M57 50 H70" />
         </g>
       )}
+      {variant === "health" && (
+        // A vesica: the overlap of two equal circles, which is the figure the whole star is
+        // constructed from. ʿāfiya is soundness — something held whole, not something added.
+        <path d="M50 33 Q65 50 50 67 Q35 50 50 33 Z" fill={accent} />
+      )}
       {variant === "institute" && (
         <polygon points={KHATAM_POINTS} transform="translate(30 30) scale(0.4)" fill={accent} />
       )}
@@ -54,5 +59,5 @@ export function Khatam({ variant, strokeWidth = 5, accent = "currentColor", ...r
 }
 
 // cms/web: a space's mark is its house's variant. The portal and the neutral CMS pages use the Collective's.
-const VARIANTS: readonly string[] = ["site", "ai", "engineering", "institute", "oss", "research"];
+const VARIANTS: readonly string[] = ["site", "ai", "engineering", "health", "institute", "oss", "research"];
 export const variantFor = (space: string): KhatamVariant => (VARIANTS.includes(space) ? (space as KhatamVariant) : "site");

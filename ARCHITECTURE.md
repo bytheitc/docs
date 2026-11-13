@@ -19,6 +19,7 @@ editors ──> cms/web ──> cms/api
 | Collective | `site/web` · 3000 | `site/api` · 4000 |
 | AI | `ai/web` · 3001 | `ai/api` · 4001 |
 | Engineering | `engineering/web` · 3002 | `engineering/api` · 4002 |
+| Health | `health/web` · 3007 | `health/api` · 4007 |
 | Institute | `institute/web` · 3003 | `institute/api` · 4003 |
 | Open Source | `oss/web` · 3004 | `oss/api` · 4004 |
 | Research | `research/web` · 3005 | `research/api` · 4005 |
@@ -26,7 +27,7 @@ editors ──> cms/web ──> cms/api
 | **CMS** | `cms/web` · 3100 | `cms/api` · 4100 |
 | **Status** | — | `status/api` · 4008 |
 
-A space id is the house id: `site`, `ai`, `engineering`, `institute`, `oss`, `research`, `portal`.
+A space id is the house id: `site`, `ai`, `engineering`, `health`, `institute`, `oss`, `research`, `portal`.
 
 ## Rules
 1. **A web never touches a database.** It talks only to its own api, server-side, over HTTP.
