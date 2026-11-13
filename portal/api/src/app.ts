@@ -43,6 +43,12 @@ export function createApp(ctx: Ctx) {
   app.use(webhookRoutes(ctx));
   app.use(express.json({ limit: BODY_LIMIT }));
 
+  // Cheap and path-only: some hosts probe the bare root as a liveness check, and this api
+  // otherwise has no route there. /health is the real (CMS-reaching) check.
+  app.get("/", (_req, res) => {
+    res.json({ ok: true, service: `${HOUSE.space} api` });
+  });
+
   app.get("/health", async (_req, res) => {
     const reachable = ctx.cms.configured ? await ctx.cms.ping() : false;
     res.status(reachable || !ctx.cms.configured ? 200 : 503).json({
