@@ -1,0 +1,23 @@
+# Repo-root ignores for this house when it is published on its own.
+#
+# In the monorepo the root .gitignore covers all of this, but a `git subtree split` takes only
+# this directory — the root file is not in it. Without this copy the published repository would
+# have no rule against committing a real .env, which is how credentials leak.
+
+# Secrets: never commit
+.env
+.env.*
+!.env.example
+**/.env.local
+**/.env*.local
+
+# Dependencies and build output
+node_modules/
+.next/
+dist/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# OS
+.DS_Store
