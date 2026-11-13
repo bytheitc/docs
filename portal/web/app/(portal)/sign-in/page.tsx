@@ -21,9 +21,8 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<{
   const { error, next, signedout } = await searchParams;
   const dest = safeNext(next);
   if (await currentContributor()) redirect(dest);
-  const { usable, devEnabled } = await getProviders();
+  const { usable, devEnabled, reachable } = await getProviders();
   const providers = usable.filter((p) => p.id !== "dev");
-  const reachable = usable.length > 0 || devEnabled;
   const q = dest !== "/dashboard" ? `?next=${encodeURIComponent(dest)}` : "";
 
   return (
@@ -45,7 +44,9 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<{
               ))}
             </div>
           ) : (
-            <p className="flash info" style={{ marginTop: 16 }}>No providers configured. An administrator needs to set up at least one platform (see <code>.env.example</code>).</p>
+            reachable && (
+              <p className="flash info" style={{ marginTop: 16 }}>No providers configured. An administrator needs to set up at least one platform (see <code>.env.example</code>).</p>
+            )
           )}
           {devEnabled && (
             <form action="/auth/dev/start" method="get" className="dev-form">

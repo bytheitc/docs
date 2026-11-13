@@ -94,12 +94,15 @@ export interface ProvidersView {
   providers: ProviderInfo[];
   usable: { id: string; name: string; category: string }[];
   devEnabled: boolean;
+  /** Whether the api actually answered. False only on a real fetch/HTTP failure — never just
+   *  because nothing is configured yet, which is a separate (and much more common) state. */
+  reachable: boolean;
 }
 
 /** Every provider the portal knows, and which of them work here. Never any client id or secret. */
 export async function getProviders(): Promise<ProvidersView> {
   const r = await call<ProvidersView>("/auth/providers", { revalidate: 60, tags: ["providers"] });
-  return r.ok ? { providers: r.providers, usable: r.usable, devEnabled: r.devEnabled } : { providers: [], usable: [], devEnabled: false };
+  return r.ok ? { providers: r.providers, usable: r.usable, devEnabled: r.devEnabled, reachable: true } : { providers: [], usable: [], devEnabled: false, reachable: false };
 }
 
 export const authorize = (payload: { provider: string; next: string; redirectUri: string; user?: string }) =>
