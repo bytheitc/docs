@@ -26,8 +26,13 @@ editors ──> cms/web ──> cms/api
 | Contributor portal | `portal/web` · 3006 | `portal/api` · 4006 |
 | **CMS** | `cms/web` · 3100 | `cms/api` · 4100 |
 | **Status** | — | `status/api` · 4008 |
+| **Mobile** | `mobile` (Expo / React Native) | — uses `portal/api` · 4006 |
 
 A space id is the house id: `site`, `ai`, `engineering`, `health`, `institute`, `oss`, `research`, `portal`.
+
+`mobile` is a native client, not a house: it has no api, no space in the CMS and no database. It
+signs in against `portal/api` with the same bearer token `portal/web` uses, owning the redirect URI
+itself (`itc://auth`) the way the web owns its own. See `mobile/README.md`.
 
 ## Rules
 1. **A web never touches a database.** It talks only to its own api, server-side, over HTTP.
