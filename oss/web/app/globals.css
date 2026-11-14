@@ -33,8 +33,8 @@ a { color: inherit; text-decoration: none; }
 
 /* ---------- TOPBAR ---------- */
 .topbar { position: sticky; top: 0; z-index: 10; display: grid; grid-template-columns: auto 1fr auto auto; border-bottom: var(--line); background: var(--black); }
-.brand { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-right: var(--line); font-family: var(--display); font-size: 20px; letter-spacing: -0.01em; }
-.mark { width: 30px; height: 30px; color: var(--white); }
+.brand { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-right: var(--line); font-family: var(--display); font-size: 30px; letter-spacing: -0.01em; }
+.mark { width: 45px; height: 45px; color: var(--white); }
 .topbar nav { display: flex; }
 .topbar nav a { display: flex; align-items: center; padding: 0 20px; border-right: var(--line-dim); font-weight: 700; font-size: 13px; }
 .topbar nav a:hover { background: var(--mint); color: var(--black); }

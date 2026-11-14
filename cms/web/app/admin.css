@@ -56,13 +56,13 @@ body { background: #F3EDE0; }
 .cms-auth-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; }
 .cms-auth-form { display: grid; gap: 14px; margin-top: 8px; }
 .cms-steps { padding-left: 20px; display: grid; gap: 8px; }
-.cms-mark { width: 30px; height: 30px; color: var(--cms-ink); flex: none; }
+.cms-mark { width: 45px; height: 45px; color: var(--cms-ink); flex: none; }
 
 /* ---------- shell ---------- */
 .cms-shell { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
 .cms-side { position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 18px 14px; background: var(--cms-side); color: var(--cms-side-ink); border-right: var(--cms-bw) solid var(--cms-line); }
 .cms-side .cms-mark { color: var(--cms-side-ink); }
-.cms-brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 14px; font-weight: 700; text-decoration: none; font-family: var(--cms-font-display); font-size: 17px; }
+.cms-brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 14px; font-weight: 700; text-decoration: none; font-family: var(--cms-font-display); font-size: 26px; }
 .cms-navtoggle { display: none; }
 .cms-nav ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
 .cms-nav a { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--cms-radius); text-decoration: none; font-size: 14px; opacity: .85; }
