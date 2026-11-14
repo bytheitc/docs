@@ -129,6 +129,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: 300;
 }
 .lede { font-size: clamp(17px, 1.5vw, 20px); color: var(--ink-soft); max-width: 34em; margin-bottom: 36px; }
+.empty { color: var(--ink-soft); font-size: 15px; }
 .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
 
 .hero-art { display: flex; justify-content: center; }
@@ -182,6 +183,19 @@ a { color: inherit; text-decoration: none; }
 .tile-title { margin-top: 40px; margin-bottom: 10px; line-height: 1.1; }
 .tile-desc { font-size: 15px; opacity: .78; max-width: 32em; }
 .tile-go { margin-top: 20px; font-weight: 600; font-size: 14px; }
+
+/* Soft launch: the one tile shown while the other five houses are stood down. */
+.tile-portal {
+  grid-column: span 6;
+  background: var(--emerald);
+  color: var(--parchment);
+  align-items: flex-start;
+  padding: 44px 40px;
+}
+.tile-portal .tile-mark { color: var(--gold); width: 36px; height: 36px; }
+.tile-portal .tile-title { font-size: clamp(28px, 3.4vw, 40px); }
+.tile-portal .tile-desc { opacity: .9; }
+.tile-portal .tile-go { color: var(--gold-soft); }
 
 /* Each tile previews its house in that house's own typeface + palette */
 .tile-ai {
@@ -282,6 +296,7 @@ a { color: inherit; text-decoration: none; }
 
 /* ---------- GATHERINGS ---------- */
 .gatherings { max-width: var(--max); margin: 0 auto; padding: 120px var(--gutter); }
+.gatherings .empty { border-top: 1px solid var(--line); padding-top: 32px; }
 .events { display: grid; gap: 0; border-top: 1px solid var(--line); }
 .event {
   display: grid;

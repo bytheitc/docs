@@ -22,13 +22,11 @@ export default function NotFound() {
       <p className="lede">The page you were looking for isn&rsquo;t here. It may have moved, or it may not exist yet. Let&rsquo;s bring you back to the center.</p>
       <div className="hero-ctas center">
         <Link href="/" className="btn">Return home</Link>
-        <Link href="/houses" className="btn btn-ghost">Find a house →</Link>
+        <Link href="/join" className="btn btn-ghost">Join the Collective →</Link>
       </div>
       <ul className="lost-links">
         <li><Link href="/about">About</Link></li>
-        <li><Link href="/events">Gatherings</Link></li>
-        <li><Link href="/news">News</Link></li>
-        <li><Link href="/contact">Contact</Link></li>
+        <li><Link href="/join">Join</Link></li>
       </ul>
     </section>
     </main>

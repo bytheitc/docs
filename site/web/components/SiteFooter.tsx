@@ -14,7 +14,7 @@ export function SiteFooter() {
           <p className="sf-ar"><span lang="ar">{self.arabic}</span> <span>{self.transliteration} · {self.sense}</span></p>
           <p className="sf-line">Technology, built with intention, in service of people.</p>
         </div>
-        {FOOTER_NAV.map((col) => (
+        {FOOTER_NAV.filter((col) => col.links.length > 0).map((col) => (
           <nav key={col.heading} aria-label={col.heading} className="sf-col">
             <h2>{col.heading}</h2>
             <ul>

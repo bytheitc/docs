@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Khatam, KHATAM_POINTS } from "@/components/Khatam";
 import { JoinForm } from "@/components/JoinForm";
-import { house } from "@/lib/houses";
+import { house, PORTAL_URL } from "@/lib/houses";
 import { getEvents, getHouseProfiles, getPrinciples } from "@/lib/data";
 
 function Rosette() {
@@ -29,8 +29,10 @@ function Rosette() {
 
 export default async function Home() {
   const self = house("site");
-  const [TILES, PRINCIPLES, events] = await Promise.all([getHouseProfiles(), getPrinciples(), getEvents()]);
-  const GATHERINGS = events.slice(0, 3);
+  // Soft launch: the houses bento and the gatherings list are stood down for now (see below).
+  // getHouseProfiles/getEvents stay called so nothing about data-fetching needs to change when
+  // they come back — only what's rendered from them does.
+  const [, PRINCIPLES] = await Promise.all([getHouseProfiles(), getPrinciples(), getEvents()]);
   return (
     <>
       <div className="home">
@@ -55,25 +57,18 @@ export default async function Home() {
 
         <section id="houses" className="houses">
           <div className="section-head">
-            <p className="eyebrow">Five houses</p>
-            <h2>One collective, five ways in.</h2>
-            <p>Each house has its own focus, its own people and its own voice. They share one root, and the star at the center of every one of them.</p>
-            <p><Link href="/houses" className="text-link">How the houses work together →</Link></p>
+            <p className="eyebrow">Get involved</p>
+            <h2>Start with the contributor portal.</h2>
+            <p>The five houses are still here — for now, the portal is the one door we&rsquo;re keeping open.</p>
           </div>
           <div className="bento">
-            {TILES.map((t) => {
-              const h = house(t.id);
-              return (
-                <a key={t.id} className={`tile tile-${t.id}`} href={h.url}>
-                  <Khatam variant={t.id} className="tile-mark" strokeWidth={4} />
-                  <span className="tile-ar" lang="ar">{h.arabic}</span>
-                  <span className="tile-label">{t.label}</span>
-                  <span className="tile-title">{t.title}</span>
-                  <span className="tile-desc">{t.desc}</span>
-                  <span className="tile-go">Enter →</span>
-                </a>
-              );
-            })}
+            <a className="tile tile-portal" href={PORTAL_URL}>
+              <Khatam variant="site" className="tile-mark" strokeWidth={4} />
+              <span className="tile-label">Contributor portal</span>
+              <span className="tile-title">Find something to work on.</span>
+              <span className="tile-desc">Link a platform account, claim an issue and see your work recognised across the Collective.</span>
+              <span className="tile-go">Enter →</span>
+            </a>
           </div>
         </section>
 
@@ -98,20 +93,8 @@ export default async function Home() {
           <div className="section-head">
             <p className="eyebrow">Gatherings</p>
             <h2>Where the collective meets.</h2>
-            <p><Link href="/events" className="text-link">All gatherings →</Link></p>
           </div>
-          <div className="events">
-            {GATHERINGS.map((g) => (
-              <Link key={g.slug} href={`/events/${g.slug}`} className="event">
-                <div className="ev-date"><span className="ev-day">—</span><span className="ev-mon">Date TBA</span></div>
-                <div>
-                  <p className="ev-house">{g.hostLabel}</p>
-                  <h3>{g.title}</h3>
-                  <p>{g.summary}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <p className="empty">No events for now — check back soon.</p>
         </section>
 
         <section id="join" className="join">

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHero } from "@/components/PageHero";
-import { house } from "@/lib/houses";
+import { house, PORTAL_URL } from "@/lib/houses";
 import { getPrinciples } from "@/lib/data";
 
 export const metadata: Metadata = {
@@ -89,11 +89,11 @@ export default async function AboutPage() {
       </section>
 
       <section className="cta-band">
-        <h2>Find your house.</h2>
-        <p>Five ways into the same work.</p>
+        <h2>Start with the contributor portal.</h2>
+        <p>The houses are still here — for now, the portal is the one door we&rsquo;re keeping open.</p>
         <div className="hero-ctas center">
-          <Link href="/houses" className="btn">Meet the houses</Link>
-          <Link href="/team" className="btn btn-ghost">Who stewards it →</Link>
+          <a href={PORTAL_URL} className="btn">Open the portal</a>
+          <Link href="/join" className="btn btn-ghost">Join the Collective →</Link>
         </div>
       </section>
     </>
