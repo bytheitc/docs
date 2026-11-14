@@ -13,5 +13,10 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 
+# Separate products, each its own git repo and remote (bytheitc/hifz, bytheitc/zakat) —
+# living here for convenience, not part of this monorepo's own history.
+/hifz/
+/zakat/
+
 # OS
 .DS_Store
