@@ -47,8 +47,8 @@ export const SEED_GIVING: GivingPage = {
     { title: "Sponsor a gathering", body: "Underwrite a Builders’ Iftar, a Sprint hub or a Reading Circle season." },
     { title: "In-kind", body: "Compute, cloud credits, venue space or professional services, agreed in writing." },
   ],
-  email: "giving@example.org",
-  note: "Online giving is not open yet. Until it is, write to giving@example.org and we will reply personally.",
+  email: "giving@bytheitc.xyz",
+  note: "Online giving is not open yet. Until it is, write to giving@bytheitc.xyz and we will reply personally.",
   notice: [
     "We are seeking scholarly guidance on whether, and how, gifts to the Collective may count as zakat. Until that guidance is published, please give as general charity (ṣadaqa) and do not designate gifts as zakat.",
     "The Collective’s legal and tax status is still being established. We will publish it here before accepting gifts online.",
@@ -68,9 +68,9 @@ export interface ContactPage {
 export const SEED_CONTACT: ContactPage = {
   id: "contact",
   channels: [
-    { label: "The Collective", email: "hello@example.org" },
-    { label: "Press", email: "press@example.org" },
-    { label: "Giving", email: "giving@example.org" },
+    { label: "The Collective", email: "hello@bytheitc.xyz" },
+    { label: "Press", email: "press@bytheitc.xyz" },
+    { label: "Giving", email: "giving@bytheitc.xyz" },
   ],
   topics: ["The Collective", "AI", "Engineering", "Institute", "Open Source", "Research", "Press", "Support & giving"],
 };
@@ -88,7 +88,7 @@ export interface PressPage {
 /** Built-in content: seeds the database and serves as the fallback when none is connected. */
 export const SEED_PRESS: PressPage = {
   id: "press",
-  email: "press@example.org",
+  email: "press@bytheitc.xyz",
   centers: [
     { house: "site", text: "Solid dot: the one center everything turns around" },
     { house: "ai", text: "Four linked nodes: a network that thinks" },

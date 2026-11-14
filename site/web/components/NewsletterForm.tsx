@@ -45,7 +45,7 @@ export function NewsletterForm({ lists, defaultList = "site" }: { lists: Newslet
     <form className="form" onSubmit={onSubmit}>
       <label>
         <span>Email</span>
-        <input name="email" type="email" autoComplete="email" placeholder="you@example.org" required />
+        <input name="email" type="email" autoComplete="email" placeholder="you@bytheitc.xyz" required />
       </label>
       <fieldset className="checkset">
         <legend>Which lists?</legend>

@@ -46,7 +46,7 @@ export function ProposalForm({ rfp, title }: { rfp: string; title: string }) {
       </div>
       <label>
         <span>Email</span>
-        <input name="email" type="email" autoComplete="email" placeholder="you@example.org" required />
+        <input name="email" type="email" autoComplete="email" placeholder="you@bytheitc.xyz" required />
       </label>
       <label>
         <span>Work we can look at</span>
@@ -63,7 +63,7 @@ export function ProposalForm({ rfp, title }: { rfp: string; title: string }) {
         <input name="availability" type="text" placeholder="e.g. from March, two days a week" />
       </label>
       <Honeypot />
-      {state === "failed" && <FormError email="build@example.org" />}
+      {state === "failed" && <FormError email="build@bytheitc.xyz" />}
       <button className="btn" type="submit" disabled={state === "sending"}>
         {state === "sending" ? "Sending…" : "Register interest"}
       </button>

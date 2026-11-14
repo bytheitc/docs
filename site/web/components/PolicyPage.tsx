@@ -28,7 +28,7 @@ export function PolicyPage({ title, intro, sections }: { title: string; intro: s
         ))}
       </div>
       <footer className="detail-more">
-        <p>Questions about this policy? Write to <a href="mailto:privacy@example.org" className="text-link">privacy@example.org</a> or use the <Link href="/contact" className="text-link">contact page</Link>.</p>
+        <p>Questions about this policy? Write to <a href="mailto:privacy@bytheitc.xyz" className="text-link">privacy@bytheitc.xyz</a> or use the <Link href="/contact" className="text-link">contact page</Link>.</p>
         <p className="fine-note">Last updated: not yet published.</p>
       </footer>
     </article>

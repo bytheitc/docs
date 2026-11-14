@@ -4,7 +4,7 @@
 //
 //   MAIL_PROVIDER   log (default) | resend | postmark | none
 //   MAIL_API_KEY    the provider's key. Never logged, never sent anywhere but the provider.
-//   MAIL_FROM       "ITC <hello@example.org>"
+//   MAIL_FROM       "ITC <hello@bytheitc.xyz>"
 //   MAIL_REPLY_TO   optional, when replies should go somewhere else
 //
 // "log" prints the whole message to the server log and sends nothing. That is the development

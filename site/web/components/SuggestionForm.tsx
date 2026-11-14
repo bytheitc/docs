@@ -65,12 +65,12 @@ export function SuggestionForm({ areas }: { areas: string[] }) {
         </label>
         <label>
           <span>Email <em>(optional)</em></span>
-          <input name="email" type="email" autoComplete="email" placeholder="you@example.org" />
+          <input name="email" type="email" autoComplete="email" placeholder="you@bytheitc.xyz" />
           <small>Only so we can write back.</small>
         </label>
       </div>
       <Honeypot />
-      {state === "failed" && <FormError email="build@example.org" />}
+      {state === "failed" && <FormError email="build@bytheitc.xyz" />}
       <button className="btn" type="submit" disabled={state === "sending"}>
         {state === "sending" ? "Sending…" : "Send this to us"}
       </button>

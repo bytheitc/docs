@@ -10,7 +10,7 @@ export function Honeypot() {
 }
 
 /** Shown when a submission could not be stored (e.g. no database connected). */
-export function FormError({ email = "hello@example.org" }: { email?: string }) {
+export function FormError({ email = "hello@bytheitc.xyz" }: { email?: string }) {
   return (
     <p className="form-error" role="alert">
       We couldn&rsquo;t send this right now. Please email <a href={`mailto:${email}`}>{email}</a> instead, and we&rsquo;ll reply personally.

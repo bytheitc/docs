@@ -37,7 +37,7 @@ export function ContactForm({ topics }: { topics: string[] }) {
         </label>
         <label>
           <span>Email</span>
-          <input name="email" type="email" autoComplete="email" placeholder="you@example.org" required />
+          <input name="email" type="email" autoComplete="email" placeholder="you@bytheitc.xyz" required />
         </label>
       </div>
       <label>

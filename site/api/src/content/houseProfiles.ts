@@ -26,7 +26,7 @@ export const SEED_HOUSE_PROFILES: HouseProfile[] = [
       { with: "research", how: "turns open questions into evaluations, and findings into safer defaults" },
       { with: "engineering", how: "ships models inside products that are built to last" },
     ],
-    email: "ai@example.org",
+    email: "ai@bytheitc.xyz",
   },
   {
     id: "engineering",
@@ -38,7 +38,7 @@ export const SEED_HOUSE_PROFILES: HouseProfile[] = [
       { with: "oss", how: "upstreams what it builds so the commons can maintain it" },
       { with: "ai", how: "provides the platform that AI work runs on" },
     ],
-    email: "engineering@example.org",
+    email: "engineering@bytheitc.xyz",
   },
   {
     id: "institute",
@@ -50,7 +50,7 @@ export const SEED_HOUSE_PROFILES: HouseProfile[] = [
       { with: "research", how: "co-hosts the Reading Circle and pairs fellows with research projects" },
       { with: "oss", how: "trains new maintainers through mentored placements" },
     ],
-    email: "institute@example.org",
+    email: "institute@bytheitc.xyz",
   },
   {
     id: "oss",
@@ -62,7 +62,7 @@ export const SEED_HOUSE_PROFILES: HouseProfile[] = [
       { with: "engineering", how: "keeps shared libraries healthy and well-reviewed" },
       { with: "institute", how: "hosts mentees on real projects" },
     ],
-    email: "oss@example.org",
+    email: "oss@bytheitc.xyz",
   },
   {
     id: "research",
@@ -74,7 +74,7 @@ export const SEED_HOUSE_PROFILES: HouseProfile[] = [
       { with: "ai", how: "studies how systems behave in the hands of real communities" },
       { with: "institute", how: "brings classical scholarship into conversation with current work" },
     ],
-    email: "research@example.org",
+    email: "research@bytheitc.xyz",
   },
 ];
 
