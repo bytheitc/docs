@@ -104,3 +104,63 @@ export const SEED_PRESS: PressPage = {
   ],
   guidelines: "The full guidelines cover the mark’s construction, each house’s layout and voice, and the shared Collective bar. A public edition is being prepared.",
 };
+
+/* ---------------- Mobile app ---------------- */
+
+export interface MobileFeature { title: string; body: string }
+export interface MobilePage {
+  id: string;
+  /** The hero. */
+  lede: string;
+  features: MobileFeature[];
+  /** What the app deliberately does not do, and where to go instead. */
+  notYet: string[];
+  /** Store links. Empty means "not published yet", and the page says so rather than inventing a link. */
+  appStoreUrl: string;
+  playStoreUrl: string;
+  /** Shown while the stores are empty. */
+  betaNote: string;
+}
+
+/** Built-in content: seeds the database and serves as the fallback when none is connected. */
+export const SEED_MOBILE: MobilePage = {
+  id: "mobile",
+  lede:
+    "The contributor portal, on your phone. Sign in with the accounts you already use, see the work recorded in your name, hold an issue while you work on it, and decide exactly how much of yourself is public.",
+  features: [
+    {
+      title: "Your profile, and what is public",
+      body:
+        "Nothing about you is public unless you say so. One switch governs the lot, and each thing below it — your houses, your linked accounts, your contributions, your place on the contributors wall — is yours to turn on or off from the phone in your hand.",
+    },
+    {
+      title: "The work recorded in your name",
+      body:
+        "Everything the portal has matched to your linked accounts, with what a steward has verified and what is still pending. Work that happened somewhere the portal cannot see — a talk, a translation, a design review — you can log yourself.",
+    },
+    {
+      title: "Claim an issue before you start",
+      body:
+        "Claiming tells everyone else you are on it, and holds it for a set number of days so two people do not spend the same weekend on the same bug. The app shows what you hold and when it runs out.",
+    },
+    {
+      title: "Decisions waiting on you",
+      body:
+        "If you maintain a repository, invitations and nominations that need your judgement are on the home screen. The governance record itself stays in the open, on the web, where it belongs.",
+    },
+    {
+      title: "Your data, in your hands",
+      body:
+        "Take a copy of everything held about you, or delete your account outright. The portal treats what it holds as amāna — a trust — and a trust you cannot withdraw is not a trust at all.",
+    },
+  ],
+  notYet: [
+    "Reviewing or merging code. The app shows what has been recorded, not a code review tool.",
+    "Casting a governance vote or objecting to a nomination. Those are decided in the open, on the web, with the full record beside them.",
+    "Anything a steward does. Staff tools stay on the web.",
+  ],
+  appStoreUrl: "",
+  playStoreUrl: "",
+  betaNote:
+    "The app is not in the stores yet. It is built and working; what remains is the developer accounts and the review process. If you want to try it before then, write to us and we will add you to the test build.",
+};

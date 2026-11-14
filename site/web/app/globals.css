@@ -885,3 +885,63 @@ a.event:hover h3 { color: var(--emerald); }
 /* Masking is how an external one-colour SVG takes a colour: the knockout stays transparent. */
 .mono-masked { width: 72px; height: 72px; flex: none; background: var(--parchment); -webkit-mask: url(/mark-mono.svg) center / contain no-repeat; mask: url(/mark-mono.svg) center / contain no-repeat; }
 @media (max-width: 620px) { .mono-row { grid-template-columns: 1fr; } }
+
+/* ---------------- The app (/mobile) ---------------- */
+.mb-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.mb-beta { margin-top: 18px; max-width: 54ch; color: var(--ink-soft); font-size: 15px; line-height: 1.6; }
+
+/* Three drawn phones. They scroll sideways on a narrow screen rather than shrinking to nothing. */
+.mb-shots { display: flex; gap: 28px; justify-content: center; padding: 8px 0 12px; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.mb-phone { flex: none; width: 248px; margin: 0; scroll-snap-align: center; border-radius: 34px; padding: 10px; background: linear-gradient(160deg, #1b2a24, #14201B); box-shadow: 0 18px 40px rgba(20, 32, 27, .22); }
+.mb-screen { position: relative; border-radius: 26px; background: var(--parchment); padding: 16px 13px; min-height: 420px; display: flex; flex-direction: column; gap: 10px; }
+/* The notch. Decorative, so it is not announced. */
+.mb-screen::before { content: ""; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 64px; height: 5px; border-radius: 3px; background: rgba(20, 32, 27, .18); }
+.mb-screen-title { margin: 12px 0 2px; font-family: var(--display); font-size: 19px; font-weight: 700; color: var(--ink); }
+.mb-card { background: #fff; border: 1px solid var(--line); border-radius: 13px; padding: 11px 12px; }
+.mb-eyebrow { margin: 4px 0 0; font-size: 9.5px; letter-spacing: .09em; text-transform: uppercase; font-weight: 700; color: var(--ink-soft); }
+
+.mb-id { display: flex; align-items: center; gap: 10px; }
+.mb-id > span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.mb-id b { font-size: 14px; color: var(--ink); }
+.mb-id i { font-style: normal; font-size: 11.5px; color: var(--ink-soft); }
+.mb-avatar { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--emerald-wash, #E4EFE9); color: var(--emerald); font-size: 12px; font-weight: 700; }
+
+.mb-stats { display: flex; gap: 14px; }
+.mb-stats > span { flex: 1; display: flex; flex-direction: column; }
+.mb-stats b { font-size: 22px; line-height: 1.1; color: var(--ink); }
+.mb-stats i { font-style: normal; font-size: 10.5px; color: var(--ink-soft); }
+
+.mb-milestone { display: flex; flex-direction: column; gap: 7px; }
+.mb-milestone b { font-size: 13.5px; color: var(--ink); }
+.mb-milestone i { font-style: normal; font-size: 10.5px; color: var(--ink-soft); }
+.mb-bar { display: block; height: 6px; border-radius: 999px; background: var(--parchment-deep); overflow: hidden; }
+.mb-bar > span { display: block; height: 100%; background: var(--emerald); }
+
+.mb-rows { display: flex; flex-direction: column; padding: 0; }
+.mb-rows > span { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 12px; font-size: 12px; color: var(--ink); border-bottom: 1px solid var(--line); }
+.mb-rows > span:last-child { border-bottom: 0; }
+.mb-rows em { font-style: normal; font-size: 11.5px; color: var(--ink-soft); }
+.mb-rows em.on { color: var(--emerald); font-weight: 600; }
+
+.mb-cta { background: var(--emerald); color: var(--parchment); border-radius: 11px; text-align: center; padding: 11px; font-size: 13px; font-weight: 600; }
+.mb-claim { display: flex; flex-direction: column; gap: 3px; }
+.mb-claim b { font-size: 13px; color: var(--ink); }
+.mb-claim i { font-style: normal; font-size: 10.5px; color: var(--ink-soft); }
+.mb-claim i.mb-warn { color: var(--warn, #8A5A12); }
+
+.mb-features, .mb-notyet, .mb-privacy { padding: 72px 0; border-top: 1px solid var(--line); }
+.mb-list { list-style: none; margin: 34px 0 0; padding: 0; display: grid; gap: 26px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+.mb-list h3 { font-family: var(--display); font-size: 21px; margin: 0 0 8px; color: var(--ink); }
+.mb-list p { margin: 0; color: var(--ink-soft); line-height: 1.65; }
+
+.mb-donts { list-style: none; margin: 30px 0 0; padding: 0; display: grid; gap: 12px; }
+.mb-donts li { padding: 15px 18px; border-left: 3px solid var(--gold); background: var(--parchment); border-radius: 0 10px 10px 0; color: var(--ink-soft); line-height: 1.6; }
+
+.mb-defs { margin: 30px 0 0; display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.mb-defs dt { font-family: var(--display); font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.mb-defs dd { margin: 0; color: var(--ink-soft); line-height: 1.65; }
+
+@media (max-width: 760px) {
+  .mb-shots { justify-content: flex-start; padding-inline: 2px; }
+  .mb-features, .mb-notyet, .mb-privacy { padding: 52px 0; }
+}

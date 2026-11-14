@@ -6,7 +6,7 @@ import { SEED_FAQ } from "./faq.js";
 import { MEMBER_HOUSE_IDS, SEED_HOUSE_PROFILES } from "./houseProfiles.js";
 import { HOUSES } from "./houses.js";
 import { NEWS_KINDS, SEED_NEWS } from "./news.js";
-import { SEED_CONTACT, SEED_GIVING, SEED_JOIN, SEED_PRESS } from "./pages.js";
+import { SEED_CONTACT, SEED_GIVING, SEED_JOIN, SEED_MOBILE, SEED_PRESS } from "./pages.js";
 import { SEED_POLICIES } from "./policies.js";
 import { RFP_STATUSES, SEED_RFPS } from "./rfps.js";
 import { SEED_SUGGEST } from "./suggestions.js";
@@ -341,6 +341,31 @@ export const COLLECTIONS: CollectionDef[] = [
       },
       { type: "lines", name: "donts", label: "Please don’t", help: "One per line." },
       { type: "textarea", name: "guidelines", label: "Brand guidelines note", rows: 3 },
+    ],
+  },
+  {
+    name: "mobile",
+    label: "Mobile page",
+    singular: "Mobile page",
+    description: "The page for the contributor app. Leave the store links empty until the listings exist \u2014 the page then says the app is not published yet rather than linking nowhere.",
+    idField: "id",
+    titleField: "id",
+    singleton: true,
+    seed: () => rows([SEED_MOBILE]),
+    fields: [
+      { type: "text", name: "id", label: "Id", required: true, help: "Leave as \u201cmobile\u201d." },
+      { type: "textarea", name: "lede", label: "Lede", rows: 3, required: true },
+      {
+        type: "list", name: "features", label: "What it does", itemLabel: "feature", itemTitle: "title",
+        fields: [
+          { type: "text", name: "title", label: "Title", required: true },
+          { type: "textarea", name: "body", label: "Body", rows: 3, required: true },
+        ],
+      },
+      { type: "lines", name: "notYet", label: "What it deliberately does not do", help: "One per line." },
+      { type: "url", name: "appStoreUrl", label: "App Store link", help: "Leave empty until the listing exists." },
+      { type: "url", name: "playStoreUrl", label: "Google Play link", help: "Leave empty until the listing exists." },
+      { type: "textarea", name: "betaNote", label: "Note shown while the stores are empty", rows: 3 },
     ],
   },
 ];

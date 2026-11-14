@@ -35,3 +35,17 @@ export interface PressPage {
   donts: string[];
   guidelines: string;
 }
+
+/* ---------------- Mobile app ---------------- */
+
+export interface MobileFeature { title: string; body: string }
+export interface MobilePage {
+  id: string;
+  lede: string;
+  features: MobileFeature[];
+  notYet: string[];
+  /** Empty until the listing exists. The page says so rather than linking nowhere. */
+  appStoreUrl: string;
+  playStoreUrl: string;
+  betaNote: string;
+}

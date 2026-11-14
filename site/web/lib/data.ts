@@ -9,7 +9,7 @@ import type { FaqItem } from "@/lib/faq";
 import type { HouseProfile } from "@/lib/houseProfiles";
 import { HOUSES, type HouseId } from "@/lib/houses";
 import type { NewsPost } from "@/lib/news";
-import type { ContactPage, GivingPage, JoinPage, PressPage } from "@/lib/pages";
+import type { ContactPage, GivingPage, JoinPage, MobilePage, PressPage } from "@/lib/pages";
 import type { PolicyDoc } from "@/lib/policies";
 import type { Principle } from "@/lib/principles";
 import type { Rfp } from "@/lib/rfps";
@@ -77,6 +77,7 @@ const EMPTY_SUGGEST: SuggestPage = {
   id: "suggest", headline: "Tell us what to build", intro: "", prompts: [], steps: [], areas: ["Something else entirely"], outOfScope: [], privacy: "",
 };
 const EMPTY_PRESS: PressPage = { id: "press", email: "", centers: [], donts: [], guidelines: "" };
+const EMPTY_MOBILE: MobilePage = { id: "mobile", lede: "", features: [], notYet: [], appStoreUrl: "", playStoreUrl: "", betaNote: "" };
 
 export const getTeam = async (): Promise<Team> => {
   const t = (await getSingleton<Team>("team")) ?? EMPTY_TEAM;
@@ -110,4 +111,18 @@ export const getSuggestPage = async (): Promise<SuggestPage> => {
 export const getPressPage = async (): Promise<PressPage> => {
   const p = (await getSingleton<PressPage>("press")) ?? EMPTY_PRESS;
   return { ...p, centers: (p.centers ?? []).filter((c) => isHouse(c.house)), donts: p.donts ?? [], guidelines: p.guidelines ?? "" };
+};
+
+export const getMobilePage = async (): Promise<MobilePage> => {
+  const m = (await getSingleton<MobilePage>("mobile")) ?? EMPTY_MOBILE;
+  return {
+    ...m,
+    features: (m.features ?? []).filter((f) => f.title && f.body),
+    notYet: m.notYet ?? [],
+    // An editor who clears a store link means "not published", which the page must be able to tell
+    // apart from "published at an unknown address". Empty string is that signal; never a fake href.
+    appStoreUrl: m.appStoreUrl ?? "",
+    playStoreUrl: m.playStoreUrl ?? "",
+    betaNote: m.betaNote ?? "",
+  };
 };
