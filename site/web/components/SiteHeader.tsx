@@ -26,7 +26,7 @@ export function SiteHeader() {
     <header className={`nav${open ? " nav-open" : ""}`}>
       <Link href="/" className="brand" aria-label="Islamic Tech Collective home">
         <Khatam variant="site" className="mark" strokeWidth={6} />
-        <span className="wordmark">Islamic Tech Collective</span>
+        <span className="wordmark">Collective</span>
       </Link>
       <button
         type="button"

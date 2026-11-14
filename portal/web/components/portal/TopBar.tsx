@@ -12,7 +12,7 @@ export async function TopBar({ current }: { current?: "contributors" | "dashboar
         <Link href="/" className="brand" aria-label="ITC Contributor Portal, home">
           <Khatam variant="site" className="mark" strokeWidth={5} accent="var(--gold)" />
           <span className="brand-text">
-            <span className="brand-name">Contributor Portal</span>
+            <span className="brand-name">Contributors</span>
             <span className="brand-sub">Islamic Tech Collective</span>
           </span>
         </Link>

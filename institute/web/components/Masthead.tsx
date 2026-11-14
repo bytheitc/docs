@@ -31,7 +31,7 @@ export function Masthead() {
       <nav className="mh-left" aria-label="Institute, first half">{links(NAV_LEFT)}</nav>
       <Link href="/" className="mh-brand" aria-label="The Institute home" aria-current={pathname === "/" ? "page" : undefined} onClick={() => setOpen(false)}>
         <Khatam variant="institute" className="mark" strokeWidth={3.5} accent="var(--gold)" />
-        <span className="mh-name">The Institute</span>
+        <span className="mh-name">Institute</span>
         <span className="mh-sub">for the Centers · Islamic Tech Collective</span>
       </Link>
       <nav className="mh-right" aria-label="Institute, second half">{links(NAV_RIGHT)}</nav>
