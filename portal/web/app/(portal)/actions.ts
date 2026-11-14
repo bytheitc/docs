@@ -101,3 +101,14 @@ export async function claimIssue(_: ActionState, fd: FormData): Promise<ActionSt
       : `Claimed until ${until}. A steward will assign it to ${result.username}.`,
   };
 }
+
+/**
+ * Give a claim back before it runs out. Only your own: the api answers "not found" for anyone
+ * else's, so there is nothing to check here that it does not check again.
+ */
+export async function releaseOwnClaim(fd: FormData) {
+  await requireContributor("/dashboard");
+  const result = await api.releaseOwnClaim((await sessionToken())!, s(fd, "id", 80));
+  revalidatePath("/dashboard");
+  if (!result.ok) redirect("/dashboard?error=release");
+}

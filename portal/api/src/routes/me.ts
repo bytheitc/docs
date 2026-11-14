@@ -9,9 +9,11 @@
 //   POST   /me/contributions        self-logged work, held as pending until a steward verifies it
 //   DELETE /me/accounts/:provider/:providerUserId
 //   POST   /me/claims               claim an issue
+//   POST   /me/claims/:id/release   hand back a claim of your own before it expires
 import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import { badRequest, body, invalid, notFound, str } from "../http.js";
+import { releaseOwnClaim } from "../portal/claims.js";
 import { getSettings } from "../portal/content.js";
 import { needsContributor, needsDatabase } from "../portal/guard.js";
 import { counts, evaluateMilestones } from "../portal/milestones.js";
@@ -206,6 +208,19 @@ export function meRoutes({ cms }: Ctx): Router {
       });
     }
     res.status(201).json({ ok: true, assigned, expiresAt: claim.expiresAt.toISOString(), username: account.username });
+  });
+
+  r.post("/me/claims/:id/release", async (req, res) => {
+    const me = req.contributor!;
+    const result = await releaseOwnClaim(requirePortalStore(), me, String(req.params.id ?? ""));
+    if (!result.ok) {
+      throw notFound(
+        result.reason === "not-found"
+          ? "You have no active claim with that id."
+          : "That claim is no longer active.",
+      );
+    }
+    res.json({ ok: true, claim: result.claim });
   });
 
   return r;

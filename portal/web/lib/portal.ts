@@ -76,8 +76,21 @@ export const unlinkAccount = (token: string, provider: string, providerUserId: s
 export const deleteMe = (token: string, confirm: string) =>
   call<Record<string, never>>("/me", { method: "DELETE", token, body: { confirm } });
 
+/**
+ * `issue` is a number here because that is what it is, but it goes over the wire as a string: the
+ * api reads every scalar with a helper that rejects non-strings outright, so sending the number
+ * makes the whole request a 400 ("issue" must be a string) and no claim is ever created.
+ */
 export const claimIssue = (token: string, claim: { provider: string; repo: string; issue: number }) =>
-  call<{ assigned: boolean; expiresAt: string; username: string }>("/me/claims", { method: "POST", token, body: claim });
+  call<{ assigned: boolean; expiresAt: string; username: string }>("/me/claims", {
+    method: "POST",
+    token,
+    body: { ...claim, issue: String(claim.issue) },
+  });
+
+/** Hand back a claim of your own before it expires. Someone else's is a maintainer's to release. */
+export const releaseOwnClaim = (token: string, id: string) =>
+  call<{ claim: Claim }>(`/me/claims/${encodeURIComponent(id)}/release`, { method: "POST", token });
 
 /* ---------------- sign-in ---------------- */
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { releaseOwnClaim } from "../actions";
 import { Khatam } from "@/components/Khatam";
 import { ContributionItem } from "@/components/portal/ContributionItem";
 import { getSettings } from "@/lib/data";
@@ -94,6 +95,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                   <span className="c-title">{c.repo} #{c.issue}</span>
                   <span className={`chip ${c.assigned ? "ok" : "warn"}`}>{c.assigned ? "Assigned" : "Awaiting assignment"}</span>
                   <span className="c-meta">Until {fmtDate(c.expiresAt)}</span>
+                  {/* A claim is a promise to everyone else that you are on it. Being able to hand it
+                      back is what keeps the promise meaningful: otherwise the only way out is silence. */}
+                  <form action={releaseOwnClaim} className="row-actions">
+                    <input type="hidden" name="id" value={c.id} />
+                    <button type="submit" className="btn ghost small">Release</button>
+                  </form>
                 </li>
               ))}
             </ul>
