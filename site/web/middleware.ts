@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 // Soft launch: only these are public for now. Everything else still exists — this is the one
 // place to flip to bring a page back, not a deletion. Add a path here to re-open it.
-const VISIBLE = ["/", "/about", "/join", "/privacy", "/terms"];
+const VISIBLE = ["/", "/about", "/join", "/privacy", "/terms", "/products"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

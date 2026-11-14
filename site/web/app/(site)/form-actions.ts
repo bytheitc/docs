@@ -36,6 +36,11 @@ export async function sendContact(fd: FormData) {
   return record("contact", fd, ["name", "email", "topic", "message"]);
 }
 
+/** /products/[slug]: a review, held for a steward to publish. Form id "product-review". */
+export async function sendProductReview(fd: FormData) {
+  return record("product-review", fd, ["product", "name", "rating", "body"]);
+}
+
 /* ---------------- Newsletter ---------------- */
 
 /** Double opt-in: this only ever asks the api to send one confirmation email. */

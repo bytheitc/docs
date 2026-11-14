@@ -8,6 +8,8 @@ import { HOUSES } from "./houses.js";
 import { NEWS_KINDS, SEED_NEWS } from "./news.js";
 import { SEED_CONTACT, SEED_GIVING, SEED_JOIN, SEED_MOBILE, SEED_PRESS } from "./pages.js";
 import { SEED_POLICIES } from "./policies.js";
+import { PRODUCT_STATUSES, SEED_PRODUCTS } from "./products.js";
+import { SEED_REVIEWS } from "./reviews.js";
 import { RFP_STATUSES, SEED_RFPS } from "./rfps.js";
 import { SEED_SUGGEST } from "./suggestions.js";
 import { SEED_PRINCIPLES } from "./principles.js";
@@ -15,6 +17,7 @@ import { SEED_TEAM } from "./team.js";
 import type { CollectionDef, Field, SpaceLink } from "./types.js";
 
 const HOUSE_IDS = HOUSES.map((h) => h.id);
+const PRODUCT_IDS = SEED_PRODUCTS.map((p) => p.slug);
 const rows = (x: unknown) => x as Record<string, unknown>[];
 
 const roleFields: Field[] = [
@@ -267,6 +270,45 @@ export const COLLECTIONS: CollectionDef[] = [
     ],
   },
   {
+    name: "products",
+    label: "Products",
+    singular: "Product",
+    description: "Shown on /products, one page each. The repo/download URL doubles as \"access\" until there's a hosted app.",
+    idField: "slug",
+    titleField: "name",
+    columns: ["status"],
+    seed: () => rows(SEED_PRODUCTS),
+    fields: [
+      { type: "text", name: "slug", label: "Slug", required: true, help: "Appears in the address: /products/slug." },
+      { type: "text", name: "name", label: "Name", required: true },
+      { type: "text", name: "tagline", label: "Tagline", required: true, help: "One sentence, shown on the card." },
+      { type: "select", name: "status", label: "Status", required: true, options: PRODUCT_STATUSES },
+      { type: "textarea", name: "summary", label: "Summary", required: true, rows: 2, help: "One or two sentences for the list page." },
+      { type: "paragraphs", name: "body", label: "Description", required: true },
+      { type: "lines", name: "features", label: "Features", help: "One per line." },
+      { type: "url", name: "repoUrl", label: "Repository / download URL", help: "GitHub repo, or wherever it can be downloaded from." },
+      { type: "url", name: "liveUrl", label: "Live URL", help: "A hosted version, if there is one." },
+    ],
+  },
+  {
+    name: "reviews",
+    label: "Product reviews",
+    singular: "Review",
+    description: "Published reviews, shown under a product on its /products/[slug] page. Promote a good submission from the inbox here.",
+    idField: "id",
+    titleField: "name",
+    columns: ["product", "rating", "name"],
+    seed: () => rows(SEED_REVIEWS),
+    fields: [
+      { type: "text", name: "id", label: "Id", required: true },
+      { type: "select", name: "product", label: "Product", required: true, options: PRODUCT_IDS },
+      { type: "text", name: "name", label: "Name", required: true, help: "First name or handle is fine." },
+      { type: "number", name: "rating", label: "Rating", required: true, min: 1, max: 5 },
+      { type: "textarea", name: "body", label: "Review", required: true, rows: 3 },
+      { type: "text", name: "date", label: "Date", required: true, help: "YYYY-MM-DD." },
+    ],
+  },
+  {
     name: "suggest",
     label: "Suggestions page",
     singular: "Suggestions page",
@@ -377,6 +419,7 @@ export const FORMS: Record<string, string> = {
   suggestion: "Suggestions: what to build",
   invite: "Home: invitation request",
   contact: "Contact: message",
+  "product-review": "Products: review",
 };
 
 export function getCollection(name: string): CollectionDef {

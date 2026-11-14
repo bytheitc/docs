@@ -12,6 +12,7 @@ import type { NewsPost } from "@/lib/news";
 import type { ContactPage, GivingPage, JoinPage, MobilePage, PressPage } from "@/lib/pages";
 import type { PolicyDoc } from "@/lib/policies";
 import type { Principle } from "@/lib/principles";
+import type { Product, ProductReview } from "@/lib/products";
 import type { Rfp } from "@/lib/rfps";
 import type { SuggestPage } from "@/lib/suggestions";
 import type { Team } from "@/lib/team";
@@ -65,6 +66,20 @@ export const getPolicy = async (slug: string) => {
   const p = await getPublishedOne<PolicyDoc>("policies", slug);
   return p && { ...p, sections: p.sections ?? [] };
 };
+
+const normaliseProduct = (p: Product): Product => ({ ...p, body: p.body ?? [], features: p.features ?? [] });
+export const getProducts = async () => (await getPublished<Product>("products")).map(normaliseProduct);
+export const getProduct = async (slug: string) => {
+  const p = await getPublishedOne<Product>("products", slug);
+  return p && normaliseProduct(p);
+};
+
+/** Published reviews for one product, newest first. The collection has no per-product filter, so
+ *  this reads every review and filters here — fine at the volume a few products' reviews reach. */
+export const getProductReviews = async (slug: string) =>
+  (await getPublished<ProductReview>("reviews"))
+    .filter((r) => r.product === slug)
+    .sort((a, b) => b.date.localeCompare(a.date));
 
 /* ---------------- Singletons ---------------- */
 

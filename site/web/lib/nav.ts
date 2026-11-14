@@ -5,6 +5,7 @@ export interface NavLink { href: string; label: string }
 // bring it back into the nav the moment its page comes back.
 export const PRIMARY_NAV: NavLink[] = [
   { href: "/about", label: "About" },
+  { href: "/products", label: "Products" },
   // { href: "/houses", label: "Houses" },
   // { href: "/events", label: "Gatherings" },
   // { href: "/news", label: "News" },
@@ -27,6 +28,7 @@ export const FOOTER_NAV: { heading: string; links: NavLink[] }[] = [
     heading: "Take part",
     links: [
       { href: "/join", label: "Join" },
+      { href: "/products", label: "Products" },
       // { href: "/events", label: "Gatherings" },
       // { href: "/rfps", label: "Requests for proposals" },
       // { href: "/suggest", label: "Tell us what to build" },
