@@ -15,6 +15,7 @@ import { contentRoutes } from "./routes/content.js";
 import { formRoutes } from "./routes/forms.js";
 import { maintainerRoutes } from "./routes/maintainers.js";
 import { meRoutes } from "./routes/me.js";
+import { oauthRoutes } from "./routes/oauth.js";
 import { publicRoutes } from "./routes/public.js";
 import { staffRoutes } from "./routes/staff.js";
 import { webhookRoutes } from "./routes/webhook.js";
@@ -69,6 +70,7 @@ export function createApp(ctx: Ctx) {
   app.use(authRoutes(ctx));
   app.use(publicRoutes(ctx));
   app.use(meRoutes(ctx));
+  app.use(oauthRoutes(ctx));
   app.use(maintainerRoutes(ctx));
   app.use(staffRoutes(ctx));
 

@@ -45,6 +45,25 @@ itself (`itc://auth`) the way the web owns its own. See `mobile/README.md`.
 5. **Degrade gracefully.** If the CMS is unreachable or not configured, a house api serves its built-in seed content read-only
    (header `X-Content-Source: seed`), and forms answer `503` so the web can show "please email us instead".
 
+## "Sign in with ITC" (OAuth 2.0 / OIDC)
+
+`portal/api` is the collective's identity provider, at `/oauth`. It lives there rather than in a
+service of its own because it has to read the contributors it vouches for, and rule 2 above says
+only `portal/api` may.
+
+| | |
+|---|---|
+| Discovery | `GET /oauth/.well-known/openid-configuration`, `GET /oauth/jwks` |
+| Flow | authorization code + PKCE (S256), always. No implicit, no password grant, no `plain`. |
+| Access / refresh tokens | Opaque, stored only as SHA-256. Verified by `POST /oauth/introspect`, so revoking one takes effect at once. |
+| `id_token` | RS256 JWT. `OAUTH_SIGNING_KEY` (PKCS#8 PEM) is required in production; development generates an ephemeral key. |
+| Clients | CMS entries in the portal space. Redirect URIs match exactly. A confidential client stores only its secret's hash. |
+| Scopes | `openid`, `profile`, `contributions`, `entitlements`, `offline_access` |
+| Entitlements | `tier` and `entitlements` on a contributor, set by staff, released through the `entitlements` scope. Not billing: a product decides what a tier means to it. |
+
+Replaying an authorization code, or reusing a rotated refresh token, revokes every token that
+client holds for that person rather than merely refusing the request.
+
 ## CMS API contract (v1)
 
 JSON in and out. Errors look like `{ "error": { "code": "…", "message": "…", "fields": { "path": "message" } } }`.
