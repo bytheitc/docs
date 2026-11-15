@@ -360,7 +360,7 @@ document.body.innerHTML = toSVG(pattern, { stroke: "#C6F432" });`,
       "Works on macOS, Linux and WSL",
       "`bayt doctor` explains what's missing and how to fix it",
     ],
-    install: { lang: "shell", code: "go install github.com/TODO-itc-oss/bayt@latest" },
+    install: { lang: "shell", code: "go install github.com/bytheitc/bayt@latest" },
     usage: {
       lang: "shell",
       code: `cd mizan-ui

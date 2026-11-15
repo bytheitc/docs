@@ -1,7 +1,7 @@
 import type { DocSection } from "./doc.js";
 import { CONTACT } from "./site.js";
 
-// First-timer's guide. Placeholder org name is TODO-itc-oss until the GitHub org exists.
+// First-timer's guide.
 export const SEED_CONTRIBUTE: DocSection[] = [
   {
     id: "before",
@@ -25,12 +25,12 @@ export const SEED_CONTRIBUTE: DocSection[] = [
     title: "01 · SET UP",
     blocks: [
       "Install `bayt` once. It reads the `bayt.toml` in each repo and installs the right toolchain, so you never fight version managers.",
-      { lang: "shell", title: "install bayt", code: "go install github.com/TODO-itc-oss/bayt@latest\nbayt doctor   # tells you exactly what's missing" },
+      { lang: "shell", title: "install bayt", code: "go install github.com/bytheitc/bayt@latest\nbayt doctor   # tells you exactly what's missing" },
       "Fork the repo you want to work on from its page on GitHub, then clone **your fork** and add the original as `upstream`.",
       {
         lang: "shell",
         title: "clone your fork",
-        code: "git clone https://github.com/<you>/mizan-ui.git\ncd mizan-ui\ngit remote add upstream https://github.com/TODO-itc-oss/mizan-ui.git\nbayt up",
+        code: "git clone https://github.com/<you>/mizan-ui.git\ncd mizan-ui\ngit remote add upstream https://github.com/bytheitc/mizan-ui.git\nbayt up",
       },
       "If `bayt up` doesn't get you to a working dev server, that is a bug in the repo, not in you. Open an issue with the output and label it `dx`.",
     ],

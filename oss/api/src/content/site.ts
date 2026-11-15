@@ -2,7 +2,7 @@
 // which is where they are changed; pages read them through lib/data.ts.
 
 // TODO(launch): replace with the real GitHub organisation URL (in the admin). Every "GITHUB" / repo link reads from it.
-export const GITHUB_ORG_URL = "https://github.com/TODO-itc-oss";
+export const GITHUB_ORG_URL = "https://github.com/bytheitc";
 
 // Placeholder contact addresses. example.org until real inboxes exist.
 export const CONTACT = {
