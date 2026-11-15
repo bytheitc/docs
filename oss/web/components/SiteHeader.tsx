@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Khatam } from "@/components/Khatam";
 import { NAV } from "@/lib/site";
 
-export function SiteHeader({ githubUrl }: { githubUrl: string }) {
+export function SiteHeader({ githubUrl, accountName }: { githubUrl: string; accountName?: string | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
@@ -41,6 +41,9 @@ export function SiteHeader({ githubUrl }: { githubUrl: string }) {
       </button>
       {/* TODO(launch): set the real GitHub organisation URL in the admin (Site settings) */}
       <a className="gh" href={githubUrl} rel="noreferrer">GITHUB ↗</a>
+      <Link href="/account" className="gh" onClick={() => setOpen(false)}>
+        {accountName ? `@${accountName}` : "SIGN IN"}
+      </Link>
     </header>
   );
 }
