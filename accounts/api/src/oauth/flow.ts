@@ -7,9 +7,9 @@ import { newToken, safeEqual, sha256, signJwt, verifyPkce, type SigningKey } fro
 import { redirectAllowed, resolveScopes } from "./clients.js";
 import {
   accessDenied, invalidGrant, invalidRequest, invalidScope,
-  type AccessToken, type AuthCode, type OAuthClient, type RefreshToken, type Scope,
+  type AccessToken, type AccountProfile, type AuthCode, type OAuthClient, type RefreshToken, type Scope,
 } from "./types.js";
-import type { Contributor, PortalStore } from "../portal/types.js";
+import type { AccountsStore } from "../store/types.js";
 
 /** Short: a code only has to survive one redirect. The RFC's ceiling is ten minutes. */
 export const CODE_TTL_MS = 60_000;
@@ -28,16 +28,16 @@ export interface AuthorizeRequest {
 }
 
 /**
- * Validates an authorization request and mints a code for an already signed-in contributor.
+ * Validates an authorization request and mints a code for an already signed-in ITC account.
  *
  * The caller must have established who the person is; this does not authenticate anyone. It
  * deliberately validates the client and redirect URI *before* anything else, because those decide
  * whether it is safe to redirect errors back rather than showing them.
  */
 export async function createAuthCode(
-  store: PortalStore,
+  store: AccountsStore,
   client: OAuthClient,
-  contributor: Contributor,
+  account: { id: string },
   req: AuthorizeRequest,
   now: Date,
 ): Promise<{ code: string; scopes: Scope[] }> {
@@ -58,7 +58,7 @@ export async function createAuthCode(
   await store.createAuthCode({
     codeHash: sha256(code),
     clientId: client.clientId,
-    contributorId: contributor.id,
+    accountId: account.id,
     redirectUri: req.redirectUri,
     scopes,
     codeChallenge: req.codeChallenge,
@@ -69,7 +69,7 @@ export async function createAuthCode(
   });
 
   await store.upsertGrant({
-    id: randomUUID(), clientId: client.clientId, contributorId: contributor.id,
+    id: randomUUID(), clientId: client.clientId, accountId: account.id,
     scopes, createdAt: now, lastUsedAt: now,
   });
 
@@ -86,16 +86,16 @@ export interface IssuedTokens {
 }
 
 async function issue(
-  store: PortalStore,
+  store: AccountsStore,
   client: OAuthClient,
-  contributor: Contributor,
+  profile: AccountProfile,
   scopes: Scope[],
   now: Date,
-  opts: { nonce?: string; issuer: string; key: SigningKey; claims?: Record<string, unknown> },
+  opts: { nonce?: string; issuer: string; key: SigningKey },
 ): Promise<IssuedTokens> {
   const access = newToken();
   const accessRow: AccessToken = {
-    tokenHash: sha256(access), clientId: client.clientId, contributorId: contributor.id,
+    tokenHash: sha256(access), clientId: client.clientId, accountId: profile.id,
     scopes, expiresAt: new Date(now.getTime() + ACCESS_TTL_MS), createdAt: now,
   };
   await store.createAccessToken(accessRow);
@@ -104,7 +104,7 @@ async function issue(
   if (scopes.includes("offline_access")) {
     refresh = newToken();
     const row: RefreshToken = {
-      tokenHash: sha256(refresh), clientId: client.clientId, contributorId: contributor.id,
+      tokenHash: sha256(refresh), clientId: client.clientId, accountId: profile.id,
       scopes, expiresAt: new Date(now.getTime() + REFRESH_TTL_MS), createdAt: now,
     };
     await store.createRefreshToken(row);
@@ -123,12 +123,12 @@ async function issue(
     out.id_token = signJwt(
       {
         iss: opts.issuer,
-        sub: contributor.id,
+        sub: profile.id,
         aud: client.clientId,
         iat,
         exp: iat + 3600,
         ...(opts.nonce ? { nonce: opts.nonce } : {}),
-        ...(opts.claims ?? {}),
+        ...identityClaims(profile, scopes),
       },
       opts.key,
     );
@@ -144,11 +144,11 @@ async function issue(
  * and every token this client holds for this person is revoked rather than merely refusing.
  */
 export async function redeemCode(
-  store: PortalStore,
+  store: AccountsStore,
   client: OAuthClient,
   args: { code: string; redirectUri: string; codeVerifier: string; issuer: string; key: SigningKey },
   now: Date,
-  loadContributor: (id: string) => Promise<Contributor | null>,
+  loadProfile: (accountId: string) => Promise<AccountProfile | null>,
 ): Promise<IssuedTokens> {
   const codeHash = sha256(args.code);
   const row = await store.redeemAuthCode(codeHash, now);
@@ -156,7 +156,7 @@ export async function redeemCode(
   if (!row) {
     const seen = await store.getAuthCode(codeHash);
     if (seen?.usedAt) {
-      await store.revokeTokensFor(seen.clientId, seen.contributorId);
+      await store.revokeTokensFor(seen.clientId, seen.accountId);
       throw invalidGrant("That code was already used. Every token issued from it has been revoked.");
     }
     throw invalidGrant("That code is not valid or has expired.");
@@ -164,21 +164,16 @@ export async function redeemCode(
 
   // Bound to the client it was issued to, and to the exact redirect it was issued for.
   if (!safeEqual(row.clientId, client.clientId)) {
-    await store.revokeTokensFor(row.clientId, row.contributorId);
+    await store.revokeTokensFor(row.clientId, row.accountId);
     throw invalidGrant("That code was issued to a different client.");
   }
   if (row.redirectUri !== args.redirectUri) throw invalidGrant("redirect_uri does not match the one the code was issued for.");
   if (!verifyPkce(args.codeVerifier, row.codeChallenge)) throw invalidGrant("The code_verifier does not match the challenge.");
 
-  const contributor = await loadContributor(row.contributorId);
-  if (!contributor || contributor.disabled) throw accessDenied("That account cannot sign in.");
+  const profile = await loadProfile(row.accountId);
+  if (!profile || profile.disabled) throw accessDenied("That account cannot sign in.");
 
-  return issue(store, client, contributor, row.scopes, now, {
-    nonce: row.nonce,
-    issuer: args.issuer,
-    key: args.key,
-    claims: identityClaims(contributor, row.scopes),
-  });
+  return issue(store, client, profile, row.scopes, now, { nonce: row.nonce, issuer: args.issuer, key: args.key });
 }
 
 /**
@@ -189,18 +184,18 @@ export async function redeemCode(
  * rotation is worth the bookkeeping.
  */
 export async function useRefreshToken(
-  store: PortalStore,
+  store: AccountsStore,
   client: OAuthClient,
   args: { refreshToken: string; scope?: string; issuer: string; key: SigningKey },
   now: Date,
-  loadContributor: (id: string) => Promise<Contributor | null>,
+  loadProfile: (accountId: string) => Promise<AccountProfile | null>,
 ): Promise<IssuedTokens> {
   const hash = sha256(args.refreshToken);
   const row = await store.getRefreshToken(hash);
   if (!row) throw invalidGrant("That refresh token is not valid.");
 
   if (row.replacedBy || row.revokedAt) {
-    await store.revokeTokensFor(row.clientId, row.contributorId);
+    await store.revokeTokensFor(row.clientId, row.accountId);
     throw invalidGrant("That refresh token has already been used. Every token for this app has been revoked.");
   }
   if (row.expiresAt <= now) throw invalidGrant("That refresh token has expired.");
@@ -214,37 +209,35 @@ export async function useRefreshToken(
     scopes = asked as Scope[];
   }
 
-  const contributor = await loadContributor(row.contributorId);
-  if (!contributor || contributor.disabled) throw accessDenied("That account cannot sign in.");
+  const profile = await loadProfile(row.accountId);
+  if (!profile || profile.disabled) throw accessDenied("That account cannot sign in.");
 
   const next = newToken();
   const ok = await store.rotateRefreshToken(hash, {
-    tokenHash: sha256(next), clientId: client.clientId, contributorId: row.contributorId,
+    tokenHash: sha256(next), clientId: client.clientId, accountId: row.accountId,
     scopes, expiresAt: new Date(now.getTime() + REFRESH_TTL_MS), createdAt: now,
   });
   // Lost the race against another request rotating the same token: treat it as the replay it is.
   if (!ok) {
-    await store.revokeTokensFor(row.clientId, row.contributorId);
+    await store.revokeTokensFor(row.clientId, row.accountId);
     throw invalidGrant("That refresh token has already been used.");
   }
 
-  const issued = await issue(store, client, contributor, scopes, now, {
-    issuer: args.issuer, key: args.key, claims: identityClaims(contributor, scopes),
-  });
+  const issued = await issue(store, client, profile, scopes, now, { issuer: args.issuer, key: args.key });
   return { ...issued, refresh_token: next };
 }
 
 /** The identity claims that belong in an id_token, by scope. Never more than was asked for. */
-export function identityClaims(c: Contributor, scopes: Scope[]): Record<string, unknown> {
+export function identityClaims(p: AccountProfile, scopes: Scope[]): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (scopes.includes("profile")) {
-    out.preferred_username = c.handle;
-    out.name = c.displayName;
-    if (c.avatarUrl) out.picture = c.avatarUrl;
+    if (p.handle) out.preferred_username = p.handle;
+    if (p.displayName) out.name = p.displayName;
+    if (p.avatarUrl) out.picture = p.avatarUrl;
   }
   if (scopes.includes("entitlements")) {
-    out.itc_tier = c.tier ?? "member";
-    out.itc_entitlements = c.entitlements ?? [];
+    out.itc_tier = p.tier ?? "member";
+    out.itc_entitlements = p.entitlements ?? [];
   }
   return out;
 }

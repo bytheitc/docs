@@ -26,9 +26,13 @@ editors ──> cms/web ──> cms/api
 | Contributor portal | `portal/web` · 3006 | `portal/api` · 4006 |
 | **CMS** | `cms/web` · 3100 | `cms/api` · 4100 |
 | **Status** | — | `status/api` · 4008 |
+| **Accounts** | `accounts/web` · 3008 | `accounts/api` · 4009 |
 | **Mobile** | `mobile` (Expo / React Native) | — uses `portal/api` · 4006 |
 
-A space id is the house id: `site`, `ai`, `engineering`, `health`, `institute`, `oss`, `research`, `portal`.
+`accounts/sdk` is a library, not a house: no port, no space, no database — a client package for
+partners (and the collective's own apps) to integrate against `accounts/api`.
+
+A space id is the house id: `site`, `ai`, `engineering`, `health`, `institute`, `oss`, `research`, `portal`, `accounts`.
 
 `mobile` is a native client, not a house: it has no api, no space in the CMS and no database. It
 signs in against `portal/api` with the same bearer token `portal/web` uses, owning the redirect URI
@@ -37,7 +41,9 @@ itself (`itc://auth`) the way the web owns its own. See `mobile/README.md`.
 ## Rules
 1. **A web never touches a database.** It talks only to its own api, server-side, over HTTP.
 2. **An api never touches another api's database.** Only `cms/api` holds content, and only `portal/api` holds portal data.
-   `status/api` holds its own, and deliberately depends on nothing it watches: see `status/README.md`.
+   `status/api` and `accounts/api` each hold their own, and `status/api` deliberately depends on nothing it watches: see
+   `status/README.md`. `accounts/api` depends on `portal/api` the same way `oss/api` already does — over HTTP, as a caller of its
+   api, never its database.
 3. **Browsers never hold service credentials.** Space keys and api tokens live on servers. Session cookies are httpOnly, on the web's
    own origin, and hold opaque tokens that the web forwards to its api as `Authorization: Bearer …`.
 4. **Content models belong to the houses.** Each house api *registers* its schema (collections, fields, seed content, forms) with the
@@ -45,11 +51,24 @@ itself (`itc://auth`) the way the web owns its own. See `mobile/README.md`.
 5. **Degrade gracefully.** If the CMS is unreachable or not configured, a house api serves its built-in seed content read-only
    (header `X-Content-Source: seed`), and forms answer `503` so the web can show "please email us instead".
 
-## "Sign in with ITC" (OAuth 2.0 / OIDC)
+## Accounts — "Sign in with ITC" (OAuth 2.0 / OIDC)
 
-`portal/api` is the collective's identity provider, at `/oauth`. It lives there rather than in a
-service of its own because it has to read the contributors it vouches for, and rule 2 above says
-only `portal/api` may.
+`accounts/api` is the collective's identity provider, at `/oauth`. It is a house of its own, not
+part of `portal/api` — but **signup stays entirely portal's**: the only way to get an ITC account
+is still portal's federated login (`/auth/*`, unchanged). `accounts/api` never touches the
+contributor database (rule 2 stays intact); it calls `portal/api` over HTTP, exactly the way
+`oss/api` already does for the public contributors wall:
+
+- **The login handshake** proxies portal/api's existing `/auth/authorize` and `/auth/callback` —
+  the same federated sign-in `portal/web` and `mobile` already use — with `accounts/web`'s own
+  redirect URI. The resulting portal session token is read once (`GET /me`) and discarded, the
+  same "exchange and discard" idiom this codebase already uses for upstream GitHub/GitLab tokens,
+  one level up. A thin `Account` row (`{ id, portalContributorId }`) is created the first time a
+  portal contributor completes it; that `id`, not portal's, is what `sub` is in every token.
+- **Ongoing identity claims** (`profile`, `entitlements`, `contributions` scopes — needed on every
+  token issuance and every userinfo call, not just at login) read portal/api's one new endpoint:
+  `GET /internal/contributors/:id`, authenticated by a shared key (`ACCOUNTS_SERVICE_KEY`) instead
+  of a person's bearer token. Profile data is never duplicated into `accounts/api`'s own database.
 
 | | |
 |---|---|
@@ -57,7 +76,7 @@ only `portal/api` may.
 | Flow | authorization code + PKCE (S256), always. No implicit, no password grant, no `plain`. |
 | Access / refresh tokens | Opaque, stored only as SHA-256. Verified by `POST /oauth/introspect`, so revoking one takes effect at once. |
 | `id_token` | RS256 JWT. `OAUTH_SIGNING_KEY` (PKCS#8 PEM) is required in production; development generates an ephemeral key. |
-| Clients | CMS entries in the portal space. Redirect URIs match exactly. A confidential client stores only its secret's hash. |
+| Clients | The collective's own first-party apps are CMS entries in the `accounts` space. Partner apps register themselves at `/developers` (self-service, reviewed before any scope beyond `openid profile` is released). Redirect URIs match exactly either way. A confidential client stores only its secret's hash. |
 | Scopes | `openid`, `profile`, `contributions`, `entitlements`, `offline_access` |
 | Entitlements | `tier` and `entitlements` on a contributor, set by staff, released through the `entitlements` scope. Not billing: a product decides what a tier means to it. |
 
@@ -164,20 +183,65 @@ Phase 2 is done: all seven houses are split. A few details settled during the wo
   `/staff/overview`, `/staff/contributors`, `/staff/contributions`, `/staff/claims`, `/staff/sync`,
   `/staff/providers` and `/staff/audit`. Editors read; publishers verify, hide, release and sync; admins disable.
   Staff changes go to the portal's **own** audit log (`portal_audit`), because this api owns the data they change.
+- **Internal:** `GET /internal/contributors/:id`, for `accounts/api` only (`Authorization: Bearer <ACCOUNTS_SERVICE_KEY>`,
+  not a person's token). Returns the public-safe profile fields "Sign in with ITC" needs for an id_token or userinfo
+  response, plus a contribution count and house list, or 404.
+
+## Accounts
+`accounts/api` is the collective's OAuth 2.0 / OpenID Connect provider ("## Accounts — Sign in with ITC" above).
+Its data (sessions, auth codes, tokens, grants, the thin `Account → portalContributorId` link) lives in MongoDB
+`itc_accounts`. Its CMS-managed content (the collective's own trusted clients) is in CMS space `accounts`.
+
+### Accounts api surface (as built)
+- **Login:** `GET /login/providers` (proxies portal/api), `POST /login/authorize`, `POST /login/callback`,
+  `POST /login/signout`, `POST /login/signout-all`. The same shape as portal's own `/auth/*`, one level up:
+  `accounts/web` owns the redirect URI and the short-lived state/PKCE cookie; the api holds the handshake with
+  portal/api and discards the portal session token once it has read `/me`.
+- **Sessions** are opaque bearer tokens, the same way portal's are: the api stores only a SHA-256 hash, and
+  `accounts/web` keeps the token in an httpOnly cookie on its own origin.
+- **OAuth/OIDC:** as specified above — discovery, `/oauth/authorize`, `/oauth/token`, `/oauth/userinfo`,
+  `/oauth/introspect`, `/oauth/revoke`, `/oauth/grants`. The consent screen and sign-in pages are built on
+  `accounts/web`.
+- **First-party credentials (`/account/*`):** additive sign-*in* methods on an account the portal handshake
+  already created — never a second way to sign up. Passkeys (WebAuthn, via `@simplewebauthn/server` — the one
+  dependency this service doesn't hand-roll, because correctly verifying an attestation or assertion is not a
+  dozen-line primitive the way PKCE, JWT signing and TOTP are): `POST /account/webauthn/register/options` and
+  `/verify`, `DELETE /account/webauthn/:credentialId`. A password (scrypt-hashed) plus optional TOTP two-factor
+  and one-time recovery codes: `POST`/`DELETE /account/password`, `POST /account/totp/enroll`/`confirm`,
+  `DELETE /account/totp`, `POST /account/recovery-codes`. Signing in with any of these:
+  `POST /login/webauthn/options`/`verify` (no identifier — the browser offers whichever discoverable passkey it
+  has) and `POST /login/password` (handle + password, then a TOTP or recovery code if that account has one).
+- **Self-service partner registration (`/developers/apps`, backed by `accounts_partner_clients`):** register an
+  app and get a `client_id` back at once if it only asks for `openid`/`profile`; asking for `contributions`,
+  `entitlements`, `offline_access`, or registering a confidential client, holds it `pending` — invisible to
+  `getClient`/`listClients` (`oauth/clients.ts` merges CMS trusted clients with *approved, active* partner
+  clients only) — until a staff reviewer approves or rejects it. Owner-scoped CRUD: `GET`/`PATCH`/`DELETE
+  /developers/apps/:clientId`, `POST .../regenerate-secret`. The collective's own first-party apps stay CMS
+  entries; self-service never produces a `trusted` client, so consent is never skipped.
+- **Staff review (`/staff/*`):** the same CMS-account sign-in pattern as portal's staff tools, checked against
+  the `accounts` space instead of `portal`. `POST /staff/login` (proxies the CMS sign-in), `GET
+  /staff/partner-apps?status=pending` (resolves each owner's portal handle, since who's asking matters for the
+  decision), `POST .../approve` (can narrow, never widen, the granted scopes), `POST .../reject` `{ reason }`.
+- **`accounts/sdk`** (`itc-accounts-sdk`, unpublished): a dependency-free TypeScript client — PKCE, the
+  authorize URL, token exchange/refresh, userinfo, and id_token verification against the JWKS — built only on
+  `fetch` and Web Crypto, so it runs unmodified in a browser or Node. Partner integration docs live at `/docs`
+  on `accounts/web`.
 
 ## Environment (per package; see each `.env.example`)
 - `cms/api`: `MONGODB_URI`, `CMS_DB_NAME` (`itc_cms`), `CMS_SPACE_KEYS`, `CMS_SETUP_TOKEN`, `PORT`; optional `CMS_DB` (`mongodb`),
   `CMS_TRUST_PROXY`, `CMS_LOGIN_LIMIT`, `CMS_LOG=off`.
 - `cms/web`: `CMS_API_URL`, `PORT`.
 - `<house>/api`: `CMS_API_URL`, `CMS_SPACE_KEY`, `API_PUBLIC_URL` (the address the CMS posts webhooks to), `WEB_URL`,
-  `REVALIDATE_SECRET`, `PORT`, `CONTENT_TTL`, plus house-specific settings: `PORTAL_API_URL` for `oss/api`, and
-  `MONGODB_URI`, `PORTAL_DB_NAME` and the OAuth provider settings for `portal/api`.
+  `REVALIDATE_SECRET`, `PORT`, `CONTENT_TTL`, plus house-specific settings: `PORTAL_API_URL` for `oss/api` and `accounts/api`,
+  `MONGODB_URI` and `PORTAL_DB_NAME` for `portal/api`, and `ACCOUNTS_SERVICE_KEY` (shared between `portal/api` and
+  `accounts/api`) plus `MONGODB_URI`, `ACCOUNTS_DB_NAME`, `PORTAL_WEB_URL` and `OAUTH_SIGNING_KEY` for `accounts/api`.
 - `<house>/web`: `API_URL`, `REVALIDATE_SECRET`, and the `NEXT_PUBLIC_ITC_*_URL` links. `portal/web` also takes
   `NEXT_PUBLIC_CMS_WEB_URL`, so its staff tools can link into the Studio.
 
-Databases: one MongoDB cluster (Atlas). `cms/api` uses `itc_cms`; `portal/api` uses `itc_portal`. `status/api` uses `itc_status`,
-and should be given separate hosting — ideally a separate cluster — since a status page that fails with everything else is useless. Other databases can be supported
-behind the storage-adapter interface in `cms/api`.
+Databases: one MongoDB cluster (Atlas). `cms/api` uses `itc_cms`; `portal/api` uses `itc_portal`; `accounts/api` uses
+`itc_accounts`. `status/api` uses `itc_status`, and should be given separate hosting — ideally a separate cluster — since a
+status page that fails with everything else is useless. Other databases can be supported behind the storage-adapter
+interface in `cms/api`.
 
 ## Databases and secrets (provisioned)
 
@@ -187,6 +251,7 @@ One MongoDB Atlas cluster, with one database per part:
 |---|---|---|
 | `itc_cms` | `cms/api` | content, revisions, inbox, editor accounts, sessions, audit log |
 | `itc_portal` | `portal/api` | contributors, linked accounts, contributions, claims, sync runs |
+| `itc_accounts` | `accounts/api` | "Sign in with ITC": sessions, auth codes, access/refresh tokens, grants, the thin `Account → portalContributorId` link. No profile data — that's always read live from `portal/api`. |
 | `itc_site`, `itc_ai`, `itc_engineering`, `itc_institute`, `itc_oss`, `itc_research` | each house api | data the house api owns itself. First use: a **form outbox**, so a submission is stored when the CMS is unreachable and forwarded later. House *content* stays in `itc_cms`. |
 
 Each database has a `_meta` document describing its purpose. Web packages never get database settings.

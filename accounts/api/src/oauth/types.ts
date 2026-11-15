@@ -1,14 +1,16 @@
-// "Sign in with ITC": the portal as an OAuth 2.0 / OpenID Connect provider.
+// "Sign in with ITC": the OAuth 2.0 / OpenID Connect provider, as its own service.
 //
-// The portal already owns identity — contributors, handles, linked accounts, sessions — so it is
-// the only service that can vouch for a person without breaking ARCHITECTURE.md rule 2 (no api
-// touches another api's database). This is that identity, offered to the collective's own products.
+// It used to live inside portal/api, because portal was the only api allowed to touch the
+// contributor database. It still is (ARCHITECTURE.md rule 2) — this service never touches that
+// database. An ITC account here is a thin row pointing at the portal contributor it was created
+// from (portal/api's /auth/* flow is still the only way to create one); profile claims
+// (handle, tier, entitlements...) are always read live from portal/api, never duplicated.
 //
 // Shape, and why:
 //   * Authorization code + PKCE, always, for every client including confidential ones. There is no
 //     implicit flow and no password grant: neither is safe and neither is needed.
-//   * Access and refresh tokens are opaque and stored only as SHA-256 hashes, exactly as contributor
-//     sessions already are. A leaked database row cannot be replayed as a token.
+//   * Access and refresh tokens are opaque and stored only as SHA-256 hashes, exactly as portal
+//     contributor sessions were. A leaked database row cannot be replayed as a token.
 //   * The id_token is a signed JWT because that is what every OIDC client library expects. It is the
 //     only thing here a client is meant to read without asking us.
 //   * Resource servers verify access tokens by introspection rather than by parsing them, so a
@@ -30,8 +32,9 @@ export const SCOPE_DESCRIPTIONS: Record<Scope, string> = {
 export type ClientType = "public" | "confidential";
 
 /**
- * A registered client. Editors add these in the CMS; nothing is registered dynamically, because
- * every client today is one of the collective's own products.
+ * A registered client: either one of the collective's own first-party apps (a CMS entry an editor
+ * added — "nothing registers itself") or a partner's self-registered app, approved for the scopes
+ * it asked for. `clients.ts` merges the two into this one shape.
  */
 export interface OAuthClient {
   clientId: string;
@@ -60,7 +63,8 @@ export interface AuthCode {
   /** SHA-256 of the code. The code itself is only ever in the redirect. */
   codeHash: string;
   clientId: string;
-  contributorId: string;
+  /** The ITC account id (`sub` in the id_token) — accounts' own id, not portal's contributor id. */
+  accountId: string;
   redirectUri: string;
   scopes: Scope[];
   /** The S256 challenge. The verifier is checked against this at the token endpoint. */
@@ -77,7 +81,7 @@ export interface AuthCode {
 export interface AccessToken {
   tokenHash: string;
   clientId: string;
-  contributorId: string;
+  accountId: string;
   scopes: Scope[];
   expiresAt: Date;
   createdAt: Date;
@@ -87,7 +91,7 @@ export interface AccessToken {
 export interface RefreshToken {
   tokenHash: string;
   clientId: string;
-  contributorId: string;
+  accountId: string;
   scopes: Scope[];
   expiresAt: Date;
   createdAt: Date;
@@ -103,13 +107,33 @@ export interface RefreshToken {
 export interface Grant {
   id: string;
   clientId: string;
-  contributorId: string;
+  accountId: string;
   scopes: Scope[];
   createdAt: Date;
   lastUsedAt?: Date;
 }
 
-/** What `GET /oauth/userinfo` returns, by scope. `sub` is always the contributor id. */
+/**
+ * The claims a `sub` carries, merged from this service's own account row and a live read of the
+ * portal contributor it was created from. `null` fields mean portal/api could not be reached or the
+ * contributor no longer exists — callers treat that the same as "disabled."
+ */
+export interface AccountProfile {
+  /** Accounts' own id. This is what `sub` is, in both the id_token and introspection. */
+  id: string;
+  disabled: boolean;
+  handle?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  tier?: string;
+  entitlements?: string[];
+  /** For the `contributions` scope. Always fetched alongside everything else above — one read of
+   * the portal contributor, not a second one only when this scope happens to be asked for. */
+  contributions?: number;
+  houses?: string[];
+}
+
+/** What `GET /oauth/userinfo` returns, by scope. `sub` is always the account id. */
 export interface UserInfo {
   sub: string;
   /** profile */

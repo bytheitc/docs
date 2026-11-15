@@ -12,7 +12,11 @@ forms send nothing, and nobody can sign in. This plan turns them into working pr
 | F1 | **Version control + CI** | Put the code in git. Run typecheck and build for all six apps on every pull request. |
 | F2 | **Hosting + domains** | Six deployments: `itc.org`, `ai.`, `engineering.`, `institute.`, `oss.`, `research.`. Set the `NEXT_PUBLIC_ITC_*_URL` variables. |
 | F3 | **Database** | MongoDB (Atlas). Each app uses its own database on a shared cluster. All access goes through a storage-adapter interface, so other databases can be added later. |
-| F4 | **ITC Account** (one sign-in for every site) | A central sign-in at `id.itc.org`. The session cookie is set on `.itc.org`, so signing in once works on all six subdomains. Sign-in options: email magic link, passkeys, GitHub, Google. This is Engineering's **Qibla** platform, built for real. |
+| F4 | **ITC Account** (one sign-in for every site) | A central sign-in at `id.itc.org`. The session cookie is set on `.itc.org`, so signing in once works on all six subdomains. Sign-in options: email magic link, passkeys, GitHub, Google. This is Engineering's **Qibla** platform, built for real. **Underway:** the OAuth/OIDC provider, consent screen, passkeys, password + TOTP two-factor, recovery codes,
+self-service partner registration with staff review, a client SDK (`itc-accounts-sdk`) and integration docs
+(`/docs`) are all live as their own house, `accounts/api` + `accounts/web` (see ARCHITECTURE.md, "## Accounts")
+— signup still runs through the portal's federated login, unchanged. What's left: email magic link, and moving
+the collective's own apps over to it one at a time (`oss` first — see the houses list below). |
 | F5 | **Native admins** (decided) | Every app has its own `/admin`, built on one schema-driven CMS kit copied into each app: roles (editor, publisher, admin), draft → review → publish, edits to live entries held as pending, revisions, inbox, audit log. The kit is the seed of a future standalone CMS that anyone can use and that supports multiple databases. |
 | F6 | **Transactional email** | Confirmations, magic links, application updates, newsletter. |
 | F7 | **Shared design package** | Move the Khatam mark, the Collective bar and the house list into a versioned package (this is Engineering's **Mizan**). That ends the copy-into-six-apps maintenance. |

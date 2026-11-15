@@ -1,14 +1,12 @@
-// The client registry: which applications may ask the portal who you are.
+// The client registry: which applications may ask "Sign in with ITC" who someone is.
 //
-// Clients are CMS entries, not database rows and not environment variables. Every client today is
-// one of the collective's own products, so an editor adding one is the right amount of ceremony —
-// and it keeps the list readable by the people who are accountable for it. There is deliberately
-// no dynamic registration: nothing should be able to become a client without a person deciding so.
-//
-// Secrets are never stored. The CMS holds a SHA-256 of a confidential client's secret, so the
-// registry is not itself a set of credentials, and a leaked export cannot be used to impersonate
-// a client.
+// Today every client is a CMS entry — one of the collective's own first-party products, added by
+// an editor. That ceremony is deliberate for first-party apps. A self-service registry for partner
+// apps (reviewed before anything beyond `openid profile` is released) is a separate store this
+// module will also read from; `listClients`/`getClient` are the one place that merge the two, so
+// nothing else in this service needs to know a client might come from either place.
 import type { CmsClient } from "../cms.js";
+import type { AccountsStore, PartnerClient } from "../store/types.js";
 import { SCOPES, type OAuthClient, type Scope } from "./types.js";
 
 /** What an editor fills in. Everything arrives as loose JSON, so nothing here is trusted. */
@@ -77,15 +75,35 @@ function toClient(d: ClientDef): OAuthClient | null {
   };
 }
 
-export async function listClients(cms: CmsClient): Promise<OAuthClient[]> {
+/** An approved, active partner client, in the same shape a CMS entry becomes. Pending and
+ * rejected ones are invisible here — they cannot sign anyone in until a reviewer approves them. */
+function fromPartnerClient(p: PartnerClient): OAuthClient | null {
+  if (p.status !== "approved" || !p.active) return null;
+  return {
+    clientId: p.clientId,
+    name: p.name,
+    type: p.type,
+    secretHash: p.secretHash,
+    redirectUris: p.redirectUris,
+    allowedScopes: p.allowedScopes,
+    trusted: false,
+    homepage: p.homepage,
+    active: true,
+  };
+}
+
+export async function listClients(cms: CmsClient, store?: AccountsStore): Promise<OAuthClient[]> {
   const entries = (await cms.content("oauth-clients")).entries as ClientDef[];
-  return entries.map(toClient).filter((c): c is OAuthClient => !!c);
+  const trusted = entries.map(toClient).filter((c): c is OAuthClient => !!c);
+  if (!store) return trusted;
+  const partners = (await store.listPartnerClients({ status: "approved" })).map(fromPartnerClient).filter((c): c is OAuthClient => !!c);
+  return [...trusted, ...partners];
 }
 
 /** The active client with this id, or null. An inactive client is treated as absent. */
-export async function getClient(cms: CmsClient, clientId: string): Promise<OAuthClient | null> {
+export async function getClient(cms: CmsClient, clientId: string, store?: AccountsStore): Promise<OAuthClient | null> {
   if (!clientId) return null;
-  return (await listClients(cms)).find((c) => c.clientId === clientId && c.active) ?? null;
+  return (await listClients(cms, store)).find((c) => c.clientId === clientId && c.active) ?? null;
 }
 
 /**

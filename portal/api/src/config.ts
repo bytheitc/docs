@@ -15,6 +15,9 @@
 //   CONTENT_TTL         seconds to hold a content response in memory (60)
 //   REGISTER_SCHEMA     "off" skips schema registration on boot (useful in tests)
 //   API_LOG             "off" silences request logs
+//   ACCOUNTS_SERVICE_KEY  required on GET /internal/contributors/:id. Shared with accounts/api,
+//                       which is the only caller: "Sign in with ITC" moved there, and it needs a
+//                       live read of a contributor's profile for every id_token and userinfo call.
 import { HOUSE } from "./content/house.js";
 
 export interface Config {
@@ -33,6 +36,8 @@ export interface Config {
   jobs: { claimSweepMs: number; syncIntervalMs: number; governanceSweepMs: number };
   registerSchema: boolean;
   log: boolean;
+  /** Shared with accounts/api. Empty means the internal endpoint refuses every caller. */
+  accountsServiceKey: string;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -61,5 +66,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     },
     registerSchema: env.REGISTER_SCHEMA !== "off",
     log: env.API_LOG !== "off",
+    accountsServiceKey: env.ACCOUNTS_SERVICE_KEY || (production ? "" : "dev-accounts-service-key"),
   };
 }

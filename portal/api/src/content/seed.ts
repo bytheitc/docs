@@ -89,33 +89,3 @@ export const SEED_SETTINGS: PortalSettings[] = [{
   claimDays: 7,
   goodFirstIssues: "Suggested good first issues from the Open Source house will appear here.",
 }];
-
-/** A registered "Sign in with ITC" client. Editors manage these; see oauth/clients.ts. */
-export interface OAuthClientDef {
-  clientId: string;
-  name: string;
-  type: "public" | "confidential";
-  secretHash?: string;
-  redirectUris: string[];
-  allowedScopes: string[];
-  trusted: boolean;
-  homepage?: string;
-  active: boolean;
-}
-
-/**
- * Built-in clients. The contributor app is public — an installed app cannot keep a secret, which
- * is exactly the case PKCE exists for — and trusted, because the collective ships it, so it does
- * not ask the person to approve the collective's own app on every sign-in.
- */
-export const SEED_OAUTH_CLIENTS: OAuthClientDef[] = [
-  {
-    clientId: "itc-mobile",
-    name: "ITC (the contributor app)",
-    type: "public",
-    redirectUris: ["itc://auth"],
-    allowedScopes: ["openid", "profile", "contributions", "entitlements", "offline_access"],
-    trusted: true,
-    active: true,
-  },
-];

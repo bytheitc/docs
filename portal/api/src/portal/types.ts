@@ -2,7 +2,6 @@
 import type { HouseId } from "../content/houses.js";
 import type { ContributionKind, ContributionState } from "../providers/types.js";
 import type { Maintainership, Nomination, NominationStatus, ReviewerInvitation } from "./maintainers.js";
-import type { AccessToken, AuthCode, Grant, RefreshToken } from "../oauth/types.js";
 
 export interface PublicProfile {
   /** Master switch: nothing is public unless this is true. */
@@ -221,35 +220,6 @@ export interface PortalStore {
   // audit log
   addAudit(ev: AuditEvent): Promise<void>;
   listAudit(opts?: { limit?: number }): Promise<AuditEvent[]>;
-
-  // "Sign in with ITC" (see oauth/types.ts for the shapes and why they look like this)
-  createAuthCode(c: AuthCode): Promise<void>;
-  /**
-   * Marks the code used and returns it, in one atomic step. Returns null when it does not exist,
-   * has expired, or was already redeemed — the caller cannot be allowed to decide that itself,
-   * because two requests racing on the same code must not both win.
-   */
-  redeemAuthCode(codeHash: string, now: Date): Promise<AuthCode | null>;
-  /** For telling "never existed" apart from "already used", which is a replay and not a mistake. */
-  getAuthCode(codeHash: string): Promise<AuthCode | null>;
-
-  createAccessToken(t: AccessToken): Promise<void>;
-  getAccessToken(tokenHash: string): Promise<AccessToken | null>;
-  revokeAccessToken(tokenHash: string): Promise<void>;
-
-  createRefreshToken(t: RefreshToken): Promise<void>;
-  getRefreshToken(tokenHash: string): Promise<RefreshToken | null>;
-  /** Rotation: marks the old token replaced and stores the new one, atomically. */
-  rotateRefreshToken(oldHash: string, next: RefreshToken): Promise<boolean>;
-  /**
-   * Revokes every access and refresh token this client holds for this person. Used when a refresh
-   * token is presented twice, which means one of the two holders is not its owner.
-   */
-  revokeTokensFor(clientId: string, contributorId: string): Promise<void>;
-
-  upsertGrant(g: Grant): Promise<void>;
-  listGrants(contributorId: string): Promise<Grant[]>;
-  deleteGrant(contributorId: string, clientId: string): Promise<void>;
 }
 
 export class AccountTakenError extends Error {

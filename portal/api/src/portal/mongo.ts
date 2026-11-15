@@ -7,7 +7,6 @@ import {
   type AuditEvent, type LinkedAccount, type PortalStore, type SyncRun,
 } from "./types.js";
 import type { Maintainership, Nomination, ReviewerInvitation } from "./maintainers.js";
-import type { AccessToken, AuthCode, Grant, RefreshToken } from "../oauth/types.js";
 
 // One connection pool per URI, per process.
 const g = globalThis as unknown as { __itcMongo?: Map<string, Promise<MongoClient>> };
@@ -72,17 +71,6 @@ export function createPortalMongoStore(uri: string, dbName: string): PortalStore
         ),
         d.collection("portal_invitations").createIndex({ id: 1 }, { unique: true }),
         d.collection("portal_invitations").createIndex({ contributorId: 1, status: 1 }),
-        // "Sign in with ITC". The TTL indexes matter: an authorization code or an expired token
-        // left lying in the database is a credential nobody is watching, so Mongo deletes them.
-        d.collection("portal_oauth_codes").createIndex({ codeHash: 1 }, { unique: true }),
-        d.collection("portal_oauth_codes").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 600 }),
-        d.collection("portal_oauth_access").createIndex({ tokenHash: 1 }, { unique: true }),
-        d.collection("portal_oauth_access").createIndex({ clientId: 1, contributorId: 1 }),
-        d.collection("portal_oauth_access").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 86400 }),
-        d.collection("portal_oauth_refresh").createIndex({ tokenHash: 1 }, { unique: true }),
-        d.collection("portal_oauth_refresh").createIndex({ clientId: 1, contributorId: 1 }),
-        d.collection("portal_oauth_refresh").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 2592000 }),
-        d.collection("portal_oauth_grants").createIndex({ contributorId: 1, clientId: 1 }, { unique: true }),
       ]);
       return d;
     })().catch((e) => { ready = null; throw e; });
@@ -321,83 +309,6 @@ export function createPortalMongoStore(uri: string, dbName: string): PortalStore
     async addAudit(ev) { await (await col<AuditEvent>("portal_audit")).insertOne({ ...ev }); },
     async listAudit(opts) {
       return (await (await col<AuditEvent>("portal_audit")).find({}).sort({ at: -1 }).limit(opts?.limit ?? 100).toArray()).map((d) => strip<AuditEvent>(d));
-    },
-
-    /* ---------------- "Sign in with ITC" ---------------- */
-
-    async createAuthCode(c) { await (await col<AuthCode>("portal_oauth_codes")).insertOne({ ...c }); },
-
-    async redeemAuthCode(codeHash, now) {
-      // One atomic step. Two requests racing on the same code must not both come away with tokens,
-      // so the "is it still unused?" test and the "mark it used" write are the same operation.
-      const d = await (await col<AuthCode>("portal_oauth_codes")).findOneAndUpdate(
-        // Matching null also matches a document with no `usedAt` at all, which is what "not yet
-        // redeemed" means here. The driver's types do not allow null for an optional Date, so the
-        // filter is cast; the query itself is exactly what Mongo wants.
-        { codeHash, usedAt: null, expiresAt: { $gt: now } } as unknown as Filter<AuthCode>,
-        { $set: { usedAt: now } },
-        { returnDocument: "after" },
-      );
-      return d ? strip<AuthCode>(d) : null;
-    },
-
-    async getAuthCode(codeHash) {
-      const d = await (await col<AuthCode>("portal_oauth_codes")).findOne({ codeHash });
-      return d ? strip<AuthCode>(d) : null;
-    },
-
-    async createAccessToken(t) { await (await col<AccessToken>("portal_oauth_access")).insertOne({ ...t }); },
-
-    async getAccessToken(tokenHash) {
-      const d = await (await col<AccessToken>("portal_oauth_access")).findOne({ tokenHash });
-      return d ? strip<AccessToken>(d) : null;
-    },
-
-    async revokeAccessToken(tokenHash) {
-      await (await col<AccessToken>("portal_oauth_access")).updateOne({ tokenHash }, { $set: { revokedAt: new Date() } });
-    },
-
-    async createRefreshToken(t) { await (await col<RefreshToken>("portal_oauth_refresh")).insertOne({ ...t }); },
-
-    async getRefreshToken(tokenHash) {
-      const d = await (await col<RefreshToken>("portal_oauth_refresh")).findOne({ tokenHash });
-      return d ? strip<RefreshToken>(d) : null;
-    },
-
-    async rotateRefreshToken(oldHash, next) {
-      // Same reasoning as redeeming a code: only the request that actually flips the old token
-      // from live to replaced may issue the new one. The loser gets false and is refused.
-      const d = await (await col<RefreshToken>("portal_oauth_refresh")).findOneAndUpdate(
-        { tokenHash: oldHash, replacedBy: null, revokedAt: null } as unknown as Filter<RefreshToken>,
-        { $set: { replacedBy: next.tokenHash } },
-      );
-      if (!d) return false;
-      await (await col<RefreshToken>("portal_oauth_refresh")).insertOne({ ...next });
-      return true;
-    },
-
-    async revokeTokensFor(clientId, contributorId) {
-      const now = new Date();
-      await Promise.all([
-        (await col<AccessToken>("portal_oauth_access")).updateMany({ clientId, contributorId, revokedAt: null } as unknown as Filter<AccessToken>, { $set: { revokedAt: now } }),
-        (await col<RefreshToken>("portal_oauth_refresh")).updateMany({ clientId, contributorId, revokedAt: null } as unknown as Filter<RefreshToken>, { $set: { revokedAt: now } }),
-      ]);
-    },
-
-    async upsertGrant(g) {
-      await (await col<Grant>("portal_oauth_grants")).updateOne(
-        { contributorId: g.contributorId, clientId: g.clientId },
-        { $set: { scopes: g.scopes, lastUsedAt: g.lastUsedAt ?? new Date() }, $setOnInsert: { id: g.id, createdAt: g.createdAt } },
-        { upsert: true },
-      );
-    },
-
-    async listGrants(contributorId) {
-      return (await (await col<Grant>("portal_oauth_grants")).find({ contributorId }).sort({ createdAt: -1 }).toArray()).map((d) => strip<Grant>(d));
-    },
-
-    async deleteGrant(contributorId, clientId) {
-      await (await col<Grant>("portal_oauth_grants")).deleteOne({ contributorId, clientId });
     },
   };
 }

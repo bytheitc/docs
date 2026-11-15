@@ -7,12 +7,12 @@ import test from "node:test";
 import { redirectAllowed, resolveScopes, usableRedirect } from "../src/oauth/clients.js";
 import { jwks, resetSigningKey, sha256, signingKey, verifyPkce } from "../src/oauth/crypto.js";
 import { createAuthCode, redeemCode, useRefreshToken } from "../src/oauth/flow.js";
-import { OAuthError, type AccessToken, type AuthCode, type Grant, type OAuthClient, type RefreshToken } from "../src/oauth/types.js";
-import type { Contributor, PortalStore } from "../src/portal/types.js";
+import { OAuthError, type AccessToken, type AccountProfile, type AuthCode, type Grant, type OAuthClient, type RefreshToken } from "../src/oauth/types.js";
+import type { AccountsStore } from "../src/store/types.js";
 
-const ME: Contributor = {
-  id: "c-1", handle: "amina", displayName: "Amina", profile: {} as never,
-  createdAt: new Date("2026-01-01"), tier: "member", entitlements: ["institute.library"],
+const ME: AccountProfile = {
+  id: "acc-1", disabled: false, handle: "amina", displayName: "Amina",
+  tier: "member", entitlements: ["institute.library"],
 };
 
 const CLIENT: OAuthClient = {
@@ -58,22 +58,21 @@ function fakeStore() {
       refresh.push({ ...next });
       return true;
     },
-    async revokeTokensFor(clientId: string, contributorId: string) {
-      revoked.push(`${clientId}:${contributorId}`);
-      for (const t of access) if (t.clientId === clientId && t.contributorId === contributorId) t.revokedAt = new Date();
-      for (const t of refresh) if (t.clientId === clientId && t.contributorId === contributorId) t.revokedAt = new Date();
+    async revokeTokensFor(clientId: string, accountId: string) {
+      revoked.push(`${clientId}:${accountId}`);
+      for (const t of access) if (t.clientId === clientId && t.accountId === accountId) t.revokedAt = new Date();
+      for (const t of refresh) if (t.clientId === clientId && t.accountId === accountId) t.revokedAt = new Date();
     },
     async upsertGrant(g: Grant) { grants.push({ ...g }); },
-    async listGrants(id: string) { return grants.filter((g) => g.contributorId === id); },
+    async listGrants(id: string) { return grants.filter((g) => g.accountId === id); },
     async deleteGrant() {},
-    async getContributor(id: string) { return id === ME.id ? ME : null; },
-  } as unknown as PortalStore;
+  } as unknown as AccountsStore;
 
   return { store, codes, access, refresh, grants, revoked };
 }
 
 const now = () => new Date("2026-11-14T12:00:00Z");
-const ISSUER = "https://portal.example.org/oauth";
+const ISSUER = "https://id.itc.org/oauth";
 const load = async (id: string) => (id === ME.id ? ME : null);
 
 function authorizeArgs(challenge: string, over: Partial<Record<string, string>> = {}) {
@@ -206,7 +205,7 @@ test("replaying a code revokes every token it produced — someone else has it",
   await redeemCode(s.store, CLIENT, args, now(), load);
   await assert.rejects(() => redeemCode(s.store, CLIENT, args, now(), load));
 
-  assert.deepEqual(s.revoked, ["itc-mobile:c-1"], "the family is revoked, not merely refused");
+  assert.deepEqual(s.revoked, ["itc-mobile:acc-1"], "the family is revoked, not merely refused");
   assert.ok(s.access.every((t) => t.revokedAt), "the access token issued from that code is dead");
 });
 
@@ -220,7 +219,7 @@ test("a code issued to one client cannot be redeemed by another", async () => {
     () => redeemCode(s.store, OTHER, { code, redirectUri: "itc://auth", codeVerifier: verifier, issuer: ISSUER, key }, now(), load),
     (e: OAuthError) => e.code === "invalid_grant",
   );
-  assert.deepEqual(s.revoked, ["itc-mobile:c-1"], "and the real client's tokens are revoked too");
+  assert.deepEqual(s.revoked, ["itc-mobile:acc-1"], "and the real client's tokens are revoked too");
 });
 
 test("a stolen code is useless without the verifier", async () => {
@@ -288,7 +287,7 @@ test("reusing a rotated refresh token revokes the whole family", async () => {
   await useRefreshToken(s.store, CLIENT, { refreshToken: first, issuer: ISSUER, key }, now(), load);
   await assert.rejects(() => useRefreshToken(s.store, CLIENT, { refreshToken: first, issuer: ISSUER, key }, now(), load));
 
-  assert.ok(s.revoked.includes("itc-mobile:c-1"));
+  assert.ok(s.revoked.includes("itc-mobile:acc-1"));
   assert.ok(s.refresh.every((t) => t.revokedAt), "including the replacement, which the thief may hold");
 });
 
@@ -372,4 +371,17 @@ test("nothing is stored that could be replayed: only hashes", async () => {
   const t = await redeemCode(s.store, CLIENT, { code: a.code, redirectUri: "itc://auth", codeVerifier: verifier, issuer: ISSUER, key }, now(), load);
   assert.ok(!JSON.stringify(s.access).includes(t.access_token));
   assert.ok(!JSON.stringify(s.refresh).includes(t.refresh_token!));
+});
+
+test("disabled accounts and accounts that no longer exist cannot redeem a code", async () => {
+  const { store } = fakeStore();
+  const { verifier, challenge } = pkce();
+  const key = signingKey({ NODE_ENV: "test" } as NodeJS.ProcessEnv);
+  const { code } = await createAuthCode(store, CLIENT, ME, authorizeArgs(challenge), now());
+
+  const gone = async () => null;
+  await assert.rejects(
+    () => redeemCode(store, CLIENT, { code, redirectUri: "itc://auth", codeVerifier: verifier, issuer: ISSUER, key }, now(), gone),
+    (e: OAuthError) => e.code === "access_denied",
+  );
 });

@@ -1,16 +1,16 @@
-// "Sign in with ITC" — the OAuth 2.0 / OpenID Connect surface of the portal.
+// "Sign in with ITC" — the OAuth 2.0 / OpenID Connect surface, as its own service.
 //
 //   GET  /oauth/.well-known/openid-configuration   discovery, so clients configure themselves
 //   GET  /oauth/jwks                               the id_token signing key
-//   GET  /oauth/authorize                          validates the request; portal/web renders consent
+//   GET  /oauth/authorize                          validates the request; accounts/web renders consent
 //   POST /oauth/authorize                          the signed-in person approves; returns the redirect
 //   POST /oauth/token                              authorization_code and refresh_token grants
-//   GET  /oauth/userinfo                           claims for a bearer access token
+//   GET  /oauth/userinfo                            claims for a bearer access token
 //   POST /oauth/introspect                         for resource servers: is this token live?
-//   POST /oauth/revoke                             a client hands a token back
+//   POST /oauth/revoke                              a client hands a token back
 //   GET  /oauth/grants, DELETE /oauth/grants/:id   what a person has connected, and taking it back
 //
-// The browser half lives on portal/web, which owns the session cookie. This api never reads a
+// The browser half lives on accounts/web, which owns the session cookie. This api never reads a
 // cookie and never renders a page: it validates, decides, and hands back a URL to redirect to.
 import { Router, type ErrorRequestHandler } from "express";
 import { body, str } from "../http.js";
@@ -18,10 +18,11 @@ import { getClient, listClients, redirectAllowed } from "../oauth/clients.js";
 import { jwks, safeEqual, sha256, signingKey } from "../oauth/crypto.js";
 import { createAuthCode, identityClaims, redeemCode, useRefreshToken } from "../oauth/flow.js";
 import { SCOPES, SCOPE_DESCRIPTIONS, OAuthError, invalidClient, invalidRequest, type OAuthClient, type Scope } from "../oauth/types.js";
-import { needsDatabase } from "../portal/guard.js";
-import { rateLimit } from "../portal/ratelimit.js";
-import { bearerToken, contributorForToken } from "../portal/session.js";
-import { requirePortalStore } from "../portal/store.js";
+import { needsDatabase } from "../guard.js";
+import { resolveProfile as resolveProfileFor } from "../profile.js";
+import { rateLimit } from "../ratelimit.js";
+import { accountForToken, bearerToken } from "../session.js";
+import { requireAccountsStore } from "../store/index.js";
 import type { Ctx } from "../app.js";
 
 /** The issuer, as clients will see it. Must match what discovery advertises, exactly. */
@@ -47,7 +48,7 @@ async function authenticateClient(ctx: Ctx, req: { header(n: string): string | u
     secret = decodeURIComponent(rest.join(":"));
   }
 
-  const client = await getClient(ctx.cms, clientId);
+  const client = await getClient(ctx.cms, clientId, requireAccountsStore());
   if (!client) throw invalidClient("Unknown client.");
 
   if (client.type === "confidential") {
@@ -63,14 +64,18 @@ export function oauthRoutes(ctx: Ctx): Router {
   const publicUrl = ctx.config.publicUrl;
   const issuer = issuerOf(publicUrl);
 
-  const limited = (ip: string, name: string, max: number) => !rateLimit(`oauth:${name}:${ip}`, max);
+  const limited = async (ip: string, name: string, max: number) => !(await rateLimit(`oauth:${name}:${ip}`, max));
+  const resolveProfile = (accountId: string) => resolveProfileFor(ctx, accountId);
 
   /* ---------------- discovery ---------------- */
 
   r.get("/oauth/.well-known/openid-configuration", (_req, res) => {
     res.json({
       issuer,
-      authorization_endpoint: `${publicUrl}/oauth/authorize`,
+      // The one endpoint here a browser is actually sent to, rather than one a client calls with
+      // fetch — so unlike every other endpoint below, it has to be a page that renders the
+      // sign-in and consent screen, not this api's own JSON route of (almost) the same name.
+      authorization_endpoint: `${ctx.config.web.url}/authorize`,
       token_endpoint: `${publicUrl}/oauth/token`,
       userinfo_endpoint: `${publicUrl}/oauth/userinfo`,
       introspection_endpoint: `${publicUrl}/oauth/introspect`,
@@ -96,22 +101,22 @@ export function oauthRoutes(ctx: Ctx): Router {
   /* ---------------- authorize ---------------- */
 
   /**
-   * Describes an authorization request so portal/web can render the consent screen.
+   * Describes an authorization request so accounts/web can render the consent screen.
    *
    * Nothing is issued here. The client and redirect are checked first: only once they are known
    * good may an error be sent back to the client, and until then errors belong on our own page.
    */
   r.get("/oauth/authorize", needsDatabase, async (req, res) => {
     const q = req.query as Record<string, string | undefined>;
-    const client = await getClient(ctx.cms, q.client_id ?? "");
+    const client = await getClient(ctx.cms, q.client_id ?? "", requireAccountsStore());
     if (!client) throw invalidRequest("Unknown or inactive client.");
     if (!redirectAllowed(client, q.redirect_uri ?? "")) throw invalidRequest("That redirect_uri is not registered for this client.");
 
     const requested = (q.scope ?? "openid").split(/\s+/).filter(Boolean);
     const unknown = requested.filter((s) => !client.allowedScopes.includes(s as Scope));
 
-    const me = await contributorForToken(bearerToken(req.header("authorization")));
-    const grants = me ? await requirePortalStore().listGrants(me.id) : [];
+    const me = await accountForToken(ctx, bearerToken(req.header("authorization")));
+    const grants = me ? await requireAccountsStore().listGrants(me.id) : [];
     const existing = grants.find((g) => g.clientId === client.clientId);
 
     res.json({
@@ -125,22 +130,22 @@ export function oauthRoutes(ctx: Ctx): Router {
     });
   });
 
-  /** The person approves. Requires their session; returns the URL for portal/web to redirect to. */
+  /** The person approves. Requires their session; returns the URL for accounts/web to redirect to. */
   r.post("/oauth/authorize", needsDatabase, async (req, res) => {
-    if (limited(req.ip ?? "local", "authorize", 60)) throw new OAuthError(429, "temporarily_unavailable", "Too many requests.");
+    if (await limited(req.ip ?? "local", "authorize", 60)) throw new OAuthError(429, "temporarily_unavailable", "Too many requests.");
     const b = body(req);
-    const me = await contributorForToken(bearerToken(req.header("authorization")));
+    const me = await accountForToken(ctx, bearerToken(req.header("authorization")));
     if (!me) throw new OAuthError(401, "login_required", "Sign in first.");
 
     const clientId = str(b, "client_id", { required: true, max: 100 });
-    const client = await getClient(ctx.cms, clientId);
+    const client = await getClient(ctx.cms, clientId, requireAccountsStore());
     if (!client) throw invalidRequest("Unknown or inactive client.");
 
     const redirectUri = str(b, "redirect_uri", { required: true, max: 500 });
     const state = str(b, "state", { max: 500 });
 
     const { code } = await createAuthCode(
-      requirePortalStore(),
+      requireAccountsStore(),
       client,
       me,
       {
@@ -165,13 +170,12 @@ export function oauthRoutes(ctx: Ctx): Router {
   /* ---------------- token ---------------- */
 
   r.post("/oauth/token", needsDatabase, async (req, res) => {
-    if (limited(req.ip ?? "local", "token", 120)) throw new OAuthError(429, "temporarily_unavailable", "Too many requests.");
+    if (await limited(req.ip ?? "local", "token", 120)) throw new OAuthError(429, "temporarily_unavailable", "Too many requests.");
     const client = await authenticateClient(ctx, req);
     const b = body(req);
     const grantType = str(b, "grant_type", { required: true, max: 40 });
-    const store = requirePortalStore();
+    const store = requireAccountsStore();
     const key = signingKey();
-    const load = (id: string) => store.getContributor(id);
 
     // Tokens must never be cached by anything between here and the client.
     res.set("cache-control", "no-store");
@@ -186,7 +190,7 @@ export function oauthRoutes(ctx: Ctx): Router {
           codeVerifier: str(b, "code_verifier", { required: true, max: 200 }),
           issuer, key,
         },
-        new Date(), load,
+        new Date(), resolveProfile,
       );
       return void res.json(out);
     }
@@ -199,7 +203,7 @@ export function oauthRoutes(ctx: Ctx): Router {
           scope: str(b, "scope", { max: 500 }) || undefined,
           issuer, key,
         },
-        new Date(), load,
+        new Date(), resolveProfile,
       );
       return void res.json(out);
     }
@@ -213,7 +217,7 @@ export function oauthRoutes(ctx: Ctx): Router {
   async function liveToken(header: string | undefined) {
     const raw = bearerToken(header);
     if (!raw) return null;
-    const row = await requirePortalStore().getAccessToken(sha256(raw));
+    const row = await requireAccountsStore().getAccessToken(sha256(raw));
     if (!row || row.revokedAt || row.expiresAt <= new Date()) return null;
     return row;
   }
@@ -225,16 +229,14 @@ export function oauthRoutes(ctx: Ctx): Router {
       res.set("www-authenticate", 'Bearer error="invalid_token"');
       throw new OAuthError(401, "invalid_token", "That access token is not valid.");
     }
-    const store = requirePortalStore();
-    const me = await store.getContributor(token.contributorId);
+    const me = await resolveProfile(token.accountId);
     if (!me || me.disabled) throw new OAuthError(401, "invalid_token", "That account is not available.");
 
     const claims: Record<string, unknown> = { sub: me.id, ...identityClaims(me, token.scopes) };
-    if (token.scopes.includes("profile")) claims.profile = `${ctx.config.web.url}/u/${me.handle}`;
+    if (token.scopes.includes("profile") && me.handle) claims.profile = `${ctx.config.portal.webUrl}/u/${me.handle}`;
     if (token.scopes.includes("contributions")) {
-      const list = await store.listContributions({ contributorId: me.id, includeHidden: false });
-      claims.itc_contributions = list.length;
-      claims.itc_houses = [...new Set(list.map((c) => c.house))];
+      claims.itc_contributions = me.contributions ?? 0;
+      claims.itc_houses = me.houses ?? [];
     }
     res.set("cache-control", "no-store");
     res.json(claims);
@@ -250,12 +252,12 @@ export function oauthRoutes(ctx: Ctx): Router {
   r.post("/oauth/introspect", needsDatabase, async (req, res) => {
     await authenticateClient(ctx, req);
     const token = str(body(req), "token", { required: true, max: 500 });
-    const row = await requirePortalStore().getAccessToken(sha256(token));
+    const row = await requireAccountsStore().getAccessToken(sha256(token));
     res.set("cache-control", "no-store");
     if (!row || row.revokedAt || row.expiresAt <= new Date()) return void res.json({ active: false });
     res.json({
       active: true,
-      sub: row.contributorId,
+      sub: row.accountId,
       client_id: row.clientId,
       scope: row.scopes.join(" "),
       exp: Math.floor(row.expiresAt.getTime() / 1000),
@@ -270,12 +272,12 @@ export function oauthRoutes(ctx: Ctx): Router {
     const client = await authenticateClient(ctx, req);
     const token = str(body(req), "token", { required: true, max: 500 });
     const hash = sha256(token);
-    const store = requirePortalStore();
+    const store = requireAccountsStore();
     const access = await store.getAccessToken(hash);
     if (access && access.clientId === client.clientId) await store.revokeAccessToken(hash);
     else {
       const refresh = await store.getRefreshToken(hash);
-      if (refresh && refresh.clientId === client.clientId) await store.revokeTokensFor(client.clientId, refresh.contributorId);
+      if (refresh && refresh.clientId === client.clientId) await store.revokeTokensFor(client.clientId, refresh.accountId);
     }
     res.json({ ok: true });
   });
@@ -283,9 +285,9 @@ export function oauthRoutes(ctx: Ctx): Router {
   /* ---------------- what a person has connected ---------------- */
 
   r.get("/oauth/grants", needsDatabase, async (req, res) => {
-    const me = await contributorForToken(bearerToken(req.header("authorization")));
+    const me = await accountForToken(ctx, bearerToken(req.header("authorization")));
     if (!me) throw new OAuthError(401, "login_required", "Sign in first.");
-    const [grants, clients] = await Promise.all([requirePortalStore().listGrants(me.id), listClients(ctx.cms)]);
+    const [grants, clients] = await Promise.all([requireAccountsStore().listGrants(me.id), listClients(ctx.cms, requireAccountsStore())]);
     res.json({
       grants: grants.map((g) => {
         const c = clients.find((x) => x.clientId === g.clientId);
@@ -303,14 +305,14 @@ export function oauthRoutes(ctx: Ctx): Router {
 
   /** Disconnecting takes the tokens with it; a grant you can revoke without that is theatre. */
   r.delete("/oauth/grants/:clientId", needsDatabase, async (req, res) => {
-    const me = await contributorForToken(bearerToken(req.header("authorization")));
+    const me = await accountForToken(ctx, bearerToken(req.header("authorization")));
     if (!me) throw new OAuthError(401, "login_required", "Sign in first.");
     const clientId = String(req.params.clientId ?? "");
-    const store = requirePortalStore();
+    const store = requireAccountsStore();
     await store.deleteGrant(me.id, clientId);
     await store.revokeTokensFor(clientId, me.id);
     await store.addAudit({
-      at: new Date(), actor: me.handle, action: "oauth.grant.revoke",
+      at: new Date(), actor: me.id, action: "oauth.grant.revoke",
       target: `client/${clientId}`, detail: "disconnected by the person",
     });
     res.json({ ok: true });
@@ -318,7 +320,7 @@ export function oauthRoutes(ctx: Ctx): Router {
 
   /**
    * OAuth errors have their own wire shape — `{ error, error_description }` from RFC 6749, not the
-   * portal's `{ error: { code, message } }`. Clients switch on it, so it is handled here rather
+   * house's `{ error: { code, message } }`. Clients switch on it, so it is handled here rather
    * than teaching the shared handler a second format.
    */
   r.use(((err, _req, res, next) => {

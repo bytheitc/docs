@@ -4,7 +4,7 @@
 import { HOUSES } from "./houses.js";
 import { PROVIDER_IDS } from "../providers/index.js";
 import { CONTRIBUTION_KINDS } from "../providers/types.js";
-import { MILESTONE_RULES, SEED_FAQ, SEED_LANDING, SEED_MILESTONES, SEED_OAUTH_CLIENTS, SEED_SETTINGS, SEED_SOURCES } from "./seed.js";
+import { MILESTONE_RULES, SEED_FAQ, SEED_LANDING, SEED_MILESTONES, SEED_SETTINGS, SEED_SOURCES } from "./seed.js";
 import type { CollectionDef, SpaceLink } from "./types.js";
 
 const HOUSE_IDS = HOUSES.map((h) => h.id);
@@ -99,26 +99,6 @@ export const COLLECTIONS: CollectionDef[] = [
       { type: "text", name: "id", label: "Id", required: true, help: "Leave as “settings”." },
       { type: "number", name: "claimDays", label: "Claim expiry (days)", required: true, min: 1, max: 90, help: "How long an issue claim lasts before it is released." },
       { type: "textarea", name: "goodFirstIssues", label: "Good first issues note", rows: 2, help: "Shown on the dashboard until suggestions are wired to the Open Source house." },
-    ],
-  },
-  {
-    name: "oauth-clients",
-    label: "Sign in with ITC",
-    singular: "Client",
-    description: "Applications allowed to sign people in with their ITC account. Redirect URIs are matched exactly \u2014 no wildcards \u2014 and a confidential client stores only the SHA-256 of its secret, never the secret itself.",
-    idField: "clientId",
-    titleField: "name",
-    seed: () => rows(SEED_OAUTH_CLIENTS),
-    fields: [
-      { type: "text", name: "clientId", label: "Client id", required: true, placeholder: "itc-mobile" },
-      { type: "text", name: "name", label: "Name", required: true, help: "Shown to the person on the consent screen." },
-      { type: "select", name: "type", label: "Type", required: true, options: ["public", "confidential"], help: "Public: anything installed on a device or running in a browser, which cannot keep a secret. Confidential: a server that can." },
-      { type: "text", name: "secretHash", label: "Client secret (SHA-256)", help: "Confidential clients only. Store the hash, never the secret." },
-      { type: "lines", name: "redirectUris", label: "Redirect URIs", required: true, help: "One per line, matched exactly. https anywhere; http only on localhost; a private scheme such as itc://auth for installed apps." },
-      { type: "tags", name: "allowedScopes", label: "Allowed scopes", help: "openid, profile, contributions, entitlements, offline_access. openid is always granted." },
-      { type: "boolean", name: "trusted", label: "First-party", help: "Skips the consent screen. Only for applications the Collective itself ships." },
-      { type: "url", name: "homepage", label: "Homepage", help: "Where someone can find out what this application is." },
-      { type: "boolean", name: "active", label: "Active", help: "An inactive client is treated as if it does not exist." },
     ],
   },
 ];
