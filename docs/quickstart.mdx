@@ -1,0 +1,65 @@
+---
+title: 'Quickstart'
+description: 'Integrate AuthOS into your application in minutes'
+---
+
+## Get started in three steps
+
+Follow these steps to integrate AuthOS into your application.
+
+### Step 1: Install the client library
+
+Install the AuthOS React library (or use our API directly).
+
+```bash
+npm install @authos/react
+```
+
+### Step 2: Initialize AuthOS
+
+Wrap your application with the `AuthOSProvider` and provide your publishable key.
+
+```tsx
+import { AuthOSProvider } from '@authos/react';
+
+function App() {
+  return (
+    <AuthOSProvider publishableKey="your_publishable_key">
+      <YourApp />
+    </AuthOSProvider>
+  );
+}
+```
+
+### Step 3: Use Auth components
+
+Add pre-built components for Sign In and Sign Up.
+
+```tsx
+import { SignIn, SignUp } from '@authos/react';
+
+function AuthPage() {
+  return (
+    <div>
+      <SignIn />
+      <SignUp />
+    </div>
+  );
+}
+```
+
+## Next steps
+
+Explore these key features of AuthOS:
+
+<CardGroup cols={2}>
+
+<Card title="API Reference" icon="code" href="/api-reference/introduction">
+  Detailed API documentation for all endpoints.
+</Card>
+
+<Card title="Multi-tenancy" icon="users" href="/essentials/navigation">
+  Manage multiple tenants with a single integration.
+</Card>
+
+</CardGroup>
