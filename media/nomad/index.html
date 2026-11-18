@@ -1,0 +1,547 @@
+<title>Nomad Identity Studies</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Courier+Prime:wght@400;700&family=DM+Mono:wght@400;500&family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600;800&family=Instrument+Serif:ital@0;1&family=Oswald:wght@500;600;700&family=Syncopate:wght@400;700&family=Unbounded:wght@300;500;800&display=swap">
+<style>
+/* Layout: a review wall. One direction at a time: logo kit grid, then two 16:9 stages (intro, outro). */
+:root{
+  --ui-bg:#131416; --ui-panel:#1B1C20; --ui-line:#2A2C31; --ui-fg:#ECEAE5; --ui-mute:#8F9199; --ui-accent:#FF5A4E;
+  --ui-sans:'Geist',system-ui,-apple-system,sans-serif; --ui-mono:'Geist Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+body{background:var(--ui-bg);color:var(--ui-fg);font-family:var(--ui-sans);font-size:15px;line-height:1.5}
+*{box-sizing:border-box}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 72px}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:16px 40px;padding-bottom:20px;border-bottom:1px solid var(--ui-line)}
+.eyebrow{font:500 11px/1 var(--ui-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ui-mute);margin:0}
+h1{font:800 clamp(30px,4.6vw,52px)/1 var(--ui-sans);letter-spacing:-.03em;margin:12px 0 10px;text-wrap:balance}
+.lead{color:var(--ui-mute);max-width:62ch;margin:0}
+.shortbox{font:12px/1.6 var(--ui-mono);color:var(--ui-mute);min-width:0}
+.shortbox b{color:var(--ui-fg);font-weight:500}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ui-bg)}
+nav.tabs{display:flex;gap:8px;overflow-x:auto;padding-block:14px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--ui-bg);z-index:6;scrollbar-width:none}
+.tab{display:flex;align-items:center;gap:10px;padding:9px 14px 9px 12px;border:1px solid var(--ui-line);border-radius:999px;background:transparent;color:var(--ui-fg);font:600 14px var(--ui-sans);cursor:pointer;white-space:nowrap}
+.tab:hover{border-color:var(--ui-mute)}
+.tab[aria-selected="true"]{background:var(--ui-fg);color:var(--ui-bg);border-color:var(--ui-fg)}
+.tab .sw{display:flex;padding-left:3px}.tab .sw i{width:11px;height:11px;border-radius:50%;margin-left:-3px;box-shadow:0 0 0 1.5px var(--ui-bg)}
+.tab[aria-selected="true"] .sw i{box-shadow:0 0 0 1.5px var(--ui-fg)}
+.tab .pin{font-size:11px;color:var(--ui-accent)}
+:focus-visible{outline:2px solid var(--ui-accent);outline-offset:2px}
+.dir-head{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px 40px;padding-block:14px 22px;align-items:start}
+@media(max-width:780px){.dir-head{grid-template-columns:minmax(0,1fr)}}
+h2{font:800 clamp(30px,4vw,40px)/1 var(--ui-sans);letter-spacing:-.025em;margin:8px 0 10px}
+.idea{margin:0;max-width:60ch;color:#C9C8C3}
+.meta{display:flex;flex-direction:column;gap:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px 14px}
+.chip{display:flex;gap:7px;align-items:center;font:11.5px var(--ui-mono);color:var(--ui-mute)}
+.chip i{width:20px;height:20px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.typeline{font:12px var(--ui-mono);color:var(--ui-mute)}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.btn{appearance:none;border:1px solid var(--ui-line);background:var(--ui-panel);color:var(--ui-fg);font:500 12.5px var(--ui-sans);padding:7px 12px;border-radius:8px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.btn:hover{border-color:var(--ui-mute)}
+.btn[aria-pressed="true"]{background:var(--ui-accent);border-color:var(--ui-accent);color:#160606}
+.kit{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kit .big{grid-column:span 2}
+@media(max-width:880px){.kit{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.kit{grid-template-columns:minmax(0,1fr)}.kit .big{grid-column:auto}}
+figure{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+figcaption{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font:11.5px var(--ui-mono);color:var(--ui-mute);letter-spacing:.03em}
+.films{display:grid;gap:26px;margin-top:26px}
+.films figcaption{font-size:12px}
+.films figcaption strong{color:var(--ui-fg);font-weight:500}
+.notes{margin-top:26px;display:grid;gap:8px}
+.notes label{font:11.5px var(--ui-mono);color:var(--ui-mute);letter-spacing:.06em;text-transform:uppercase}
+.notes textarea{width:100%;min-height:84px;resize:vertical;background:var(--ui-panel);color:var(--ui-fg);border:1px solid var(--ui-line);border-radius:8px;padding:10px 12px;font:14px/1.5 var(--ui-sans)}
+.sw-wrap:fullscreen{display:grid;place-items:center;background:#000}
+.sw-wrap:fullscreen .stage{width:min(100vw,177.78vh);border-radius:0}
+
+/* ---------- canvases ---------- */
+.pn,.stage{position:relative;overflow:hidden;container-type:inline-size;background:var(--bg);color:var(--fg);border-radius:8px;max-width:100%}
+.pn{aspect-ratio:16/10;display:grid;place-items:center}
+.stage{aspect-ratio:16/9;width:100%}
+.fill{position:absolute;inset:0;width:100%;height:100%}
+.mk svg,.mk-svg{display:block;width:100%;height:auto;overflow:visible}
+.pn svg *,.stage svg *{transform-box:fill-box;transform-origin:center}
+.f-acc{fill:var(--acc)}.s-acc{stroke:var(--acc)}.f-bg{fill:var(--bg)}.f-fg{fill:var(--fg)}.s-fg{stroke:var(--fg)}.f-acc2{fill:var(--acc2)}.f-dune{fill:var(--dune)}
+.st1{stop-color:var(--g1)}.st2{stop-color:var(--g2)}
+.dr{stroke-dasharray:100 100}
+.cn{position:absolute;font:500 1.05cqw/1 'DM Mono',var(--ui-mono);letter-spacing:.16em;text-transform:uppercase;opacity:.72;white-space:nowrap}
+.cn.tl{left:3cqw;top:3cqw}.cn.tr{right:3cqw;top:3cqw}.cn.bl{left:3cqw;bottom:3cqw}.cn.br{right:3cqw;bottom:3cqw}
+.lm{display:inline-block;overflow:hidden;vertical-align:top;padding:.04em .01em .1em;margin:-.04em -.01em -.1em}
+.lm>span{display:inline-block}
+.slot{position:absolute;aspect-ratio:16/9;width:40cqw;top:15cqw;display:flex;align-items:flex-end;padding:1.2cqw;font:500 1cqw/1.2 'DM Mono',var(--ui-mono);letter-spacing:.14em;text-transform:uppercase}
+.slot::before{content:"";position:absolute;left:50%;top:50%;width:0;height:0;border-left:2.4cqw solid currentColor;border-top:1.5cqw solid transparent;border-bottom:1.5cqw solid transparent;transform:translate(-35%,-50%);opacity:.55}
+.slot.sA{left:6cqw}.slot.sB{left:54cqw}
+.sub{position:absolute;left:0;right:0;top:41cqw;display:flex;justify-content:center;align-items:center;gap:1.6cqw}
+.o-head{position:absolute;left:6cqw;top:3.6cqw;display:flex;align-items:center;gap:1.8cqw}
+.o-mk{width:6.5cqw}
+.o-lab{font:500 1cqw/1 'DM Mono',var(--ui-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--acc);margin-bottom:.8cqw}
+
+/* ---------- motion system: [data-a] plays only inside .play; at rest everything sits in its final frame ---------- */
+.play [data-a]{animation:var(--k) var(--d,.8s) var(--e,cubic-bezier(.2,.8,.2,1)) var(--t,0s) var(--f,both)}
+.am{transition:opacity .35s}.am.out{opacity:0}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(var(--dy,2.4cqw))}}
+@keyframes upP{from{opacity:0;transform:translateY(45%)}}
+@keyframes rise{from{transform:translateY(118%)}}
+@keyframes draw{from{stroke-dashoffset:100}}
+@keyframes scaleIn{from{opacity:0;transform:scale(var(--s0,.6)) rotate(var(--r0,0deg))}}
+@keyframes spinIn{from{opacity:0;transform:rotate(-150deg) scale(.4)}}
+@keyframes swing{0%{opacity:0;transform:rotate(-150deg)}8%{opacity:1}34%{transform:rotate(42deg)}54%{transform:rotate(-20deg)}71%{transform:rotate(9deg)}86%{transform:rotate(-3deg)}100%{transform:rotate(0)}}
+@keyframes track{from{opacity:0;letter-spacing:var(--ls0,1.2em)}}
+@keyframes wipeR{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes wipeU{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes shiftY{from{transform:translateY(var(--y0))}}
+@keyframes drop{0%{opacity:0;transform:translateY(-70%)}55%{opacity:1;transform:translateY(7%)}78%{transform:translateY(-3%)}100%{transform:none}}
+@keyframes slam{0%{opacity:0;transform:rotate(var(--r,0deg)) scale(2.4)}55%{opacity:1;transform:rotate(var(--r,0deg)) scale(.95)}76%{transform:rotate(var(--r,0deg)) scale(1.02)}100%{opacity:var(--o,1);transform:rotate(var(--r,0deg)) scale(1)}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(.45cqw,-.3cqw)}40%{transform:translate(-.4cqw,.25cqw)}60%{transform:translate(.25cqw,.2cqw)}80%{transform:translate(-.15cqw,-.1cqw)}}
+@keyframes cut{0%{opacity:1;transform:scale(1.14)}94%{opacity:1;transform:scale(1)}100%{opacity:0}}
+@keyframes type{from{width:0}}
+@keyframes twinkle{50%{opacity:.12}}
+@keyframes marquee{to{transform:translateX(-50%)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.play [data-a]{animation:none!important}.stars i,.marq,.spin{animation:none!important}}
+
+/* ================= 1 · MERIDIAN ================= */
+.tk-mer.v-primary{--bg:#0A1A1D;--fg:#D6ECE7;--acc:#FF5A4E;--acc2:#5E8F89}
+.tk-mer.v-inverse{--bg:#D6ECE7;--fg:#0A1A1D;--acc:#E0392D;--acc2:#5E8F89}
+.mer-glow{background:radial-gradient(ellipse 70% 80% at 50% 42%,#123236 0%,var(--bg) 70%)}
+.stars i{position:absolute;border-radius:50%;background:var(--fg);animation:twinkle 4.5s ease-in-out infinite}
+.mer-word{font-family:'Syncopate',sans-serif;font-weight:700;letter-spacing:.3em;padding-left:.3em;line-height:1;white-space:nowrap}
+.mer-tag{font-family:'Syncopate',sans-serif;font-weight:400;letter-spacing:.42em;text-transform:uppercase;color:var(--acc);white-space:nowrap}
+.mer-deg{font-family:'DM Mono',monospace;color:var(--acc2);letter-spacing:.12em}
+.pn .lk-mer{display:flex;align-items:center;gap:4.5cqw}
+.pn .lk-mer .mk{width:22cqw}
+.pn .lk-mer .mer-word{font-size:7.6cqw;margin-left:-.3em}
+.pn .lk-mer .rule{height:1px;background:var(--fg);opacity:.25;margin:2.2cqw 0 1.8cqw}
+.pn .lk-mer .tagrow{display:flex;justify-content:space-between;gap:2cqw;align-items:baseline}
+.pn .lk-mer .mer-tag{font-size:1.45cqw}.pn .lk-mer .mer-deg{font-size:1.5cqw}
+.am-mer{display:flex;flex-direction:column;align-items:center;gap:3.6cqw}
+.am-mer .mk{width:26cqw}.am-mer .mer-word{font-size:5.4cqw}
+.mer-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.7cqw}
+.mer-in .mk{width:17cqw;margin-bottom:.8cqw}
+.mer-in .mer-word{font-size:6.6cqw}
+.mer-in .rule{width:30cqw;height:1px;background:var(--fg);opacity:.3}
+.mer-in .tagrow{display:flex;gap:3cqw;align-items:baseline}
+.mer-in .mer-tag{font-size:1.25cqw}.mer-in .mer-deg{font-size:1.3cqw}
+.mer-ot{font:700 2.5cqw/1.1 'Syncopate',sans-serif;letter-spacing:.08em}
+.tk-mer .slot{border:1px solid color-mix(in srgb,var(--fg) 35%,transparent);background:color-mix(in srgb,var(--fg) 4%,transparent);color:var(--fg)}
+.tk-mer .slot::after{content:"";position:absolute;inset:-.8cqw;border:solid var(--acc);border-width:0;background:
+ linear-gradient(var(--acc),var(--acc)) 0 0/1.6cqw 2px no-repeat,linear-gradient(var(--acc),var(--acc)) 0 0/2px 1.6cqw no-repeat,
+ linear-gradient(var(--acc),var(--acc)) 100% 100%/1.6cqw 2px no-repeat,linear-gradient(var(--acc),var(--acc)) 100% 100%/2px 1.6cqw no-repeat}
+.mer-subc{width:9.5cqw}
+.mer-sublab{font:700 1.5cqw 'Syncopate',sans-serif;letter-spacing:.4em}
+
+/* ================= 2 · HORIZON ================= */
+.tk-dun.v-primary{--bg:#1A0E26;--fg:#F6DDB8;--acc:#FF7A3D;--g1:#FFC46B;--g2:#FF5E3A;--dune:#5A2350}
+.tk-dun.v-inverse{--bg:#F6DDB8;--fg:#1A0E26;--acc:#C2475A;--g1:#FF9A4A;--g2:#C2475A;--dune:#1A0E26}
+.dun-word{font-family:'Unbounded',sans-serif;font-weight:800;letter-spacing:.02em;line-height:1;white-space:nowrap}
+.dun-tag{font-family:'Unbounded',sans-serif;font-weight:300;letter-spacing:.38em;text-transform:uppercase;color:var(--g1);white-space:nowrap}
+.pn .lk-dun{display:flex;flex-direction:column;align-items:center;gap:2.6cqw}
+.pn .lk-dun .mk{width:20cqw}.pn .lk-dun .dun-word{font-size:8.4cqw}.pn .lk-dun .dun-tag{font-size:1.7cqw;padding-left:.38em}
+.am-dun{display:flex;flex-direction:column;align-items:center;gap:3cqw}
+.am-dun .mk{width:24cqw}.am-dun .dun-word{font-size:7cqw}
+.dun-sky{background:linear-gradient(180deg,#24113A 0%,#5B2156 34%,#C2475A 56%,#F07A45 72%)}
+.dun-night{background:linear-gradient(180deg,#0B0612,#1A0E26 60%);opacity:0}
+.dun-night.half{opacity:.42}
+.dun-sun{position:absolute;width:30cqw;aspect-ratio:1;left:35cqw;top:11cqw;border-radius:50%;background:linear-gradient(180deg,var(--g1),var(--g2) 80%);box-shadow:0 0 9cqw color-mix(in srgb,var(--g2) 50%,transparent)}
+.dun-sun.set{top:19cqw}
+.dun-sun i{position:absolute;left:-1%;right:-1%;background:#D0505A}
+.dun-sun i:nth-child(1){top:46%;height:2.6%}.dun-sun i:nth-child(2){top:55%;height:2.2%}.dun-sun i:nth-child(3){top:63%;height:1.8%}
+.d1{fill:#8E3556}.d2{fill:#55204F}.d3{fill:#1A0E26}
+.grain{opacity:.22;mix-blend-mode:overlay;pointer-events:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.dun-title{position:absolute;left:0;right:0;top:40.5cqw;display:flex;flex-direction:column;align-items:center;gap:1.5cqw}
+.dun-title .dun-word{font-size:7.2cqw}
+.dun-title .dun-tag{font-size:1.6cqw;padding-left:.38em}
+.dun-ot{font:500 2.4cqw/1.1 'Unbounded',sans-serif}
+.tk-dun .slot{border:.25cqw solid var(--fg);background:rgba(26,14,38,.5);color:var(--fg);backdrop-filter:blur(3px)}
+.dun-subsun{width:7.5cqw;aspect-ratio:1;border-radius:50%;background:linear-gradient(var(--g1),var(--g2));box-shadow:0 0 3cqw color-mix(in srgb,var(--g2) 60%,transparent)}
+.dun-sublab{font:800 1.7cqw 'Unbounded',sans-serif;letter-spacing:.16em;color:var(--fg)}
+
+/* ================= 3 · WAYPOINT ================= */
+.tk-rou.v-primary{--bg:#E7E4D6;--fg:#21352B;--acc:#D2452B;--topo:#CBC8B2}
+.tk-rou.v-inverse{--bg:#21352B;--fg:#E7E4D6;--acc:#FF6F4E;--topo:#33493D}
+.rou-word{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-variation-settings:"opsz" 96;letter-spacing:-.045em;line-height:.9;white-space:nowrap}
+.rou-word b{color:var(--acc);font-weight:800}
+.rou-tag{font-family:'DM Mono',monospace;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;opacity:.8}
+.pn .lk-rou{display:flex;align-items:center;gap:3.4cqw}
+.pn .lk-rou .mk{width:19cqw}.pn .lk-rou .rou-word{font-size:14cqw}.pn .lk-rou .rou-tag{font-size:1.45cqw;margin-top:2.2cqw}
+.am-rou{display:flex;align-items:center;gap:3cqw}
+.am-rou .mk{width:22cqw}.am-rou .rou-word{font-size:12cqw}
+.topo{fill:none;stroke:var(--topo);stroke-width:1.4}.topo.idx{stroke-width:2.6}
+.grid{stroke:var(--fg);stroke-opacity:.07;stroke-width:1}
+.trail{fill:none;stroke:var(--acc);stroke-width:9;stroke-linecap:round;stroke-dasharray:.1 24}
+.wp{fill:var(--bg);stroke:var(--fg);stroke-width:5}
+.rlab{position:absolute;margin:-2.1cqw 0 0 2cqw;display:flex;flex-direction:column;gap:.4cqw}
+.rlab b{font:800 1.6cqw/1 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
+.rlab span{font:400 .95cqw/1 'DM Mono',monospace;letter-spacing:.08em;opacity:.75}
+.r-halo{position:absolute;left:22cqw;right:22cqw;top:18cqw;height:24cqw;background:radial-gradient(closest-side,var(--bg) 62%,transparent)}
+.r-pin{position:absolute;left:47.4cqw;width:5.2cqw;top:17.2cqw}
+.r-center{position:absolute;left:0;right:0;top:27.5cqw;display:flex;flex-direction:column;align-items:center;gap:2cqw}
+.r-center .rou-word{font-size:9cqw}.r-center .rou-tag{font-size:1.2cqw}
+.odo{font-variant-numeric:tabular-nums}
+.rou-ot{font:800 4.2cqw/1 'Bricolage Grotesque',sans-serif;letter-spacing:-.04em}
+.tk-rou .slot{border:.3cqw solid var(--fg);background:color-mix(in srgb,var(--bg) 70%,#fff);color:var(--fg);top:14cqw}
+.rou-subpin{width:4.6cqw}
+.rou-sublab{font:800 2cqw 'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
+
+/* ================= 4 · VISA ================= */
+.tk-stp.v-primary{--bg:#DCE6E1;--fg:#1F2B29;--acc:#B8343B;--guill:#B5CAC1}
+.tk-stp.v-inverse{--bg:#1F2B29;--fg:#E9E2D2;--acc:#EF6A63;--guill:#2C3B38}
+.tk-stp.v-primary .ink{mix-blend-mode:multiply}
+.guill{fill:none;stroke:var(--guill);stroke-width:1.1}
+.stp-word{font-family:'Oswald',sans-serif;font-weight:700;letter-spacing:.04em;line-height:.95;text-transform:uppercase;white-space:nowrap}
+.stp-cour{font-family:'Courier Prime',monospace;font-weight:700;letter-spacing:.24em;text-transform:uppercase;white-space:nowrap}
+.pn .lk-stp{display:flex;align-items:center;gap:4cqw}
+.pn .lk-stp .mk{width:27cqw}.pn .lk-stp .stp-word{font-size:10cqw}
+.pn .lk-stp .stp-cour{font-size:1.6cqw;margin-top:1.6cqw}.pn .lk-stp .stp-cour.sm{font-size:1.2cqw;opacity:.6;margin-top:.8cqw;font-weight:400}
+.am-stp .mk{width:36cqw}
+.stamp{position:absolute;transform:rotate(var(--r,0deg));color:var(--c);border:.32cqw solid currentColor;padding:.9cqw 1.6cqw;text-align:center;line-height:1.08;filter:url(#rough);opacity:.86}
+.stamp .big{font:700 2.5cqw/1.05 'Oswald',sans-serif;letter-spacing:.06em;text-transform:uppercase}
+.stamp .sm{font:700 .95cqw/1.4 'Courier Prime',monospace;letter-spacing:.2em;text-transform:uppercase}
+.stamp.oval{border-radius:50%;padding:1.8cqw 3.2cqw;outline:.14cqw solid currentColor;outline-offset:.45cqw}
+.stamp.dbl{border-style:double;border-width:.75cqw}
+.stp-hd{position:absolute;left:0;right:0;top:2.8cqw;text-align:center;font:700 1.1cqw 'Courier Prime',monospace;letter-spacing:.5em;color:var(--fg);opacity:.55}
+.stp-main{position:absolute;left:38cqw;top:10.5cqw;width:24cqw;transform:rotate(var(--r,0deg))}
+.stp-line{position:absolute;left:0;right:0;top:38.5cqw;text-align:center;font:700 1.5cqw 'Courier Prime',monospace;letter-spacing:.06em;color:var(--fg)}
+.typed{display:inline-block;overflow:hidden;white-space:nowrap;vertical-align:bottom;width:26ch}
+.stp-ot{font:700 4.2cqw/1 'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.03em}
+.stp-osub{font:400 1.15cqw 'Courier Prime',monospace;letter-spacing:.14em;margin-top:.8cqw;opacity:.75}
+.tkt{position:absolute;top:12cqw;padding:1.1cqw 1.4cqw 1.4cqw;background:#FBF8F0;border-radius:.6cqw;box-shadow:0 .5cqw 1.6cqw rgba(20,30,28,.18);color:#1F2B29}
+.tkt.sA{left:4.6cqw}.tkt.sB{left:52.6cqw}
+.tkt-h{display:flex;justify-content:space-between;font:700 .95cqw 'Courier Prime',monospace;letter-spacing:.2em;margin-bottom:.9cqw}
+.tkt-h b{color:#B8343B}
+.tkt .slot{position:relative;top:auto;left:auto;border:.18cqw dashed #9FB1AA;color:#5C6E68;background:#F1EFE6}
+.stp-subst{width:9cqw;aspect-ratio:1;border-radius:50%;border:.5cqw double var(--acc);color:var(--acc);display:grid;place-items:center;font:700 1.25cqw 'Oswald',sans-serif;letter-spacing:.14em;filter:url(#rough);transform:rotate(var(--r,0deg))}
+.stp-sublab{font:700 1.1cqw 'Courier Prime',monospace;letter-spacing:.2em;color:var(--fg)}
+
+/* ================= 5 · SIGNAL ================= */
+.tk-kin.v-primary{--bg:#2A1BFF;--fg:#F5F3EE;--acc:#BDB6FF;--acc2:#0E0870}
+.tk-kin.v-inverse{--bg:#F5F3EE;--fg:#2A1BFF;--acc:#2A1BFF;--acc2:#0E0870}
+.kin-word{font-family:'Anton',sans-serif;letter-spacing:.005em;line-height:.92;text-transform:uppercase;white-space:nowrap}
+.kin-by{font-family:'Instrument Serif',serif;font-style:italic;color:var(--acc);line-height:1;white-space:nowrap}
+.pn .lk-kin{display:flex;align-items:center;gap:3.6cqw}
+.pn .lk-kin .mk{width:17cqw}
+.pn .lk-kin .wd{position:relative;padding-bottom:3cqw}
+.pn .lk-kin .kin-word{font-size:14cqw}
+.pn .lk-kin .kin-by{position:absolute;right:-2cqw;bottom:0;font-size:7cqw}
+.am-kin{display:flex;align-items:center;gap:3cqw}
+.am-kin .mk{width:20cqw}.am-kin .wd{position:relative;padding-bottom:2.6cqw}.am-kin .kin-word{font-size:12cqw}.am-kin .kin-by{position:absolute;right:-2cqw;bottom:0;font-size:6cqw}
+.kcut{display:grid;place-items:center;opacity:0}
+.kcut span{font:400 11cqw/1 'Anton',sans-serif;text-transform:uppercase;letter-spacing:.01em}
+.kc-a{background:var(--bg);color:var(--fg)}.kc-b{background:var(--fg);color:var(--bg)}.kc-c{background:var(--acc2);color:var(--fg)}
+.kin-in{position:absolute;left:0;right:0;top:14cqw;display:flex;justify-content:center}
+.kin-in .wd{position:relative;padding-bottom:5cqw}
+.kin-in .kin-word{font-size:17cqw}
+.kin-in .kin-by{position:absolute;right:-4cqw;bottom:0;font-size:8.4cqw}
+.kin-ul{position:absolute;left:24cqw;width:52cqw;top:45cqw;height:.45cqw;background:var(--fg);transform-origin:left}
+.kin-ot{font:italic 400 5.2cqw/1 'Instrument Serif',serif}
+.tk-kin .slot{border:.35cqw solid var(--fg);color:var(--fg);background:color-mix(in srgb,var(--acc2) 35%,transparent)}
+.kin-subc{width:8cqw;aspect-ratio:1;border-radius:50%;background:var(--fg);color:var(--bg);display:grid;place-items:center;font:italic 400 1.8cqw 'Instrument Serif',serif}
+.kin-sublab{font:400 1.6cqw 'Anton',sans-serif;text-transform:uppercase;letter-spacing:.06em}
+.marq-wrap{position:absolute;left:0;right:0;bottom:1cqw;overflow:hidden}
+.marq{display:flex;width:max-content;animation:marquee 14s linear infinite}
+.marq span{font:400 5.4cqw/1 'Anton',sans-serif;text-transform:uppercase;color:transparent;-webkit-text-stroke:.12cqw var(--fg);padding-right:2cqw;white-space:nowrap}
+
+/* kit extras */
+.pn .solo{width:34cqw}
+.avs{display:flex;align-items:center;gap:5cqw}
+.av{border-radius:50%;background:var(--bg);display:grid;place-items:center;overflow:hidden;box-shadow:0 0 0 1px color-mix(in srgb,var(--fg) 15%,transparent)}
+.av .mk{width:64%}
+.av-wrap{display:flex;flex-direction:column;align-items:center;gap:1.6cqw;font:500 1.8cqw 'DM Mono',monospace;color:var(--ui-mute)}
+.pn.neutral{background:#24262B}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -1.5 0 0 0 1.42" result="m"/>
+      <feComposite in="d" in2="m" operator="in"/>
+    </filter>
+    <filter id="roughS" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="1.8" numOctaves="2" seed="9" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale=".9" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -1.4 0 0 0 1.4" result="m"/>
+      <feComposite in="d" in2="m" operator="in"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">ITC / Media · Nomad</p>
+      <h1>Nomad identity studies</h1>
+      <p class="lead">Five directions for the Nomad channel. Each one has a logo kit, an animated mark, a 5-second intro and an end-screen outro. Pin the ones you like and leave notes; both stay saved in this browser.</p>
+    </div>
+    <div class="shortbox" id="shortbox">Pinned: <b>none yet</b></div>
+  </header>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Directions"></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+(()=>{
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+let U=0; const uid=p=>p+(++U);
+const a=(k,t,d=.8,x='')=>`data-a style="--k:${k};--t:${t}s;--d:${d}s;${x}"`;
+const no=()=>'';
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const letters=(txt,t0,step,k='rise',d=.7,e='cubic-bezier(.2,.9,.2,1)')=>[...txt].map((c,i)=>`<span class="lm"><span ${a(k,(t0+i*step).toFixed(2),d,'--e:'+e)}>${c===' '?'&nbsp;':c}</span></span>`).join('');
+
+/* ---------- generated textures ---------- */
+function stars(n,seed){const r=rng(seed);let s='';for(let i=0;i<n;i++){const z=(r()*.22+.08).toFixed(2);s+=`<i style="left:${(r()*100).toFixed(2)}%;top:${(r()*100).toFixed(2)}%;width:${z}cqw;height:${z}cqw;opacity:${(r()*.6+.25).toFixed(2)};animation-delay:-${(r()*4.5).toFixed(2)}s"></i>`}return s}
+const STARS=stars(110,7);
+function topo(seed){const r=rng(seed);const C=[[330,250,10],[1260,650,12],[920,90,6],[120,840,6],[1500,120,5]];let o='';
+  for(const[cx,cy,n]of C){const p=[r()*6.28,r()*6.28,r()*6.28];for(let j=1;j<=n;j++){const R=j*40;let d='';for(let k=0;k<=72;k++){const t=k/72*6.2832;const rr=R*(1+.17*Math.sin(2*t+p[0])+.09*Math.sin(3*t+p[1]+j*.18)+.05*Math.sin(5*t+p[2]-j*.1));d+=(k?'L':'M')+(cx+rr*Math.cos(t)).toFixed(1)+' '+(cy+rr*.78*Math.sin(t)).toFixed(1)}o+=`<path d="${d}Z" class="topo${j%5===0?' idx':''}"/>`}}return o}
+const TOPO=topo(11);
+let GRID='';for(let x=100;x<1600;x+=100)GRID+=`<line x1="${x}" y1="0" x2="${x}" y2="900" class="grid"/>`;for(let y=100;y<900;y+=100)GRID+=`<line x1="0" y1="${y}" x2="1600" y2="${y}" class="grid"/>`;
+function guill(){let o='';const cx=800,cy=450;
+  for(let k=0;k<26;k++){const R=120+k*9,amp=20,n=18,ph=k*.24;let d='';for(let i=0;i<=360;i++){const t=i/360*6.2832;const rr=R+amp*Math.sin(n*t+ph);d+=(i?'L':'M')+(cx+rr*Math.cos(t)).toFixed(1)+' '+(cy+rr*Math.sin(t)).toFixed(1)}o+=`<path d="${d}Z" class="guill"/>`}
+  for(const y0 of[40,800])for(let k=0;k<12;k++){let d='';for(let x=0;x<=1600;x+=10){const y=y0+k*5+14*Math.sin(x/38+k*.32);d+=(x?'L':'M')+x+' '+y.toFixed(1)}o+=`<path d="${d}" class="guill"/>`}
+  return o}
+const GUILL=guill();
+
+/* ---------- marks ---------- */
+function merMark(an=false){const A=an?a:no;let ticks='';
+  for(let i=0;i<72;i++){const ang=i*5,card=i%18===0,mid=i%9===0;const r1=card?37:mid?39.5:41.5;const rad=(ang-90)*Math.PI/180;
+    ticks+=`<line x1="${(50+r1*Math.cos(rad)).toFixed(2)}" y1="${(50+r1*Math.sin(rad)).toFixed(2)}" x2="${(50+44*Math.cos(rad)).toFixed(2)}" y2="${(50+44*Math.sin(rad)).toFixed(2)}" class="s-fg" stroke-width="${card?1.6:.7}" stroke-linecap="round" opacity="${card?1:.55}"/>`}
+  return `<svg viewBox="0 0 100 100" class="mk-svg" aria-hidden="true">
+  <circle cx="50" cy="50" r="47.5" fill="none" class="s-fg dr" stroke-width="1" pathLength="100" opacity=".9" ${A('draw',.1,1.4,'--e:cubic-bezier(.6,0,.2,1)')}/>
+  <g ${A('spinIn',.5,1.5,'--e:cubic-bezier(.16,1,.3,1)')}>${ticks}</g>
+  <g ${A('swing',.9,2.6,'--e:cubic-bezier(.33,.1,.3,1)')}>
+    <polygon points="50,9 56.5,50 43.5,50" class="f-acc"/>
+    <polygon points="50,91 56.5,50 43.5,50" class="f-acc2"/>
+  </g>
+  <circle cx="50" cy="50" r="3.6" class="f-bg s-fg" stroke-width="1.3" ${A('scaleIn',1.0,.5,'--s0:0')}/>
+</svg>`}
+
+function duneMark(an=false){const A=an?a:no,g=uid('dg'),m=uid('dm'),c=uid('dc');
+  return `<svg viewBox="0 0 100 100" class="mk-svg" aria-hidden="true"><defs>
+  <linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="st1"/><stop offset=".85" class="st2"/></linearGradient>
+  <mask id="${m}" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100"><rect width="100" height="100" fill="#fff"/><rect y="55" width="100" height="3.6" fill="#000"/><rect y="63" width="100" height="3" fill="#000"/><rect y="70" width="100" height="2.4" fill="#000"/></mask>
+  <clipPath id="${c}"><circle cx="50" cy="50" r="45"/></clipPath></defs>
+  <g clip-path="url(#${c})"><g mask="url(#${m})"><circle cx="50" cy="50" r="45" fill="url(#${g})" ${A('shiftY',.1,2.2,'--y0:72%;--e:cubic-bezier(.2,.7,.1,1)')}/></g>
+  <path d="M-2 77 C18 64 38 63 54 72 C66 79 82 71 102 65 V102 H-2Z" class="f-dune" ${A('shiftY',.5,1.6,'--y0:70%;--e:cubic-bezier(.2,.8,.2,1)')}/></g>
+</svg>`}
+
+function routeMark(an=false){const A=an?a:no,m=uid('rm');const D='M22 86 V30 L74 80 V44';
+  return `<svg viewBox="0 0 100 100" class="mk-svg" aria-hidden="true"><defs><mask id="${m}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="120" height="120"><path d="${D}" fill="none" stroke="#fff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" pathLength="100" class="dr" ${A('draw',.35,1.5,'--e:cubic-bezier(.5,0,.3,1)')}/></mask></defs>
+  <path d="${D}" fill="none" class="s-acc" stroke-width="7.5" stroke-linecap="round" stroke-dasharray="0.01 11.3" mask="url(#${m})"/>
+  <circle cx="22" cy="86" r="6.8" class="f-fg" ${A('scaleIn',.1,.45,'--s0:0')}/>
+  <g ${A('drop',1.75,.7)}><path d="M74 2a13.5 13.5 0 0 1 13.5 13.5c0 10.5-13.5 24-13.5 24s-13.5-13.5-13.5-24A13.5 13.5 0 0 1 74 2z" class="f-fg"/><circle cx="74" cy="15.5" r="4.8" class="f-bg"/></g>
+</svg>`}
+function pinSVG(){return `<svg viewBox="0 0 30 40" class="mk-svg" aria-hidden="true"><path d="M15 1a14 14 0 0 1 14 14c0 11-14 24-14 24S1 26 1 15A14 14 0 0 1 15 1z" class="f-fg"/><circle cx="15" cy="15" r="5.2" class="f-bg"/></svg>`}
+
+function stampMark(){const p=uid('sp');
+  return `<svg viewBox="0 0 100 100" class="mk-svg ink" aria-hidden="true"><defs><path id="${p}" d="M50,50 m-34.6,0 a34.6,34.6 0 1,1 69.2,0 a34.6,34.6 0 1,1 -69.2,0"/></defs>
+  <g filter="url(#roughS)">
+  <circle cx="50" cy="50" r="47" fill="none" class="s-acc" stroke-width="2.8"/>
+  <circle cx="50" cy="50" r="42.3" fill="none" class="s-acc" stroke-width=".9"/>
+  <circle cx="50" cy="50" r="26.6" fill="none" class="s-acc" stroke-width=".9"/>
+  <text class="f-acc" font-family="Oswald" font-weight="600" font-size="8.2" letter-spacing="2.3"><textPath href="#${p}" textLength="213" lengthAdjust="spacing">NOMADIC ★ BY DESIGN ★ EST. 2026 ★</textPath></text>
+  <text x="50" y="61.5" text-anchor="middle" class="f-acc" font-family="Oswald" font-weight="700" font-size="31">N</text>
+  <text x="50" y="70.5" text-anchor="middle" class="f-acc" font-family="Courier Prime" font-weight="700" font-size="3.8" letter-spacing=".6">WORLDWIDE</text>
+  </g></svg>`}
+
+function kinMark(an=false){const A=an?a:no;
+  return `<svg viewBox="0 0 100 100" class="mk-svg" aria-hidden="true">
+  <rect width="100" height="100" class="f-fg" ${A('scaleIn',0,.55,'--s0:0;--e:cubic-bezier(.7,0,.2,1)')}/>
+  <text x="11" y="86" class="f-bg" font-family="Anton" font-size="86" ${A('upP',.3,.55)}>N</text>
+  <text x="55" y="88" class="f-acc2" font-family="Instrument Serif" font-style="italic" font-size="74" ${A('upP',.55,.65)}>d</text>
+</svg>`}
+
+/* ---------- directions ---------- */
+const STAGE_NOTE='Slots mark where YouTube places end-screen elements. Add the real video and subscribe elements in YouTube Studio on top.';
+const D=[
+{key:'meridian',tk:'tk-mer',name:'Meridian',
+ idea:'A compass at night. The needle swings and settles, so the channel reads as someone who keeps moving but always has a heading. Cool teal-black, one coral needle, and a wide-set wordmark.',
+ pal:[['Deep','#0A1A1D'],['Glacier','#D6ECE7'],['Coral','#FF5A4E'],['Patina','#5E8F89']],type:'Syncopate · DM Mono',
+ logo:()=>`<div class="lk-mer"><div class="mk">${merMark()}</div><div><div class="mer-word">NOMAD</div><div class="rule"></div><div class="tagrow"><span class="mer-tag">By design</span><span class="mer-deg">312° NW</span></div></div></div>`,
+ mark:()=>merMark(),
+ anim:()=>`<div class="am-mer"><div class="mk">${merMark(true)}</div><div class="mer-word" ${a('track',2.4,1.6,'--ls0:1em;--e:cubic-bezier(.16,1,.3,1)')}>NOMAD</div></div>`,
+ intro:()=>`<div class="fill mer-glow"></div><div class="fill stars" ${a('fadeIn',0,2)}>${STARS}</div>
+  <div class="cn tl" ${a('fadeIn',.4,.8)}>ITC / Media</div><div class="cn tr" ${a('fadeIn',.4,.8)}>Heading · 000° N</div>
+  <div class="mer-in"><div class="mk">${merMark(true)}</div>
+   <div class="mer-word" ${a('track',2.5,1.8,'--ls0:1.2em;--e:cubic-bezier(.16,1,.3,1)')}>NOMAD</div>
+   <div class="rule" ${a('grow',3.3,1.1,'--e:cubic-bezier(.7,0,.2,1)')}></div>
+   <div class="tagrow" ${a('fadeIn',3.8,1)}><span class="mer-tag">Nomadic by design</span><span class="mer-deg">312° NW</span></div></div>
+  <div class="cn bl" ${a('fadeIn',4.2,.8)}>Lat ··· Long ···</div>`,
+ outro:()=>`<div class="fill mer-glow"></div><div class="fill stars">${STARS}</div>
+  <div class="o-head" ${a('fadeUp',.1,.8)}><div class="o-mk mk">${merMark()}</div><div><div class="o-lab">Next heading</div><div class="mer-ot">Pick a direction.</div></div></div>
+  <div class="slot sA" ${a('wipeR',.5,.8,'--e:cubic-bezier(.7,0,.2,1)')}>Most recent upload</div>
+  <div class="slot sB" ${a('wipeR',.75,.8,'--e:cubic-bezier(.7,0,.2,1)')}>Best for viewer</div>
+  <div class="sub"><div class="mer-subc mk">${merMark(true)}</div><span class="mer-sublab" ${a('fadeIn',1.8,.8)}>Subscribe</span></div>
+  <div class="cn br" ${a('fadeIn',1.4,.8)}>ITC / Media</div>`},
+
+{key:'horizon',tk:'tk-dun',name:'Horizon',
+ idea:'A desert sun sliced by heat-haze bands, rising over three dune lines. Warm and cinematic, made to sit on top of travel footage. The intro is a sunrise and the outro is the same sun setting.',
+ pal:[['Night','#1A0E26'],['Plum','#55204F'],['Rose','#C2475A'],['Ember','#FF5E3A'],['Gold','#FFC46B'],['Sand','#F6DDB8']],type:'Unbounded',
+ logo:()=>`<div class="lk-dun"><div class="mk">${duneMark()}</div><div class="dun-word">NOMADIC</div><div class="dun-tag">by design</div></div>`,
+ mark:()=>duneMark(),
+ anim:()=>`<div class="am-dun"><div class="mk">${duneMark(true)}</div><div class="dun-word">${letters('NOMADIC',1.5,.07)}</div></div>`,
+ intro:()=>duneScene(true,'rise')+`<div class="cn tl" ${a('fadeIn',.6,.8)}>ITC / Media</div>
+  <div class="dun-title"><div class="dun-word">${letters('NOMADIC',2.5,.075,'rise',.8)}</div><div class="dun-tag" ${a('fadeUp',3.3,1)}>by design</div></div>`,
+ outro:()=>duneScene(true,'set')+`
+  <div class="o-head" ${a('fadeUp',.2,.8)}><div class="o-mk mk">${duneMark()}</div><div><div class="o-lab" style="color:var(--g1)">Until tomorrow</div><div class="dun-ot">See you at the next horizon.</div></div></div>
+  <div class="slot sA" ${a('fadeUp',.7,.8)}>Most recent upload</div>
+  <div class="slot sB" ${a('fadeUp',.95,.8)}>Best for viewer</div>
+  <div class="sub" ${a('fadeIn',1.4,.8)}><div class="dun-subsun"></div><span class="dun-sublab">Subscribe</span></div>`},
+
+{key:'waypoint',tk:'tk-rou',name:'Waypoint',
+ idea:'The N is a dotted route that ends in a map pin. Topographic paper, real coordinates and a kilometre counter make every video feel like a page from a travel log. The lowercase "nomad." reads friendly.',
+ pal:[['Paper','#E7E4D6'],['Contour','#CBC8B2'],['Forest','#21352B'],['Trail','#D2452B']],type:'Bricolage Grotesque · DM Mono',
+ logo:()=>`<div class="lk-rou"><div class="mk">${routeMark()}</div><div><div class="rou-word">nomad<b>.</b></div><div class="rou-tag">Nomadic by design</div></div></div>`,
+ mark:()=>routeMark(),
+ anim:()=>`<div class="am-rou"><div class="mk">${routeMark(true)}</div><div class="rou-word" ${a('wipeR',2.2,.8,'--e:cubic-bezier(.7,0,.2,1)')}>nomad<b>.</b></div></div>`,
+ intro:()=>{const m=uid('ri');const RP='M60 830 C200 790 240 735 300 700 C400 640 420 420 560 330 C680 250 900 170 1050 250 C1170 315 980 410 800 400';
+  const WP=[[300,700,'Marrakesh','31.63°N 7.99°W',1.05],[560,330,'Istanbul','41.01°N 28.98°E',1.9],[1050,250,'Tbilisi','41.72°N 44.79°E',2.75]];
+  return `<svg class="fill" viewBox="0 0 1600 900" aria-hidden="true"><g ${a('fadeIn',0,1.2)}>${GRID}${TOPO}</g>
+   <defs><mask id="${m}" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" height="900"><path d="${RP}" fill="none" stroke="#fff" stroke-width="44" stroke-linecap="round" pathLength="100" class="dr" ${a('draw',.6,3,'--e:linear')}/></mask></defs>
+   <path d="${RP}" class="trail" mask="url(#${m})"/>
+   ${WP.map(w=>`<circle cx="${w[0]}" cy="${w[1]}" r="14" class="wp" ${a('scaleIn',w[4],.45,'--s0:0;--e:cubic-bezier(.3,1.6,.5,1)')}/>`).join('')}</svg>
+   ${WP.map(w=>`<div class="rlab" ${a('fadeUp',w[4]+.1,.6,`--dy:1cqw;left:${w[0]/16}%;top:${w[1]/9}%`)}><b>${w[2]}</b><span>${w[3]}</span></div>`).join('')}
+   <div class="r-halo" ${a('fadeIn',3.3,.8)}></div>
+   <div class="r-pin" ${a('drop',3.45,.7)}>${pinSVG()}</div>
+   <div class="r-center"><div class="rou-word" ${a('wipeR',3.85,.8,'--e:cubic-bezier(.7,0,.2,1)')}>nomad<b>.</b></div><div class="rou-tag" ${a('fadeIn',4.4,.8)}>Nomadic by design · Est. 2026</div></div>
+   <div class="cn tl" ${a('fadeIn',.2,.8)}>ITC / Media</div>
+   <div class="cn tr" ${a('fadeIn',.2,.8)}><span class="odo" data-to="12480" data-t=".6" data-d="3">12,480</span> km</div>
+   <div class="cn bl" ${a('fadeIn',.2,.8)}>Sheet 01 · Scale 1:∞</div><div class="cn br" ${a('fadeIn',.2,.8)}>↑ N</div>`},
+ outro:()=>{const m=uid('ro');const P='M416 594 C420 700 600 750 752 745 M848 745 C1000 750 1180 700 1184 594';
+  return `<svg class="fill" viewBox="0 0 1600 900" aria-hidden="true"><g>${GRID}${TOPO}</g>
+   <defs><mask id="${m}" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" height="900"><path d="${P}" fill="none" stroke="#fff" stroke-width="40" stroke-linecap="round" pathLength="100" class="dr" ${a('draw',1.1,1.4,'--e:linear')}/></mask></defs>
+   <path d="${P}" class="trail" mask="url(#${m})"/></svg>
+   <div class="o-head" ${a('fadeUp',.1,.7)}><div class="o-mk mk">${routeMark()}</div><div><div class="o-lab">Two routes from here</div><div class="rou-ot">Next stop.</div></div></div>
+   <div class="slot sA" ${a('wipeU',.45,.7,'--e:cubic-bezier(.7,0,.2,1)')}>Stop 01 · Latest</div>
+   <div class="slot sB" ${a('wipeU',.7,.7,'--e:cubic-bezier(.7,0,.2,1)')}>Stop 02 · Picked for you</div>
+   <div class="sub" style="top:42.5cqw"><div class="rou-subpin" ${a('drop',2.3,.7)}>${pinSVG()}</div><span class="rou-sublab" ${a('fadeIn',2.6,.6)}>Subscribe</span></div>
+   <div class="cn br" ${a('fadeIn',.2,.8)}><span class="odo" data-to="12731" data-t=".2" data-d="2.6">12,731</span> km</div>`}},
+
+{key:'visa',tk:'tk-stp',name:'Visa',
+ idea:'Every video is a passport entry. Ink stamps hit a guilloche visa page one after another, and the last one to land is the logo. Tactile, a little playful, and easy to stretch into thumbnails and merch.',
+ pal:[['Page','#DCE6E1'],['Ink','#1F2B29'],['Red','#B8343B'],['Blue','#24418F'],['Violet','#5B3A8C'],['Green','#2D6A4F']],type:'Oswald · Courier Prime',
+ logo:()=>`<div class="lk-stp"><div class="mk">${stampMark()}</div><div><div class="stp-word">Nomadic</div><div class="stp-cour">By design</div><div class="stp-cour sm">Valid for all destinations</div></div></div>`,
+ mark:()=>stampMark(),
+ anim:()=>`<div class="am-stp"><div class="mk" ${a('slam',.3,.5,'--r:-6deg')} style="--r:-6deg">${stampMark()}</div></div>`,
+ intro:()=>`<div class="fill" ${a('shake',2.95,.45,'--e:linear')}>
+   <svg class="fill" viewBox="0 0 1600 900" aria-hidden="true" ${a('fadeIn',0,1)}>${GUILL}</svg>
+   <div class="stp-hd" ${a('fadeIn',.2,.8)}>VISAS · VISAS · VISADOS</div>
+   <div class="stamp ink" ${a('slam',.55,.42,'--r:-9deg;--o:.86;--c:#24418F;left:7cqw;top:8.5cqw')}><div class="sm">Entry ✈ Entrée</div><div class="big">Marrakesh</div><div class="sm">03 Mar 2026 · RAK</div></div>
+   <div class="stamp oval ink" ${a('slam',1.05,.42,'--r:8deg;--o:.86;--c:#5B3A8C;left:69cqw;top:7cqw')}><div class="big">Istanbul</div><div class="sm">19 May 2026 · Admitted</div></div>
+   <div class="stamp dbl ink" ${a('slam',1.55,.42,'--r:5deg;--o:.86;--c:#2D6A4F;left:8cqw;top:34cqw')}><div class="sm">Arrival</div><div class="big">Kuala Lumpur</div><div class="sm">02 Aug 2026</div></div>
+   <div class="stamp ink" ${a('slam',2.05,.42,'--r:-6deg;--o:.86;--c:#1F2B29;left:71cqw;top:35cqw')}><div class="big">Tbilisi</div><div class="sm">11 Oct 2026 · TBS</div></div>
+   <div class="stp-main" ${a('slam',2.7,.5,'--r:-4deg;--o:1')}><div class="mk">${stampMark()}</div></div>
+   <div class="stp-line"><span class="typed" ${a('type',3.6,1.3,'--e:steps(26,end)')}>HOLDER ··· NOMADIC BY DESIGN</span></div>
+   <div class="cn tl" ${a('fadeIn',.2,.8)}>ITC / Media</div><div class="cn br" ${a('fadeIn',.2,.8)}>Page 14</div></div>`,
+ outro:()=>`<svg class="fill" viewBox="0 0 1600 900" aria-hidden="true">${GUILL}</svg>
+   <div class="o-head" ${a('fadeUp',.1,.7)} style="top:2.8cqw"><div class="o-mk mk">${stampMark()}</div><div><div class="stp-ot">Boarding next</div><div class="stp-osub">Two departures below · Choose your gate</div></div></div>
+   <div class="tkt sA" ${a('fadeUp',.45,.7)}><div class="tkt-h"><span>Gate A</span><b>Latest upload</b></div><div class="slot">Most recent upload</div></div>
+   <div class="tkt sB" ${a('fadeUp',.7,.7)}><div class="tkt-h"><span>Gate B</span><b>Picked for you</b></div><div class="slot">Best for viewer</div></div>
+   <div class="sub" style="top:41.8cqw"><span class="stp-sublab" ${a('fadeIn',1.9,.6)}>Stamp your passport →</span><div class="stp-subst ink" ${a('slam',1.4,.45,'--r:-8deg')} style="--r:-8deg">SUBSCRIBE</div></div>`},
+
+{key:'signal',tk:'tk-kin',name:'Signal',
+ idea:'Fast kinetic type for a personality-led channel. Quick cuts (new city, new desk, new timezone, same mission), then the name lands with a handwritten-feeling italic "by design". Built for energy and short attention spans.',
+ pal:[['Signal','#2A1BFF'],['Midnight','#0E0870'],['Lilac','#BDB6FF'],['Paper','#F5F3EE']],type:'Anton · Instrument Serif',
+ logo:()=>`<div class="lk-kin"><div class="mk">${kinMark()}</div><div class="wd"><div class="kin-word">Nomadic</div><div class="kin-by">by design</div></div></div>`,
+ mark:()=>kinMark(),
+ anim:()=>`<div class="am-kin"><div class="mk">${kinMark(true)}</div><div class="wd"><div class="kin-word">${letters('NOMADIC',.7,.05,'rise',.55)}</div><div class="kin-by" ${a('scaleIn',1.3,.6,'--s0:.3;--r0:-12deg;--e:cubic-bezier(.3,1.5,.5,1)')}>by design</div></div></div>`,
+ intro:()=>{const C=[['New city.','kc-a',.1,.45],['New desk.','kc-b',.55,.45],['New timezone.','kc-c',1.0,.45],['Same mission.','kc-b',1.45,.7]];
+  return C.map(c=>`<div class="fill kcut ${c[1]}" ${a('cut',c[2],c[3],'--f:none;--e:linear')}><span>${c[0]}</span></div>`).join('')+
+  `<div class="kin-in"><div class="wd"><div class="kin-word">${letters('NOMADIC',2.2,.045,'rise',.55)}</div><div class="kin-by" ${a('scaleIn',2.8,.6,'--s0:.3;--r0:-12deg;--e:cubic-bezier(.3,1.5,.5,1)')}>by design</div></div></div>
+   <div class="kin-ul" ${a('grow',3.15,.6,'--e:cubic-bezier(.7,0,.2,1)')}></div>
+   <div class="cn tl" ${a('fadeIn',3.4,.6)}>ITC / Media</div><div class="cn tr" ${a('fadeIn',3.4,.6)}>Ep. 001</div><div class="cn br" ${a('fadeIn',3.4,.6)}>→ Keep moving</div>`},
+ outro:()=>`<div class="o-head" ${a('fadeUp',.1,.7)}><div class="o-mk mk">${kinMark()}</div><div class="kin-ot">Where to next?</div></div>
+   <div class="slot sA" ${a('scaleIn',.45,.5,'--s0:.85;--e:cubic-bezier(.3,1.4,.5,1)')}>Most recent upload</div>
+   <div class="slot sB" ${a('scaleIn',.65,.5,'--s0:.85;--e:cubic-bezier(.3,1.4,.5,1)')}>Best for viewer</div>
+   <div class="sub" style="top:39.5cqw"><div class="kin-subc" ${a('scaleIn',1.1,.5,'--s0:0;--e:cubic-bezier(.3,1.6,.5,1)')}>Subscribe</div><span class="kin-sublab" ${a('fadeIn',1.4,.5)}>Come along</span></div>
+   <div class="marq-wrap" ${a('fadeIn',.9,.8)}><div class="marq"><span>Keep moving —</span><span>Keep moving —</span><span>Keep moving —</span><span>Keep moving —</span><span>Keep moving —</span><span>Keep moving —</span></div></div>`},
+];
+
+const DUNES=[['M0 500 C260 450 420 470 640 500 C860 530 1100 430 1600 470 V900 H0Z','d1'],['M0 565 C300 525 520 605 820 575 C1100 545 1300 535 1600 565 V900 H0Z','d2'],['M0 640 C320 600 600 612 900 650 C1150 682 1380 632 1600 612 V900 H0Z','d3']];
+function duneScene(an,sun){const A=an?a:no;const rise=sun==='rise';
+  return `<div class="fill dun-sky"></div>
+  ${rise?`<div class="fill dun-night" ${A('fadeOut',0,3.2,'--e:ease-in-out')}></div>`:`<div class="fill dun-night half" ${A('fadeIn',.2,4)}></div>`}
+  <div class="dun-sun ${sun}" ${rise?A('shiftY',.2,3.6,'--y0:24cqw;--e:cubic-bezier(.2,.6,.1,1)'):A('shiftY',0,4.5,'--y0:-8cqw;--e:cubic-bezier(.4,0,.3,1)')}><i></i><i></i><i></i></div>
+  ${DUNES.map(([d,c],i)=>`<div class="fill" ${rise?A('shiftY',.5+i*.25,2.2,'--y0:'+(14+i*6)+'cqw;--e:cubic-bezier(.2,.8,.2,1)'):''}><svg viewBox="0 0 1600 900" preserveAspectRatio="none" class="fill" aria-hidden="true"><path d="${d}" class="${c}"/></svg></div>`).join('')}
+  <div class="fill grain"></div>`}
+
+/* ---------- render ---------- */
+const store={get(){try{return JSON.parse(localStorage.getItem('nomad-vet')||'{}')}catch(e){return{}}},set(v){try{localStorage.setItem('nomad-vet',JSON.stringify(v))}catch(e){}}};
+let S=store.get(); S.pins=S.pins||{}; S.notes=S.notes||{};
+
+$('#tabs').innerHTML=D.map(d=>`<button class="tab" role="tab" id="tab-${d.key}" aria-controls="sec-${d.key}" data-key="${d.key}"><span class="sw">${d.pal.slice(0,3).map(p=>`<i style="background:${p[1]}"></i>`).join('')}</span>${d.name}<span class="pin" data-pin="${d.key}" hidden>●</span></button>`).join('');
+
+$('#main').innerHTML=D.map((d,i)=>`<section class="dir" id="sec-${d.key}" role="tabpanel" aria-labelledby="tab-${d.key}" hidden>
+ <div class="dir-head">
+  <div><p class="eyebrow">Direction ${i+1} of ${D.length}</p><h2>${d.name}</h2><p class="idea">${d.idea}</p></div>
+  <div class="meta"><div class="chips">${d.pal.map(p=>`<span class="chip"><i style="background:${p[1]}"></i>${p[0]} ${p[1]}</span>`).join('')}</div>
+   <div class="typeline">Type: ${d.type}</div>
+   <div class="row"><button class="btn" data-pinbtn="${d.key}" aria-pressed="false">Pin this direction</button>
+   ${i>0?`<button class="btn" data-go="${D[i-1].key}">← ${D[i-1].name}</button>`:''}${i<D.length-1?`<button class="btn" data-go="${D[i+1].key}">${D[i+1].name} →</button>`:''}</div></div>
+ </div>
+ <div class="kit">
+  <figure class="big"><div class="pn ${d.tk} v-primary">${d.logo()}</div><figcaption><span>Primary lockup</span></figcaption></figure>
+  <figure class="big"><div class="pn ${d.tk} v-primary"><div class="am">${d.anim()}</div></div><figcaption><span>Animated logo · loops</span><button class="btn" data-replay-am>Replay</button></figcaption></figure>
+  <figure><div class="pn ${d.tk} v-inverse">${d.logo()}</div><figcaption>Inverse</figcaption></figure>
+  <figure><div class="pn ${d.tk} v-primary"><div class="mk solo">${d.mark()}</div></div><figcaption>Mark alone</figcaption></figure>
+  <figure><div class="pn neutral"><div class="avs">${[22,12,6].map(s=>`<div class="av-wrap"><div class="av ${d.tk} v-primary" style="width:${s}cqw;height:${s}cqw"><div class="mk">${d.mark()}</div></div></div>`).join('')}</div></div><figcaption>Channel avatar · 3 sizes</figcaption></figure>
+  <figure><div class="pn ${d.tk} v-mono">${d.logo()}</div><figcaption>One colour</figcaption></figure>
+ </div>
+ <div class="films">
+  <figure><div class="sw-wrap"><div class="stage ${d.tk} v-primary" data-stage>${d.intro()}</div></div>
+   <figcaption><span><strong>Intro</strong> · about 5 s, then holds on the title</span><span class="row"><button class="btn" data-replay>Replay</button><button class="btn" data-fs>Full screen</button></span></figcaption></figure>
+  <figure><div class="sw-wrap"><div class="stage ${d.tk} v-primary" data-stage>${d.outro()}</div></div>
+   <figcaption><span><strong>Outro</strong> · end-screen layout. ${STAGE_NOTE}</span><span class="row"><button class="btn" data-replay>Replay</button><button class="btn" data-fs>Full screen</button></span></figcaption></figure>
+ </div>
+ <div class="notes"><label for="notes-${d.key}">Notes on ${d.name}</label><textarea id="notes-${d.key}" data-notes="${d.key}" placeholder="What works, what to change, what to steal for another direction"></textarea></div>
+</section>`).join('');
+
+/* ---------- playback ---------- */
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function odo(el){if(reduce)return;$$('.odo',el).forEach(o=>{const to=+o.dataset.to,t=+o.dataset.t*1000,d=+o.dataset.d*1000,s=performance.now();cancelAnimationFrame(o._r);const f=n=>{const p=Math.min(1,Math.max(0,(n-s-t)/d));o.textContent=Math.round(to*(1-Math.pow(1-p,2))).toLocaleString('en-US');if(p<1)o._r=requestAnimationFrame(f)};o._r=requestAnimationFrame(f)})}
+function play(el){el.classList.remove('play');void el.offsetWidth;el.classList.add('play');odo(el)}
+function replayAm(am){am.classList.add('out');setTimeout(()=>{play(am);am.classList.remove('out')},380)}
+
+const seen=new WeakSet();
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting&&!seen.has(e.target)){seen.add(e.target);play(e.target)}}),{threshold:.55});
+$$('[data-stage]').forEach(s=>io.observe(s));
+const visAm=new Set();
+const io2=new IntersectionObserver(es=>es.forEach(e=>{e.isIntersecting?visAm.add(e.target):visAm.delete(e.target)}),{threshold:.3});
+$$('.am').forEach(m=>io2.observe(m));
+if(!reduce)setInterval(()=>{visAm.forEach(m=>{if(!m.closest('[hidden]'))replayAm(m)})},6800);
+
+let cur=null;
+function show(key){const d=D.find(x=>x.key===key)||D[0];cur=d.key;
+  $$('.dir').forEach(s=>s.hidden=s.id!=='sec-'+d.key);
+  $$('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.key===d.key));
+  const sec=$('#sec-'+d.key);
+  $$('[data-stage]',sec).forEach(s=>{seen.delete(s);io.unobserve(s);io.observe(s)});
+  $$('.am',sec).forEach(m=>play(m));
+  document.documentElement.style.setProperty('--ui-accent',d.pal.find(p=>/Coral|Ember|Trail|Red|Lilac/.test(p[0]))?.[1]||'#FF5A4E');
+  $('#tab-'+d.key).scrollIntoView({block:'nearest',inline:'nearest'});
+}
+function route(){const k=(location.hash||'').slice(1);show(D.some(d=>d.key===k)?k:D[0].key)}
+addEventListener('hashchange',route);
+
+function paintPins(){const names=D.filter(d=>S.pins[d.key]).map(d=>d.name);
+  $('#shortbox').innerHTML='Pinned: <b>'+(names.length?names.join(', '):'none yet')+'</b>';
+  $$('[data-pinbtn]').forEach(b=>{const on=!!S.pins[b.dataset.pinbtn];b.setAttribute('aria-pressed',on);b.textContent=on?'Pinned':'Pin this direction'});
+  $$('[data-pin]').forEach(p=>p.hidden=!S.pins[p.dataset.pin])}
+$$('[data-notes]').forEach(t=>{t.value=S.notes[t.dataset.notes]||'';t.addEventListener('input',()=>{S.notes[t.dataset.notes]=t.value;store.set(S)})});
+
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.key){location.hash=b.dataset.key}
+  else if(b.dataset.go){location.hash=b.dataset.go;scrollTo({top:0,behavior:reduce?'auto':'smooth'})}
+  else if(b.hasAttribute('data-pinbtn')){const k=b.dataset.pinbtn;S.pins[k]=!S.pins[k];store.set(S);paintPins()}
+  else if(b.hasAttribute('data-replay')){play($('[data-stage]',b.closest('figure')))}
+  else if(b.hasAttribute('data-replay-am')){replayAm($('.am',b.closest('figure')))}
+  else if(b.hasAttribute('data-fs')){const w=$('.sw-wrap',b.closest('figure'));const p=w.requestFullscreen?.();if(p&&p.then)p.then(()=>play($('[data-stage]',w))).catch(()=>{})}
+});
+paintPins();route();
+})();
+</script>
