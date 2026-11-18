@@ -27,12 +27,15 @@ editors ──> cms/web ──> cms/api
 | **CMS** | `cms/web` · 3100 | `cms/api` · 4100 |
 | **Status** | — | `status/api` · 4008 |
 | **Accounts** | `accounts/web` · 3008 | `accounts/api` · 4009 |
+| **Email** | `email/web` · 3009 | `email/api` · 4010 |
+| **Errors** | — | `errors/api` · 4011 |
+| **Analytics** | — | `analytics/api` · 4012 |
 | **Mobile** | `mobile` (Expo / React Native) | — uses `portal/api` · 4006 |
 
 `accounts/sdk` is a library, not a house: no port, no space, no database — a client package for
 partners (and the collective's own apps) to integrate against `accounts/api`.
 
-A space id is the house id: `site`, `ai`, `engineering`, `health`, `institute`, `oss`, `research`, `portal`, `accounts`.
+A space id is the house id: `site`, `ai`, `engineering`, `health`, `institute`, `oss`, `research`, `portal`, `accounts`, `email`.
 
 `mobile` is a native client, not a house: it has no api, no space in the CMS and no database. It
 signs in against `portal/api` with the same bearer token `portal/web` uses, owning the redirect URI
@@ -234,12 +237,14 @@ Its data (sessions, auth codes, tokens, grants, the thin `Account → portalCont
 - `<house>/api`: `CMS_API_URL`, `CMS_SPACE_KEY`, `API_PUBLIC_URL` (the address the CMS posts webhooks to), `WEB_URL`,
   `REVALIDATE_SECRET`, `PORT`, `CONTENT_TTL`, plus house-specific settings: `PORTAL_API_URL` for `oss/api` and `accounts/api`,
   `MONGODB_URI` and `PORTAL_DB_NAME` for `portal/api`, and `ACCOUNTS_SERVICE_KEY` (shared between `portal/api` and
-  `accounts/api`) plus `MONGODB_URI`, `ACCOUNTS_DB_NAME`, `PORTAL_WEB_URL` and `OAUTH_SIGNING_KEY` for `accounts/api`.
+  `accounts/api`) plus `MONGODB_URI`, `ACCOUNTS_DB_NAME`, `PORTAL_WEB_URL` and `OAUTH_SIGNING_KEY` for `accounts/api`; `MONGODB_URI`, `EMAIL_DB_NAME` and the `MAIL_*` provider settings
+  (`MAIL_PROVIDER` = `log` | `resend` | `postmark` | `none`), `MAIL_WEBHOOK_SECRET`, `POSTMARK_BROADCAST_STREAM`,
+  `EMAIL_SERVICE_KEYS` (one key per house allowed to call `POST /transactional`) and `SEND_DELAY_MS` for `email/api`. See `email/README.md`.
 - `<house>/web`: `API_URL`, `REVALIDATE_SECRET`, and the `NEXT_PUBLIC_ITC_*_URL` links. `portal/web` also takes
   `NEXT_PUBLIC_CMS_WEB_URL`, so its staff tools can link into the Studio.
 
 Databases: one MongoDB cluster (Atlas). `cms/api` uses `itc_cms`; `portal/api` uses `itc_portal`; `accounts/api` uses
-`itc_accounts`. `status/api` uses `itc_status`, and should be given separate hosting — ideally a separate cluster — since a
+`itc_accounts`; `email/api` uses `itc_email`. `status/api` uses `itc_status`, and should be given separate hosting — ideally a separate cluster — since a
 status page that fails with everything else is useless. Other databases can be supported behind the storage-adapter
 interface in `cms/api`.
 
@@ -252,6 +257,9 @@ One MongoDB Atlas cluster, with one database per part:
 | `itc_cms` | `cms/api` | content, revisions, inbox, editor accounts, sessions, audit log |
 | `itc_portal` | `portal/api` | contributors, linked accounts, contributions, claims, sync runs |
 | `itc_accounts` | `accounts/api` | "Sign in with ITC": sessions, auth codes, access/refresh tokens, grants, the thin `Account → portalContributorId` link. No profile data — that's always read live from `portal/api`. |
+| `itc_email` | `email/api` | recipient lists and their dynamic fields, Markdown templates, campaigns and per-recipient send state, suppressions (unsubscribes, hard bounces, complaints), and a body-less log of transactional mail sent for other houses. Staff sign in with their CMS accounts (the `email` space exists only for that — it has no content). |
+| `itc_errors` | `errors/api` | error-tracking projects and their DSN keys, issues (grouped events, status, alert cooldowns), recent events per issue (TTL) and daily counts. Staff sign in with CMS accounts (`errors` space). See `errors/README.md`. |
+| `itc_analytics` | `analytics/api` | sites and their domains, page views and custom events with no IP, cookie or query string (TTL, 400 days by default), and one salt per day that deletes itself after two. Staff sign in with CMS accounts (`analytics` space). See `analytics/README.md`. |
 | `itc_site`, `itc_ai`, `itc_engineering`, `itc_institute`, `itc_oss`, `itc_research` | each house api | data the house api owns itself. First use: a **form outbox**, so a submission is stored when the CMS is unreachable and forwarded later. House *content* stays in `itc_cms`. |
 
 Each database has a `_meta` document describing its purpose. Web packages never get database settings.

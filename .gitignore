@@ -14,10 +14,12 @@ out/
 next-env.d.ts
 
 # Separate products, each its own git repo and remote (bytheitc/hifz, bytheitc/zakat,
-# bytheitc/accounts) — living here for convenience, not part of this monorepo's own history.
+# bytheitc/accounts, bytheitc/ijaazah, bytheitc/khutbah) — living here for convenience, not part of this monorepo's own history.
 /hifz/
 /zakat/
 /accounts/
+/ijaazah/
+/khutbah/
 
 # OS
 .DS_Store

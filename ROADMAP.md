@@ -18,7 +18,7 @@ self-service partner registration with staff review, a client SDK (`itc-accounts
 — signup still runs through the portal's federated login, unchanged. What's left: email magic link, and moving
 the collective's own apps over to it one at a time (`oss` first — see the houses list below). |
 | F5 | **Native admins** (decided) | Every app has its own `/admin`, built on one schema-driven CMS kit copied into each app: roles (editor, publisher, admin), draft → review → publish, edits to live entries held as pending, revisions, inbox, audit log. The kit is the seed of a future standalone CMS that anyone can use and that supports multiple databases. |
-| F6 | **Transactional email** | Confirmations, magic links, application updates, newsletter. |
+| F6 | **Transactional email** | Confirmations, magic links, application updates, newsletter. **Built:** the `email` house — campaigns (CSV lists, Markdown templates with merge-tag fallbacks, test sends, send-once and resume-after-restart, one-click `List-Unsubscribe`, bounce/complaint suppression via provider webhooks) and `POST /transactional` for the other houses, keyed per house. What's left: the go-live steps in `email/README.md` (provider account, DNS: SPF/DKIM/DMARC, public URLs, webhook secret), and switching the houses' own sends (magic links, confirmations) over to `POST /transactional`. |
 | F7 | **Shared design package** | Move the Khatam mark, the Collective bar and the house list into a versioned package (this is Engineering's **Mizan**). That ends the copy-into-six-apps maintenance. |
 
 ### Roles
