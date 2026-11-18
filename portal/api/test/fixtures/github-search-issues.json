@@ -1,8 +1,0 @@
-{
-  "total_count": 2,
-  "incomplete_results": false,
-  "items": [
-    { "id": 3001, "number": 20, "title": "Document the claim flow", "html_url": "https://github.com/itc-oss/hijri-kit/issues/20", "state": "open", "created_at": "2026-10-10T08:00:00Z", "closed_at": null, "repository_url": "https://api.github.com/repos/itc-oss/hijri-kit", "user": { "id": 888, "login": "ghost-user" } },
-    { "id": 3002, "number": 21, "title": "Deleted account issue", "html_url": "https://github.com/itc-oss/hijri-kit/issues/21", "state": "closed", "created_at": "2026-10-11T08:00:00Z", "closed_at": "2026-10-12T08:00:00Z", "repository_url": "https://api.github.com/repos/itc-oss/hijri-kit", "user": null }
-  ]
-}

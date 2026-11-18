@@ -1,0 +1,25 @@
+{
+  "name": "itc-docs-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ITC docs: the reading site and the staff editor. Reads and saves everything through docs/api; never touches GitHub or a database itself.",
+  "scripts": {
+    "dev": "next dev -p 3011",
+    "build": "next build",
+    "start": "next start -p 3011",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "highlight.js": "11.11.1",
+    "marked": "15.0.12",
+    "next": "16.4.5",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "^5.9.3"
+  }
+}

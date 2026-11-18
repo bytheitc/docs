@@ -1,0 +1,39 @@
+{
+  "sections": [
+    {
+      "title": "Start here",
+      "pages": [
+        "index",
+        "contributing",
+        "first-hundred"
+      ]
+    },
+    {
+      "title": "Products",
+      "pages": [
+        "products/hifz",
+        "products/zakat",
+        "products/ijaazah",
+        "products/khutbah",
+        "self-hosting"
+      ]
+    },
+    {
+      "title": "Build with ITC",
+      "pages": [
+        "platform/sign-in-with-itc",
+        "platform/status",
+        "platform/analytics",
+        "platform/errors"
+      ]
+    },
+    {
+      "title": "The collective",
+      "pages": [
+        "collective/houses",
+        "collective/architecture",
+        "editing-these-docs"
+      ]
+    }
+  ]
+}
