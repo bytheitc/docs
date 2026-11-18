@@ -21,6 +21,12 @@ export const HOUSES: House[] = [
   { id: "research", name: "Research", arabic: "بحث", transliteration: "baḥth", sense: "inquiry", url: process.env.NEXT_PUBLIC_ITC_RESEARCH_URL ?? "http://localhost:3005" },
 ];
 
+/** Soft launch: the houses the portal offers and lists. The rest still exist (old contributions
+ *  keep their house name), but you can't pick them or see them as empty tiles. Add an id here to
+ *  open a house. */
+export const OPEN_HOUSE_IDS: HouseId[] = ["site", "oss"];
+export const OPEN_HOUSES: House[] = HOUSES.filter((h) => OPEN_HOUSE_IDS.includes(h.id));
+
 export const house = (id: HouseId): House => HOUSES.find((h) => h.id === id)!;
 
 /** The contributor portal: a Collective-level service, not a house. */

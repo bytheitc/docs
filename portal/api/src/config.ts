@@ -19,6 +19,7 @@
 //                       which is the only caller: "Sign in with ITC" moved there, and it needs a
 //                       live read of a contributor's profile for every id_token and userinfo call.
 import { HOUSE } from "./content/house.js";
+import { serverless } from "./cron.js";
 
 export interface Config {
   production: boolean;
@@ -60,9 +61,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     db: { kind: (env.PORTAL_DB ?? "mongodb").toLowerCase(), uri: env.MONGODB_URI, name: env.PORTAL_DB_NAME || "itc_portal" },
     contentTtlMs: (Number(env.CONTENT_TTL) || 60) * 1000,
     jobs: {
-      claimSweepMs: (env.CLAIM_SWEEP_MINUTES === undefined ? 15 : Number(env.CLAIM_SWEEP_MINUTES) || 0) * 60_000,
+      // On a serverless host the timers default to off: Vercel Cron calls /cron/* instead (cron.ts).
+      claimSweepMs: (env.CLAIM_SWEEP_MINUTES === undefined ? (serverless(env) ? 0 : 15) : Number(env.CLAIM_SWEEP_MINUTES) || 0) * 60_000,
       syncIntervalMs: (Number(env.SYNC_INTERVAL_MINUTES) || 0) * 60_000,
-      governanceSweepMs: (env.GOVERNANCE_SWEEP_MINUTES === undefined ? 60 : Number(env.GOVERNANCE_SWEEP_MINUTES) || 0) * 60_000,
+      governanceSweepMs: (env.GOVERNANCE_SWEEP_MINUTES === undefined ? (serverless(env) ? 0 : 60) : Number(env.GOVERNANCE_SWEEP_MINUTES) || 0) * 60_000,
     },
     registerSchema: env.REGISTER_SCHEMA !== "off",
     log: env.API_LOG !== "off",

@@ -1,5 +1,5 @@
 import { ContributionItem } from "@/components/portal/ContributionItem";
-import { HOUSES } from "@/lib/houses";
+import { OPEN_HOUSES } from "@/lib/houses";
 import { getDashboard } from "@/lib/portal";
 import { requireContributor, sessionToken } from "@/lib/session";
 import { kindLabel, providerName } from "@/lib/util";
@@ -27,7 +27,7 @@ export default async function Contributions({ searchParams }: { searchParams: Pr
           <label htmlFor="f-house">House</label>
           <select id="f-house" name="house" defaultValue={f.house ?? ""}>
             <option value="">All houses</option>
-            {HOUSES.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+            {OPEN_HOUSES.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
           </select>
         </div>
         <div className="field">

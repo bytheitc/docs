@@ -2,8 +2,10 @@
 //
 //   GET /public/contributors         the opt-in wall, also read by oss/api
 //   GET /public/contributors/:handle one public profile, honouring that person's switches
+//   GET /public/first-hundred        the launch board (portal/firstHundred.ts), read by site/api
 import { Router } from "express";
-import { notFound } from "../http.js";
+import { notFound, unavailable } from "../http.js";
+import { buildBoard, fetchIssues, type Board } from "../portal/firstHundred.js";
 import { needsDatabase } from "../portal/guard.js";
 import { counts } from "../portal/milestones.js";
 import { requirePortalStore } from "../portal/store.js";
@@ -68,6 +70,33 @@ export function publicRoutes({ config }: Ctx): Router {
           }))
         : null,
     });
+  });
+
+  // One GitHub search per minute per instance, whatever the traffic. If GitHub fails, the last
+  // board built is served marked stale rather than an error: a launch page that empties itself
+  // when GitHub hiccups is worse than one a minute or two behind.
+  let board: { value: Board; at: number } | undefined;
+  let building: Promise<Board> | undefined;
+  r.get("/public/first-hundred", needsDatabase, async (_req, res) => {
+    if (!board || Date.now() - board.at > 60_000) {
+      building ??= (async () => {
+        const [issues, claims] = await Promise.all([
+          fetchIssues(process.env.FIRST_HUNDRED_ORG || "bytheitc", process.env.GITHUB_SYNC_TOKEN || undefined),
+          requirePortalStore().listClaims({ status: "active" }),
+        ]);
+        return buildBoard(issues, claims, config.web.url);
+      })().finally(() => { building = undefined; });
+      try {
+        board = { value: await building, at: Date.now() };
+      } catch (e) {
+        console.error(`[portal] first-hundred board: ${(e as Error).message}`);
+        if (!board) throw unavailable("The board can't be built right now.");
+        res.setHeader("Cache-Control", "no-store");
+        return void res.json({ ...board.value, stale: true });
+      }
+    }
+    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=60");
+    res.json(board.value);
   });
 
   return r;

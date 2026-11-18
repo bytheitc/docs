@@ -29,7 +29,7 @@ export function LogForm({ houses, kinds }: { houses: { id: string; name: string 
       <Flash state={state} />
       <div className="field">
         <label htmlFor="title">What did you do?</label>
-        <input id="title" name="title" type="text" maxLength={200} required placeholder="e.g. Designed the Institute seminar poster" {...inv(state, "title")} />
+        <input id="title" name="title" type="text" maxLength={200} required placeholder="e.g. Reviewed the Hifz Trail onboarding copy" {...inv(state, "title")} />
         <Err state={state} name="title" />
       </div>
       <div className="grid2">

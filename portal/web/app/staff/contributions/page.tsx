@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ContributionRows, contributorIndex } from "../ui";
-import { HOUSES } from "@/lib/houses";
+import { OPEN_HOUSES } from "@/lib/houses";
 import { getProviders, staff } from "@/lib/portal";
 import { CONTRIBUTION_KINDS } from "@/lib/provider-types";
 import { atLeast, requireStaff } from "@/lib/staff-session";
@@ -48,7 +48,7 @@ export default async function StaffContributions({ searchParams }: { searchParam
         <label className="cms-sr" htmlFor="f-house">House</label>
         <select id="f-house" name="house" defaultValue={f.house ?? ""}>
           <option value="">All houses</option>
-          {HOUSES.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+          {OPEN_HOUSES.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
         </select>
         <label className="cms-sr" htmlFor="f-review">Review</label>
         <select id="f-review" name="review" defaultValue={f.review ?? ""}>

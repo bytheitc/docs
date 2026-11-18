@@ -1,6 +1,6 @@
 import { ContributionItem } from "@/components/portal/ContributionItem";
 import { LogForm } from "@/components/portal/Forms";
-import { HOUSES } from "@/lib/houses";
+import { OPEN_HOUSES } from "@/lib/houses";
 import { getDashboard } from "@/lib/portal";
 import { requireContributor, sessionToken } from "@/lib/session";
 import { kindLabel, SELF_KINDS } from "@/lib/util";
@@ -18,7 +18,7 @@ export default async function LogPage() {
       </header>
       <section className="panel" aria-labelledby="new-h">
         <h2 id="new-h">New entry</h2>
-        <LogForm houses={HOUSES.map((h) => ({ id: h.id, name: h.name }))} kinds={SELF_KINDS.map((k) => ({ id: k, label: kindLabel(k) }))} />
+        <LogForm houses={OPEN_HOUSES.map((h) => ({ id: h.id, name: h.name }))} kinds={SELF_KINDS.map((k) => ({ id: k, label: kindLabel(k) }))} />
       </section>
       <section className="panel" aria-labelledby="past-h">
         <h2 id="past-h">Your entries</h2>

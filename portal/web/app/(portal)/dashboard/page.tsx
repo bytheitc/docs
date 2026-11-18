@@ -3,7 +3,7 @@ import { releaseOwnClaim } from "../actions";
 import { Khatam } from "@/components/Khatam";
 import { ContributionItem } from "@/components/portal/ContributionItem";
 import { getSettings } from "@/lib/data";
-import { HOUSES } from "@/lib/houses";
+import { HOUSES, OPEN_HOUSE_IDS } from "@/lib/houses";
 import { getDashboard } from "@/lib/portal";
 import { requireContributor, sessionToken } from "@/lib/session";
 import { fmtDate } from "@/lib/util";
@@ -39,7 +39,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <section className="panel" aria-labelledby="houses-h">
         <h2 id="houses-h">By house</h2>
         <ul className="houses">
-          {HOUSES.map((h) => {
+          {HOUSES.filter((h) => OPEN_HOUSE_IDS.includes(h.id) || byHouse.get(h.id)).map((h) => {
             const n = byHouse.get(h.id) ?? 0;
             return (
               <li key={h.id} className={`house-tile${n ? "" : " none"}`}>

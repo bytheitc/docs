@@ -23,6 +23,8 @@ export interface Jobs {
   sweepClaims(): Promise<number>;
   /** Closes nominations whose window has passed, and retires inactive maintainers. */
   sweepGovernance(): Promise<{ carried: number; retired: number }>;
+  /** Syncs every active source once, now. */
+  syncAll(): Promise<void>;
 }
 
 /** Runs `work` every `everyMs`, never twice at once, and never letting a failure stop the timer. */
@@ -98,5 +100,5 @@ export function startJobs(config: Config, cms: CmsClient): Jobs {
     `governance ${config.jobs.governanceSweepMs ? `every ${config.jobs.governanceSweepMs / 60_000} min` : "off"}.`,
   );
 
-  return { stop: () => timers.forEach(clearInterval), sweepClaims, sweepGovernance };
+  return { stop: () => timers.forEach(clearInterval), sweepClaims, sweepGovernance, syncAll: runSync };
 }

@@ -6,8 +6,9 @@ import { CmsClient } from "./cms.js";
 import { loadConfig, type Config } from "./config.js";
 import { COLLECTIONS, FORMS } from "./content/collections.js";
 import { HOUSE } from "./content/house.js";
-import { errorHandler, notFoundHandler, requestLog } from "./http.js";
-import { startJobs } from "./jobs.js";
+import { errorHandler, notFoundHandler, requestLog, trustProxySetting } from "./http.js";
+import { startJobs, type Jobs } from "./jobs.js";
+import { cronRoutes } from "./cron.js";
 import { getPortalStore, initPortalStore, storageStatus } from "./portal/store.js";
 import { registerSchemaWithRetry } from "./register.js";
 import { authRoutes } from "./routes/auth.js";
@@ -19,10 +20,13 @@ import { meRoutes } from "./routes/me.js";
 import { publicRoutes } from "./routes/public.js";
 import { staffRoutes } from "./routes/staff.js";
 import { webhookRoutes } from "./routes/webhook.js";
+import { reportProcessErrors } from "./observe.js";
 
 export interface Ctx {
   config: Config;
   cms: CmsClient;
+  /** The scheduled work, exposed at /cron/* for hosts without a long-lived process. Optional so tests can omit it. */
+  jobs?: Jobs;
 }
 
 const BODY_LIMIT = "256kb";
@@ -32,6 +36,8 @@ export function createApp(ctx: Ctx) {
   app.disable("x-powered-by");
   app.set("etag", false);
   app.set("query parser", "simple");
+  // So req.ip is the visitor, not the proxy in front of this api (rate limits key on it).
+  app.set("trust proxy", trustProxySetting());
 
   app.use(requestLog(ctx.config.log));
   app.use(((_req, res, next) => {
@@ -65,6 +71,15 @@ export function createApp(ctx: Ctx) {
     });
   });
 
+  if (ctx.jobs) {
+    const jobs = ctx.jobs;
+    app.use(cronRoutes({
+      "claims": () => jobs.sweepClaims(),
+      "governance": () => jobs.sweepGovernance(),
+      "sync": () => jobs.syncAll(),
+    }));
+  }
+
   app.use(contentRoutes(ctx));
   app.use(formRoutes(ctx));
   app.use(authRoutes(ctx));
@@ -94,6 +109,7 @@ let instance: Instance | undefined;
 
 function getInstance(): Instance {
   if (!instance) {
+    reportProcessErrors();
     const config = loadConfig();
     if (config.production && !config.cms.key) console.warn(`[api] CMS_SPACE_KEY is not set: ${HOUSE.space} will serve seed content only.`);
     if (config.production && !config.web.revalidateSecret) console.warn("[api] REVALIDATE_SECRET is not set: the web won't be told about changes.");
@@ -108,7 +124,7 @@ function getInstance(): Instance {
     const cms = new CmsClient(config);
     registerSchemaWithRetry(config, cms);
     const jobs = startJobs(config, cms);
-    instance = { app: createApp({ config, cms }), config, jobs };
+    instance = { app: createApp({ config, cms, jobs }), config, jobs };
   }
   return instance;
 }
