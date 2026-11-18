@@ -109,7 +109,7 @@ before(async () => {
   const config = { ...loadConfig({ PORT: "0", API_LOG: "off", SUBSCRIBE_LIMIT: "500" } as NodeJS.ProcessEnv), subscribeSecret: SECRET, rootTenant: "" };
   mail = fakeMailer();
   const notifier = createNotifier(config, mail.mailer);
-  server = createApp(config, { stop() {}, async runAll() { return { checked: 0, down: 0 }; } }, { mailer: mail.mailer, notifier }).listen(0);
+  server = createApp(config, { stop() {}, async runAll() { return { checked: 0, down: 0 }; }, async prune() { return 0; } }, { mailer: mail.mailer, notifier }).listen(0);
   await new Promise((r) => server.once("listening", r));
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });
@@ -315,7 +315,7 @@ test("the subject carries the headline, so it reads without being opened", () =>
 test("with no signing secret, subscribing is refused rather than silently dropped", async () => {
   const config = { ...loadConfig({ PORT: "0", API_LOG: "off" } as NodeJS.ProcessEnv), subscribeSecret: "", rootTenant: "" };
   const m = fakeMailer();
-  const app = createApp(config, { stop() {}, async runAll() { return { checked: 0, down: 0 }; } }, { mailer: m.mailer, notifier: createNotifier(config, m.mailer) });
+  const app = createApp(config, { stop() {}, async runAll() { return { checked: 0, down: 0 }; }, async prune() { return 0; } }, { mailer: m.mailer, notifier: createNotifier(config, m.mailer) });
   const s = app.listen(0);
   await new Promise((r) => s.once("listening", r));
   const port = (s.address() as AddressInfo).port;

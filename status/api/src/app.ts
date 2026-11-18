@@ -8,7 +8,9 @@ import { adminRoutes } from "./routes/admin.js";
 import { publicRoutes } from "./routes/public.js";
 import { subscribeRoutes } from "./routes/subscribe.js";
 import { startScheduler, type Scheduler } from "./scheduler.js";
+import { cronRoutes } from "./cron.js";
 import { getStore, initStore } from "./store/index.js";
+import { reportProcessErrors } from "./observe.js";
 
 export function createApp(config: Config, scheduler: Scheduler, deps: { mailer?: Mailer; notifier?: Notifier } = {}): Express {
   const mailer = deps.mailer ?? new Mailer(loadMailConfig());
@@ -57,6 +59,7 @@ export function createApp(config: Config, scheduler: Scheduler, deps: { mailer?:
   );
   app.use(adminRoutes(config, scheduler, notifier));
   app.use(subscribeRoutes(config, mailer));
+  app.use(cronRoutes({ checks: () => scheduler.runAll(), prune: () => scheduler.prune() }));
   app.use(publicRoutes(config, offerSubscriptions));
 
   app.use(notFoundHandler);
@@ -79,6 +82,7 @@ let instance: Instance | undefined;
 
 function getInstance(): Instance {
   if (!instance) {
+    reportProcessErrors();
     const config = loadConfig();
 
     if (!config.db.uri) {

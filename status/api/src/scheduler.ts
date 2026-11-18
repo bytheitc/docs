@@ -5,12 +5,15 @@
 import type { Config } from "./config.js";
 import { runCheck, toResult } from "./checks.js";
 import { getStore } from "./store/index.js";
+import { serverless } from "./cron.js";
 import type { Service } from "./types.js";
 
 export interface Scheduler {
   stop(): void;
   /** Probe everything once, now. Used at boot, by the admin api and by the tests. */
   runAll(): Promise<{ checked: number; down: number }>;
+  /** Drops raw probes older than PRUNE_DAYS; the day buckets keep the long history. */
+  prune(): Promise<number>;
 }
 
 export function startScheduler(config: Config): Scheduler {
@@ -65,12 +68,15 @@ export function startScheduler(config: Config): Scheduler {
 
   // Individual probes are only needed for "what is the state right now" and the recent graph; the
   // day buckets carry the long history, so the raw rows are dropped on a daily sweep.
-  every(6 * 3600_000, "prune", async () => {
+  const prune = async (): Promise<number> => {
     const store = getStore();
-    if (!store) return;
+    if (!store) return 0;
     const removed = await store.prune(new Date(Date.now() - config.pruneDays * 864e5));
     if (removed) console.log(`[status] pruned ${removed} probe(s) older than ${config.pruneDays} days.`);
-  });
+    return removed;
+  };
+  // On a serverless host Vercel Cron calls /cron/prune instead (cron.ts).
+  if (!serverless()) every(6 * 3600_000, "prune", prune);
 
   // Something has to populate the page before the first interval elapses.
   if (config.checkIntervalMs > 0) {
@@ -83,5 +89,5 @@ export function startScheduler(config: Config): Scheduler {
     `keeping ${config.pruneDays} days of probes.`,
   );
 
-  return { stop: () => timers.forEach(clearInterval), runAll };
+  return { stop: () => timers.forEach(clearInterval), runAll, prune };
 }

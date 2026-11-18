@@ -16,6 +16,8 @@
 //                     cms/api exposes CMS_LOGIN_LIMIT for the same reason
 //   TRUST_PROXY       "on" when behind a load balancer, so the Host header is read correctly
 //   API_LOG           "off" silences request logs
+import { serverless } from "./cron.js";
+
 export interface Config {
   production: boolean;
   port: number;
@@ -41,12 +43,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     db: { uri: env.MONGODB_URI, name: env.STATUS_DB_NAME || "itc_status" },
     publicUrl: (env.PUBLIC_URL || `http://localhost:${port}`).replace(/\/+$/, ""),
     rootTenant: env.ROOT_TENANT || "",
-    checkIntervalMs: (env.CHECK_INTERVAL_SECONDS === undefined ? 60 : Number(env.CHECK_INTERVAL_SECONDS) || 0) * 1000,
+    // Off by default on a serverless host, where Vercel Cron calls /cron/checks instead (cron.ts).
+    checkIntervalMs: (env.CHECK_INTERVAL_SECONDS === undefined ? (serverless(env) ? 0 : 60) : Number(env.CHECK_INTERVAL_SECONDS) || 0) * 1000,
     pruneDays: Number(env.PRUNE_DAYS) || 14,
     setupToken: env.SETUP_TOKEN || "",
     subscribeSecret: env.SUBSCRIBE_SECRET || "",
     subscribeLimit: Number(env.SUBSCRIBE_LIMIT) || 10,
-    trustProxy: (env.TRUST_PROXY ?? "").toLowerCase() === "on",
+    // Unset: on under Vercel (which overwrites X-Forwarded-For and sets Host), off elsewhere.
+    trustProxy: env.TRUST_PROXY === undefined || env.TRUST_PROXY === "" ? env.VERCEL === "1" : env.TRUST_PROXY.toLowerCase() === "on",
     log: (env.API_LOG ?? "").toLowerCase() !== "off",
   };
 }

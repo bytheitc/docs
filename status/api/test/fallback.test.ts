@@ -50,7 +50,7 @@ let server: ReturnType<ReturnType<typeof createApp>["listen"]>;
 before(async () => {
   setStore(store);
   const config = { ...loadConfig({ PORT: "0", API_LOG: "off" } as NodeJS.ProcessEnv), rootTenant: "" };
-  server = createApp(config, { stop() {}, async runAll() { return { checked: 0, down: 0 }; } }).listen(0);
+  server = createApp(config, { stop() {}, async runAll() { return { checked: 0, down: 0 }; }, async prune() { return 0; } }).listen(0);
   await new Promise((r) => server.once("listening", r));
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });
