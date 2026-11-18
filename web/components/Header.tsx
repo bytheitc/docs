@@ -11,7 +11,7 @@ export function Header({ withMenu = true }: { withMenu?: boolean }) {
       {withMenu && <MenuButton />}
       <Link href="/" className="brand" aria-label="ITC Docs, home">
         <img src="/itc-mark.svg" alt="" width={30} height={30} />
-        <b>ITC <span className="slash">/</span> Docs</b>
+        <b>Docs</b>
         <span className="ar" lang="ar" aria-hidden="true">دليل</span>
       </Link>
       <span className="grow" />
