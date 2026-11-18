@@ -10,6 +10,7 @@ import { deliveryRoutes } from "./routes/delivery.js";
 import { manageRoutes } from "./routes/manage.js";
 import { SUPPORTED_DATABASES, createStorage, storageStatus } from "./storage.js";
 import type { StorageAdapter } from "./types.js";
+import { reportProcessErrors } from "./observe.js";
 
 export interface Ctx {
   config: Config;
@@ -73,6 +74,7 @@ let instance: Instance | undefined;
 
 function getInstance(): Instance {
   if (!instance) {
+    reportProcessErrors();
     const config = loadConfig();
     const status = storageStatus(config);
     if (!status.configured) {

@@ -44,7 +44,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     db: { kind: (env.CMS_DB ?? "mongodb").toLowerCase(), uri: env.MONGODB_URI, name: env.CMS_DB_NAME || "itc_cms" },
     spaceKeys: parseSpaceKeys(env.CMS_SPACE_KEYS),
     setupToken: env.CMS_SETUP_TOKEN || undefined,
-    trustProxy: !tp ? false : /^\d+$/.test(tp) ? Number(tp) : tp === "true" || tp === "1",
+    // Unset: on under Vercel (which overwrites X-Forwarded-For, so it can't be spoofed), off elsewhere.
+    trustProxy: !tp ? env.VERCEL === "1" : /^\d+$/.test(tp) ? Number(tp) : tp === "true" || tp === "1",
     loginLimit: { max: Number(env.CMS_LOGIN_LIMIT) || 20, windowMs: 10 * 60_000 },
     log: env.CMS_LOG !== "off",
   };
