@@ -189,7 +189,7 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .hero { padding: 8px 0 28px; }
 .hero .ar { display: block; font: 40px/1 var(--arabic); color: var(--gold); margin-bottom: 18px; }
 .hero h1 { font-size: clamp(38px, 5.4vw, 58px); }
-.paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 28px 0 8px; }
+.paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 28px 0 8px; }
 .path { position: relative; display: block; padding: 20px 20px 18px; border: 1px solid var(--rule-2); border-radius: 16px; background: var(--panel); text-decoration: none; color: var(--ink); box-shadow: var(--shadow); transition: border-color 0.15s, transform 0.15s; }
 .path:hover { border-color: var(--brand); transform: translateY(-2px); color: var(--ink); }
 .path .n { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--brand-wash); color: var(--brand); font: 700 13px/1 var(--mono); }
@@ -214,6 +214,7 @@ button, input, textarea, select { font: inherit; color: inherit; }
 
 /* ---------------- responsive ---------------- */
 @media (max-width: 1180px) { .shell { grid-template-columns: var(--side) minmax(0, 1fr); } .toc { display: none; } }
+@media (max-width: 1100px) { .paths { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 860px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
   .side { position: fixed; z-index: 60; top: var(--header); left: 0; width: min(300px, 86vw); background: var(--paper); border-right: 1px solid var(--rule-2); transform: translateX(-100%); transition: transform 0.2s ease; box-shadow: var(--shadow); }

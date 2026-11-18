@@ -24,7 +24,6 @@ export function DocView({ page, headings, prev, next, hero }: { page: DocPage; h
           <CodeCopy />
           <footer className="doc-foot">
             <div className="edit-row">
-              <Link href={`/admin/edit/${page.slug}`}>Edit this page</Link>
               <a href={`https://github.com/bytheitc/docs/blob/main/content/${page.slug}.md`} target="_blank" rel="noopener noreferrer">View the source</a>
               <a href={`https://github.com/bytheitc/docs/issues/new?title=${encodeURIComponent(`Docs: ${page.title}`)}`} target="_blank" rel="noopener noreferrer">Suggest a change</a>
             </div>

@@ -9,9 +9,10 @@
 //   The page, in Markdown.
 //
 // `contributing.md` is served at /contributing, `products/hifz.md` at /products/hifz, and
-// `index.md` is the home page. `nav.json` orders the sidebar: sections, each a list of slugs. A page
-// not in nav.json still has its address; it just isn't listed, which is how a draft is kept out of
-// sight until it's ready.
+// `index.md` is the home page. `nav.json` orders the sidebar: sections, each a list of slugs. Only
+// pages in nav.json (and the home page) are public: a page left out is hidden from readers, its
+// address and search included, but stays in the repository and in the editor. That is how a draft is
+// kept out of sight until it's ready, and how a finished page is taken down without deleting it.
 import type { Author, Change, DocsSource, FileVersion, Revision } from "./source.js";
 
 export const NAV_FILE = "nav.json";
@@ -223,9 +224,15 @@ export class Docs {
     return [...s.pages.values()].sort((a, b) => a.slug.localeCompare(b.slug));
   }
 
+  /** Whether readers may see a page: the home page, or one listed in the sidebar. */
+  async isPublic(slug: string): Promise<boolean> {
+    const s = await this.load();
+    return slug === "index" || s.nav.sections.some((x) => x.pages.includes(slug));
+  }
+
   async searchIndex(): Promise<SearchEntry[]> {
     const s = await this.load();
-    return [...s.pages.values()].map((p) => ({
+    return [...s.pages.values()].filter((p) => p.slug === "index" || p.section !== null).map((p) => ({
       ...meta(p),
       section: p.section,
       headings: headingsOf(p.markdown),

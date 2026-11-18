@@ -19,20 +19,10 @@
       ]
     },
     {
-      "title": "Build with ITC",
-      "pages": [
-        "platform/sign-in-with-itc",
-        "platform/status",
-        "platform/analytics",
-        "platform/errors"
-      ]
-    },
-    {
       "title": "The collective",
       "pages": [
         "collective/houses",
-        "collective/architecture",
-        "editing-these-docs"
+        "platform/errors"
       ]
     }
   ]

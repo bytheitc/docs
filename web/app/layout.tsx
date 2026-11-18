@@ -12,7 +12,7 @@ const SITE = process.env.NEXT_PUBLIC_DOCS_URL ?? "http://localhost:3011";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: { default: "ITC Docs", template: "%s · ITC Docs" },
-  description: "How to contribute to the Islamic Tech Collective, what we build, and how to build on it.",
+  description: "How to contribute to the Islamic Tech Collective, and what we build.",
   icons: { icon: "/itc-mark.svg" },
 };
 

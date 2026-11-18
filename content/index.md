@@ -1,15 +1,14 @@
 ---
 title: Welcome
-description: "The Islamic Tech Collective's documentation: how to contribute, what we build, and how to build on it."
+description: "The Islamic Tech Collective's documentation: how to contribute, and what we build."
 ---
 
 The Islamic Tech Collective builds technology in service of the Qur'an, the Sunnah and the people who keep them. Everything here is open: the code, the issues, and these docs.
 
-These pages are for three kinds of reader:
+These pages are for two kinds of reader:
 
 - **Contributors** who want to help build. Start with [Contributing](/contributing), then pick a task from [The First Hundred](/first-hundred).
 - **People using our products**, and those who want to run their own copy for a family, a workplace or a madrasah. See [Products](/products/hifz) and [Hosting your own](/self-hosting).
-- **Developers building on the collective**: [Sign in with ITC](/platform/sign-in-with-itc), and the services every ITC app shares.
 
 ## What we build
 
@@ -22,7 +21,7 @@ These pages are for three kinds of reader:
 
 ## How the collective is organised
 
-The collective is made of [houses](/collective/houses), each with its own website and api, sharing one contributor portal, one sign-in and one set of rules about data. [How the services fit together](/collective/architecture) explains them.
+The collective is organised into [houses](/collective/houses). At launch, contributions go through two: the Collective and Open Source.
 
 > [!NOTE]
-> Something here wrong or missing? Every page has an **Edit** link for staff, and anyone can open an issue on [bytheitc/docs](https://github.com/bytheitc/docs/issues).
+> Something here wrong or missing? Open an issue on [bytheitc/docs](https://github.com/bytheitc/docs/issues).

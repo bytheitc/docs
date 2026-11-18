@@ -55,7 +55,10 @@ test("the sidebar lists existing pages in order, and prev/next follow it", async
   assert.equal(c?.prev?.slug, "index");
   assert.equal(c?.next?.slug, "products/hifz");
   const d = await docs.page("draft");
-  assert.equal(d?.page.section, null, "an unlisted page still has its address");
+  assert.equal(d?.page.section, null, "an unlisted page is still in the model, for the editor");
+  assert.equal(await docs.isPublic("draft"), false, "but hidden from readers");
+  assert.equal(await docs.isPublic("contributing"), true);
+  assert.ok(!(await docs.searchIndex()).some((e) => e.slug === "draft"), "and from search");
 });
 
 test("saving with a stale version is refused instead of overwriting someone else's edit", async () => {

@@ -1,7 +1,8 @@
 // What readers get. Everything here is public and cacheable.
 //
 //   GET /nav              the sidebar: sections of { slug, title, description }
-//   GET /pages/*slug      one page: its Markdown, headings, and the previous and next page
+//   GET /pages/*slug      one page: its Markdown, headings, and the previous and next page. Only
+//                         pages listed in the sidebar (and the home page) are served; see pages.ts
 //   GET /search-index     every page's title, headings and text, for the web's search box
 import { Router } from "express";
 import type { Ctx } from "../app.js";
@@ -21,7 +22,7 @@ export function publicRoutes({ docs }: Ctx): Router {
 
   r.get("/pages/*slug", async (req, res) => {
     const slug = slugParam(req.params.slug);
-    if (!SLUG.test(slug)) throw notFound("No such page.");
+    if (!SLUG.test(slug) || !(await docs.isPublic(slug))) throw notFound("No such page.");
     const found = await docs.page(slug);
     if (!found) throw notFound("No such page.");
     const { page, headings, prev, next } = found;
