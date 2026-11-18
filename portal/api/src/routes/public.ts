@@ -8,7 +8,7 @@ import { notFound, unavailable } from "../http.js";
 import { buildBoard, fetchIssues, type Board } from "../portal/firstHundred.js";
 import { needsDatabase } from "../portal/guard.js";
 import { counts } from "../portal/milestones.js";
-import { requirePortalStore } from "../portal/store.js";
+import { getPortalStore, requirePortalStore } from "../portal/store.js";
 import type { Ctx } from "../app.js";
 
 export function publicRoutes({ config }: Ctx): Router {
@@ -77,12 +77,15 @@ export function publicRoutes({ config }: Ctx): Router {
   // when GitHub hiccups is worse than one a minute or two behind.
   let board: { value: Board; at: number } | undefined;
   let building: Promise<Board> | undefined;
-  r.get("/public/first-hundred", needsDatabase, async (_req, res) => {
+  // Not behind needsDatabase: the tasks are public GitHub issues, so with no database the board is
+  // still built, just with nothing shown as claimed, rather than the launch page going blank.
+  r.get("/public/first-hundred", async (_req, res) => {
     if (!board || Date.now() - board.at > 60_000) {
       building ??= (async () => {
+        const store = getPortalStore();
         const [issues, claims] = await Promise.all([
           fetchIssues(process.env.FIRST_HUNDRED_ORG || "bytheitc", process.env.GITHUB_SYNC_TOKEN || undefined),
-          requirePortalStore().listClaims({ status: "active" }),
+          store ? store.listClaims({ status: "active" }) : Promise.resolve([]),
         ]);
         return buildBoard(issues, claims, config.web.url);
       })().finally(() => { building = undefined; });

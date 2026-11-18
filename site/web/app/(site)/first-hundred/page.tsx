@@ -26,13 +26,17 @@ const PROJECTS: Record<string, { name: string; ar?: string; line: string }> = {
   "bytheitc/zakat": { name: "Zakat Kit", ar: "زكاة", line: "Works out the zakat you owe, in your currency, from every account you hold, with the working shown. Includes tools for businesses. TypeScript and Next.js." },
 };
 
+// The portal's board carries each task's claim link; a board built straight from GitHub (when the
+// portal can't be reached) doesn't, so the same link is made here.
+const claimUrlFor = (t: FirstHundredTask) => `${PORTAL_URL}/claim?provider=github&repo=${encodeURIComponent(t.repo)}&issue=${t.number}`;
+
 function Task({ t }: { t: FirstHundredTask }) {
   return (
     <li className={`fh-task is-${t.state}`}>
       <p className="fh-ref"><span>{TRACK_LABEL[t.track] ?? t.track}</span> #{t.number}</p>
       <h3>{t.title}</h3>
       <div className="fh-actions">
-        {t.state === "open" && t.claimUrl && <a className="btn btn-small" href={t.claimUrl} data-itc-event="First Hundred: claim">Claim it</a>}
+        {t.state === "open" && <a className="btn btn-small" href={t.claimUrl ?? claimUrlFor(t)} data-itc-event="First Hundred: claim">Claim it</a>}
         {t.state === "claimed" && <span className="fh-state">Someone is on it</span>}
         {t.state === "done" && <span className="fh-state">Done</span>}
         <a className="text-link" href={t.url} rel="noopener noreferrer" target="_blank">Read the issue</a>
@@ -77,6 +81,7 @@ export default async function FirstHundredPage() {
           <p className="eyebrow">The tasks</p>
           <h2 id="fh-tasks">Pick one.</h2>
           {board?.stale && <p className="fine-note">GitHub isn’t answering right now, so this list may be a few minutes behind.</p>}
+          {board?.claimsUnknown && <p className="fine-note">Claims can’t be shown right now, so check the issue on GitHub to see whether someone is already on it.</p>}
         </div>
 
         {!board ? (

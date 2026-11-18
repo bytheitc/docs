@@ -61,7 +61,7 @@ export interface FirstHundredBoard {
   goal: number; total: number; done: number; claimed: number; open: number;
   tracks: { track: string; total: number; done: number }[];
   projects?: { repo: string; total: number; done: number }[];
-  tasks: FirstHundredTask[]; updatedAt: string; stale?: boolean;
+  tasks: FirstHundredTask[]; updatedAt: string; stale?: boolean; claimsUnknown?: boolean;
 }
 export const getFirstHundred = (): Promise<FirstHundredBoard | null> => readJson<FirstHundredBoard>("/first-hundred", "first-hundred");
 

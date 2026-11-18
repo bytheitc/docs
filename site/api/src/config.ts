@@ -9,6 +9,10 @@
 //   MONGODB_URI         this house's own database (itc_site), for the newsletter
 //   SITE_DB_NAME        database name (itc_site)
 //   SITE_DB             which database to use: "mongodb" (default)
+//   PORTAL_API_URL      base URL of portal/api, which owns the First Hundred board
+//   GITHUB_SYNC_TOKEN   optional read-only GitHub token, used only when the portal can't be reached
+//                       and the board is built from GitHub here instead (a higher rate limit)
+//   FIRST_HUNDRED_ORG   the GitHub organisation the board's issues live in (bytheitc)
 //   CONTENT_TTL         seconds to hold a content response in memory (60)
 //   REGISTER_SCHEMA     "off" skips schema registration on boot (useful in tests)
 //   API_LOG             "off" silences request logs
@@ -27,6 +31,8 @@ export interface Config {
   db: { kind: string; uri?: string; name: string };
   /** portal/api, read for the First Hundred board (GET /public/first-hundred). */
   portal: { url: string };
+  /** Where the board's tasks live, for building it from GitHub when the portal can't be reached. */
+  firstHundred: { org: string; token: string | undefined };
   contentTtlMs: number;
   registerSchema: boolean;
   log: boolean;
@@ -51,6 +57,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     },
     db: { kind: (env.SITE_DB ?? "mongodb").toLowerCase(), uri: env.MONGODB_URI, name: env.SITE_DB_NAME || "itc_site" },
     portal: { url: (env.PORTAL_API_URL || "http://localhost:4006").replace(/\/+$/, "") },
+    firstHundred: { org: env.FIRST_HUNDRED_ORG || "bytheitc", token: env.GITHUB_SYNC_TOKEN || undefined },
     contentTtlMs: (Number(env.CONTENT_TTL) || 60) * 1000,
     registerSchema: env.REGISTER_SCHEMA !== "off",
     log: env.API_LOG !== "off",
