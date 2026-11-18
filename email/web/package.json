@@ -1,0 +1,23 @@
+{
+  "name": "itc-email-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ITC email campaigns: the staff dashboard (lists, templates, campaigns) and the public unsubscribe page. Reads everything from email/api; never touches a database.",
+  "scripts": {
+    "dev": "next dev -p 3009",
+    "build": "next build",
+    "start": "next start -p 3009",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.4.5",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "^5.9.3"
+  }
+}
