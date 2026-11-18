@@ -7,7 +7,7 @@ const fraunces = Fraunces({ subsets: ["latin"], axes: ["opsz"], variable: "--fon
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 const reemKufi = Reem_Kufi({ subsets: ["arabic"], variable: "--font-reem-kufi" });
 
-const SITE = process.env.NEXT_PUBLIC_DOCS_URL ?? "http://localhost:3011";
+const SITE = process.env.NEXT_PUBLIC_DOCS_URL ?? "https://docs.bytheitc.xyz";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
