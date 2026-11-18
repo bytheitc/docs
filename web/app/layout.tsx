@@ -13,7 +13,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: { default: "ITC Docs", template: "%s · ITC Docs" },
   description: "How to contribute to the Islamic Tech Collective, and what we build.",
-  icons: { icon: "/itc-mark.svg" },
 };
 
 export const viewport: Viewport = {
