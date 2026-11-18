@@ -6,6 +6,7 @@ export interface NavLink { href: string; label: string }
 export const PRIMARY_NAV: NavLink[] = [
   { href: "/about", label: "About" },
   { href: "/products", label: "Products" },
+  { href: "/first-hundred", label: "First Hundred" },
   // { href: "/houses", label: "Houses" },
   // { href: "/events", label: "Gatherings" },
   // { href: "/news", label: "News" },
@@ -28,6 +29,7 @@ export const FOOTER_NAV: { heading: string; links: NavLink[] }[] = [
     heading: "Take part",
     links: [
       { href: "/join", label: "Join" },
+      { href: "/first-hundred", label: "The First Hundred" },
       { href: "/products", label: "Products" },
       // { href: "/events", label: "Gatherings" },
       // { href: "/rfps", label: "Requests for proposals" },

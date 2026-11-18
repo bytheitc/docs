@@ -55,6 +55,16 @@ export async function getSingleton<T>(collection: string): Promise<T | undefined
   return (await getPublished<T>(collection))[0];
 }
 
+/** The First Hundred board, from portal/api by way of this house's api. null when it can't be read. */
+export interface FirstHundredTask { repo: string; number: number; title: string; url: string; track: string; state: "open" | "claimed" | "done"; claimUrl?: string }
+export interface FirstHundredBoard {
+  goal: number; total: number; done: number; claimed: number; open: number;
+  tracks: { track: string; total: number; done: number }[];
+  projects?: { repo: string; total: number; done: number }[];
+  tasks: FirstHundredTask[]; updatedAt: string; stale?: boolean;
+}
+export const getFirstHundred = (): Promise<FirstHundredBoard | null> => readJson<FirstHundredBoard>("/first-hundred", "first-hundred");
+
 /* ------------------------------------------------------------------ */
 /* Forms                                                              */
 /* ------------------------------------------------------------------ */

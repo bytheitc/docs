@@ -25,6 +25,8 @@ export interface Config {
   web: { url: string; revalidateSecret: string };
   /** This house's own data: the newsletter's subscribers. No other api reads it (rule 2). */
   db: { kind: string; uri?: string; name: string };
+  /** portal/api, read for the First Hundred board (GET /public/first-hundred). */
+  portal: { url: string };
   contentTtlMs: number;
   registerSchema: boolean;
   log: boolean;
@@ -48,6 +50,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       revalidateSecret: env.REVALIDATE_SECRET || "",
     },
     db: { kind: (env.SITE_DB ?? "mongodb").toLowerCase(), uri: env.MONGODB_URI, name: env.SITE_DB_NAME || "itc_site" },
+    portal: { url: (env.PORTAL_API_URL || "http://localhost:4006").replace(/\/+$/, "") },
     contentTtlMs: (Number(env.CONTENT_TTL) || 60) * 1000,
     registerSchema: env.REGISTER_SCHEMA !== "off",
     log: env.API_LOG !== "off",

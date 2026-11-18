@@ -8,12 +8,14 @@ import { Mailer, loadMailConfig } from "./mail.js";
 import { getNewsletterStore, initNewsletterStore } from "./newsletter/store.js";
 import { COLLECTIONS, FORMS } from "./content/collections.js";
 import { HOUSE } from "./content/house.js";
-import { errorHandler, notFoundHandler, requestLog } from "./http.js";
+import { errorHandler, notFoundHandler, requestLog, trustProxySetting } from "./http.js";
 import { registerSchemaWithRetry } from "./register.js";
 import { contentRoutes } from "./routes/content.js";
+import { firstHundredRoutes } from "./routes/firstHundred.js";
 import { formRoutes } from "./routes/forms.js";
 import { newsletterRoutes } from "./routes/newsletter.js";
 import { webhookRoutes } from "./routes/webhook.js";
+import { reportProcessErrors } from "./observe.js";
 
 export interface Ctx {
   config: Config;
@@ -29,6 +31,8 @@ export function createApp(ctx: Ctx) {
   app.disable("x-powered-by");
   app.set("etag", false);
   app.set("query parser", "simple");
+  // So req.ip is the visitor, not the proxy in front of this api (rate limits key on it).
+  app.set("trust proxy", trustProxySetting());
 
   app.use(requestLog(ctx.config.log));
   app.use(((_req, res, next) => {
@@ -56,6 +60,7 @@ export function createApp(ctx: Ctx) {
   });
 
   app.use(contentRoutes(ctx));
+  app.use(firstHundredRoutes(ctx));
   app.use(formRoutes(ctx));
   app.use(newsletterRoutes(ctx));
 
@@ -78,6 +83,7 @@ let instance: Instance | undefined;
 
 function getInstance(): Instance {
   if (!instance) {
+    reportProcessErrors();
     const config = loadConfig();
     if (config.production && !config.cms.key) console.warn(`[api] CMS_SPACE_KEY is not set: ${HOUSE.space} will serve seed content only.`);
     if (config.production && !config.web.revalidateSecret) console.warn("[api] REVALIDATE_SECRET is not set: the web won't be told about changes.");
