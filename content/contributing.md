@@ -11,13 +11,13 @@ Every open task is a GitHub issue. The easiest place to start is [The First Hund
 
 A good issue tells you **why** it matters, **what** to do, **which files** to look at, and **what counts as done**. If one doesn't, ask on the issue before you start.
 
-## 2. Claim it
+## 2. Ask for it
 
-Sign in to the contributor portal with GitHub and claim the issue. Claiming tells everyone it's yours, so two people don't do the same work:
+Sign in to the contributor portal with GitHub and claim the issue. A claim starts as a request:
 
-- A claim lasts **7 days**. If you need longer, say so on the issue.
-- Where it can, the portal also assigns the GitHub issue to you.
-- If you can't finish, release the claim from your dashboard so someone else can pick it up. No one minds.
+- **It's held for you** at once, so no one else can take it while you wait, and the portal notes it on the GitHub issue.
+- **A maintainer approves it.** Then the issue is assigned to you, and you have **7 days**. If you need longer, say so on the issue.
+- **If you can't finish**, release it from your dashboard so someone else can pick it up. No one minds.
 
 ## 3. Do the work
 

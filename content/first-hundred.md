@@ -19,7 +19,7 @@ The live board is at [bytheitc.xyz/first-hundred](https://bytheitc.xyz/first-hun
 ## How a task works
 
 1. **Find one** on the board, or on GitHub with the label [`first-hundred`](https://github.com/search?q=org%3Abytheitc+label%3Afirst-hundred+is%3Aopen&type=issues).
-2. **Claim it** on the portal, so no one else starts the same thing. See [Contributing](/contributing).
+2. **Ask for it** on the portal. It's held for you, and a maintainer approves it. See [Contributing](/contributing).
 3. **Open a pull request** that closes the issue.
 4. **A maintainer merges it**, and the board counts it.
 
