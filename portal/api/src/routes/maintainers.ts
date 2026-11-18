@@ -22,6 +22,9 @@ import {
   type Maintainership, type Nomination, type ReviewerInvitation,
 } from "../portal/maintainers.js";
 import { requirePortalStore } from "../portal/store.js";
+import { claimComments, decideRequest } from "../portal/claims.js";
+import { getSettings } from "../portal/content.js";
+import { assignGithubIssue, commentGithubIssue } from "../providers/github.js";
 import { httpUrl } from "../portal/util.js";
 import type { Ctx } from "../app.js";
 
@@ -29,7 +32,7 @@ const MAX_REASON = 2000;
 const MAX_NOTE = 1000;
 const MIN_REASON = 20;
 
-export function maintainerRoutes(_ctx: Ctx): Router {
+export function maintainerRoutes({ cms }: Ctx): Router {
   const r = Router();
   r.use("/maintainers", needsDatabase, needsContributor());
 
@@ -251,7 +254,7 @@ export function maintainerRoutes(_ctx: Ctx): Router {
   r.post("/maintainers/claims/:id/release", async (req, res) => {
     const me = req.contributor!;
     const store = requirePortalStore();
-    const claim = (await store.listClaims({ status: "active" })).find((c) => c.id === String(req.params.id));
+    const claim = (await store.listClaims()).find((c) => c.id === String(req.params.id) && c.status === "active");
     if (!claim) throw notFound("No active claim with that id.");
     await requireMaintainerOf(me.id, claim.repo);
     const released = await store.releaseClaim(claim.id, me.handle);
@@ -261,6 +264,35 @@ export function maintainerRoutes(_ctx: Ctx): Router {
     });
     res.json({ ok: true, claim: released });
   });
+
+  // Approving or declining a newcomer's request (portal/claims.ts). The GitHub comment and the
+  // assignment follow the decision; neither failing undoes it.
+  for (const decision of ["approve", "decline"] as const) {
+    r.post(`/maintainers/claims/:id/${decision}`, async (req, res) => {
+      const me = req.contributor!;
+      const store = requirePortalStore();
+      const pending = (await store.listClaims({ status: "requested" })).find((c) => c.id === String(req.params.id));
+      if (!pending) throw notFound("No request waiting with that id.");
+      await requireMaintainerOf(me.id, pending.repo);
+      const { claimDays } = await getSettings(cms);
+      const result = await decideRequest(store, me, pending.id, decision, claimDays);
+      if (!result.ok) throw badRequest("That request has already been answered.");
+      const claim = result.claim;
+      const env = process.env as Record<string, string | undefined>;
+      if (claim.provider === "github") {
+        if (decision === "approve") {
+          const assigned = await assignGithubIssue(fetch, env, claim.repo, claim.issue, claim.username).catch(() => false);
+          if (assigned) await store.markClaimAssigned(claim.id);
+        }
+        const text = decision === "approve"
+          ? claimComments.approved(claim.username, claim.expiresAt.toISOString().slice(0, 10), me.handle)
+          : claimComments.declined(claim.username, me.handle);
+        await commentGithubIssue(fetch, env, claim.repo, claim.issue, text)
+          .catch((e) => console.error(`[portal] could not comment on ${claim.repo}#${claim.issue}: ${(e as Error).message}`));
+      }
+      res.json({ ok: true, claim });
+    });
+  }
 
   /* ---------------- leaving, and being removed ---------------- */
 

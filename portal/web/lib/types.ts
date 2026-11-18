@@ -78,7 +78,7 @@ export interface Contribution {
   updatedAt: string;
 }
 
-export type ClaimStatus = "active" | "released" | "expired";
+export type ClaimStatus = "requested" | "active" | "released" | "expired" | "declined";
 
 export interface Claim {
   id: string;

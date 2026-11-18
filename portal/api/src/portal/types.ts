@@ -85,7 +85,10 @@ export interface Contribution {
   updatedAt: Date;
 }
 
-export type ClaimStatus = "active" | "released" | "expired";
+// requested  a newcomer asked to take the issue on; a maintainer approves or declines it
+// active     the issue is theirs until expiresAt
+// released, expired, declined   ended
+export type ClaimStatus = "requested" | "active" | "released" | "expired" | "declined";
 
 export interface Claim {
   id: string;
@@ -101,6 +104,9 @@ export interface Claim {
   assigned: boolean;
   releasedBy?: string;
   releasedAt?: Date;
+  /** Who approved a request, and when. */
+  approvedBy?: string;
+  approvedAt?: Date;
 }
 
 export interface SyncRun {
@@ -180,12 +186,18 @@ export interface PortalStore {
   countContributions(f?: ContributionFilter): Promise<number>;
 
   // claims
-  /** Throws ClaimTakenError when an active claim exists. Expired claims are marked first. */
+  /** Throws ClaimTakenError when the issue is already held (an active claim, or a request waiting
+   *  for a maintainer). Expired claims are marked first. */
   createClaim(c: Claim): Promise<void>;
   listClaims(opts?: { contributorId?: string; status?: ClaimStatus }): Promise<Claim[]>;
+  /** Ends an active claim or a pending request. Null when it was neither. */
   releaseClaim(id: string, by: string): Promise<Claim | null>;
+  /** Turns a pending request into an active claim lasting until `expiresAt`. Null when it isn't pending. */
+  approveClaim(id: string, by: string, expiresAt: Date): Promise<Claim | null>;
+  /** Declines a pending request. Null when it isn't pending. */
+  declineClaim(id: string, by: string): Promise<Claim | null>;
   markClaimAssigned(id: string): Promise<void>;
-  /** Marks every active claim past its date as expired. Returns the ones it changed. */
+  /** Marks every active claim and pending request past its date as expired. Returns the ones it changed. */
   expireClaims(): Promise<Claim[]>;
 
   // sync runs

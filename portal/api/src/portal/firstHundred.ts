@@ -64,7 +64,7 @@ export function trackOf(i: GithubIssue): Track {
 }
 
 export function buildBoard(issues: GithubIssue[], claims: Claim[], portalUrl: string, now = new Date()): Board {
-  const held = new Set(claims.filter((c) => c.status === "active" && c.provider === "github").map((c) => `${c.repo.toLowerCase()}#${c.issue}`));
+  const held = new Set(claims.filter((c) => (c.status === "active" || c.status === "requested") && c.provider === "github").map((c) => `${c.repo.toLowerCase()}#${c.issue}`));
   const order: Record<TaskState, number> = { open: 0, claimed: 1, done: 2 };
   const tasks: Task[] = issues
     .filter((i) => !i.pull_request && !(i.state === "closed" && i.state_reason === "not_planned"))

@@ -3,10 +3,13 @@
 import { MongoClient, MongoServerError, type Db, type Filter } from "mongodb";
 import {
   AccountTakenError, ClaimTakenError,
-  type Claim, type Contribution, type ContributionFilter, type Contributor, type ContributorSession,
+  type Claim, type ClaimStatus, type Contribution, type ContributionFilter, type Contributor, type ContributorSession,
   type AuditEvent, type LinkedAccount, type PortalStore, type SyncRun,
 } from "./types.js";
 import type { Maintainership, Nomination, ReviewerInvitation } from "./maintainers.js";
+
+/** Active claims and pending requests whose date has passed. */
+const HELD_AND_DUE = () => ({ status: { $in: ["active", "requested"] as ClaimStatus[] }, expiresAt: { $lte: new Date() } });
 
 // One connection pool per URI, per process.
 const g = globalThis as unknown as { __itcMongo?: Map<string, Promise<MongoClient>> };
@@ -48,6 +51,9 @@ export function createPortalMongoStore(uri: string, dbName: string): PortalStore
         d.collection("portal_claims").createIndex({ id: 1 }, { unique: true }),
         // At most one active claim per issue, enforced by the database.
         d.collection("portal_claims").createIndex({ provider: 1, repo: 1, issue: 1 }, { unique: true, partialFilterExpression: { status: "active" } }),
+        // One holder per issue, counting requests waiting for a maintainer as well as active claims.
+        // A flag rather than a status list, because a partial index can't rely on $in everywhere.
+        d.collection("portal_claims").createIndex({ provider: 1, repo: 1, issue: 1 }, { name: "one_holder_per_issue", unique: true, partialFilterExpression: { holds: true } }),
         d.collection("portal_sync_runs").createIndex({ sourceId: 1, startedAt: -1 }),
         d.collection("portal_audit").createIndex({ at: -1 }),
         d.collection("portal_maintainers").createIndex({ id: 1 }, { unique: true }),
@@ -201,9 +207,9 @@ export function createPortalMongoStore(uri: string, dbName: string): PortalStore
 
     async createClaim(cl) {
       const c = await col<Claim>("portal_claims");
-      await c.updateMany({ status: "active", expiresAt: { $lte: new Date() } }, { $set: { status: "expired" } });
+      await c.updateMany(HELD_AND_DUE(), { $set: { status: "expired" }, $unset: { holds: "" } });
       try {
-        await c.insertOne({ ...cl });
+        await c.insertOne({ ...cl, holds: true } as Claim);
       } catch (e) {
         if (isDup(e)) throw new ClaimTakenError();
         throw e;
@@ -211,7 +217,7 @@ export function createPortalMongoStore(uri: string, dbName: string): PortalStore
     },
     async listClaims(opts) {
       const c = await col<Claim>("portal_claims");
-      await c.updateMany({ status: "active", expiresAt: { $lte: new Date() } }, { $set: { status: "expired" } });
+      await c.updateMany(HELD_AND_DUE(), { $set: { status: "expired" }, $unset: { holds: "" } });
       const q: Record<string, unknown> = {};
       if (opts?.contributorId) q.contributorId = opts.contributorId;
       if (opts?.status) q.status = opts.status;
@@ -219,15 +225,25 @@ export function createPortalMongoStore(uri: string, dbName: string): PortalStore
     },
     async releaseClaim(id, by) {
       const c = await col<Claim>("portal_claims");
-      const d = await c.findOneAndUpdate({ id, status: "active" }, { $set: { status: "released", releasedBy: by, releasedAt: new Date() } }, { returnDocument: "after" });
+      const d = await c.findOneAndUpdate({ id, status: { $in: ["active", "requested"] as ClaimStatus[] } }, { $set: { status: "released", releasedBy: by, releasedAt: new Date() }, $unset: { holds: "" } }, { returnDocument: "after" });
+      return d ? strip<Claim>(d) : null;
+    },
+    async approveClaim(id, by, expiresAt) {
+      const c = await col<Claim>("portal_claims");
+      const d = await c.findOneAndUpdate({ id, status: "requested" }, { $set: { status: "active", approvedBy: by, approvedAt: new Date(), expiresAt } }, { returnDocument: "after" });
+      return d ? strip<Claim>(d) : null;
+    },
+    async declineClaim(id, by) {
+      const c = await col<Claim>("portal_claims");
+      const d = await c.findOneAndUpdate({ id, status: "requested" }, { $set: { status: "declined", releasedBy: by, releasedAt: new Date() }, $unset: { holds: "" } }, { returnDocument: "after" });
       return d ? strip<Claim>(d) : null;
     },
     async markClaimAssigned(id) { await (await col<Claim>("portal_claims")).updateOne({ id }, { $set: { assigned: true } }); },
     async expireClaims() {
       const c = await col<Claim>("portal_claims");
-      const due = await c.find({ status: "active", expiresAt: { $lte: new Date() } }).toArray();
+      const due = await c.find(HELD_AND_DUE()).toArray();
       if (!due.length) return [];
-      await c.updateMany({ id: { $in: due.map((d) => d.id) }, status: "active" }, { $set: { status: "expired" } });
+      await c.updateMany({ id: { $in: due.map((d) => d.id) }, status: { $in: ["active", "requested"] as ClaimStatus[] } }, { $set: { status: "expired" }, $unset: { holds: "" } });
       return due.map((d) => ({ ...strip<Claim>(d), status: "expired" as const }));
     },
 

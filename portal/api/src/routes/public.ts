@@ -85,7 +85,7 @@ export function publicRoutes({ config }: Ctx): Router {
         const store = getPortalStore();
         const [issues, claims] = await Promise.all([
           fetchIssues(process.env.FIRST_HUNDRED_ORG || "bytheitc", process.env.GITHUB_SYNC_TOKEN || undefined),
-          store ? store.listClaims({ status: "active" }) : Promise.resolve([]),
+          store ? store.listClaims() : Promise.resolve([]),
         ]);
         return buildBoard(issues, claims, config.web.url);
       })().finally(() => { building = undefined; });

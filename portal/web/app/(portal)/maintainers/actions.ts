@@ -64,6 +64,16 @@ export async function cancelNomination(fd: FormData) {
   refresh();
 }
 
+export async function approveClaimRequest(fd: FormData) {
+  await api.decideClaimRequest(await token(), s(fd, "id", 80), "approve");
+  revalidatePath("/maintainers/claims");
+}
+
+export async function declineClaimRequest(fd: FormData) {
+  await api.decideClaimRequest(await token(), s(fd, "id", 80), "decline");
+  revalidatePath("/maintainers/claims");
+}
+
 export async function releaseClaim(fd: FormData) {
   await api.releaseClaimAsMaintainer(await token(), s(fd, "id", 80));
   revalidatePath("/maintainers/claims");

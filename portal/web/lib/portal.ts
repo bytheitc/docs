@@ -82,7 +82,7 @@ export const deleteMe = (token: string, confirm: string) =>
  * makes the whole request a 400 ("issue" must be a string) and no claim is ever created.
  */
 export const claimIssue = (token: string, claim: { provider: string; repo: string; issue: number }) =>
-  call<{ assigned: boolean; expiresAt: string; username: string }>("/me/claims", {
+  call<{ status: "requested" | "active"; assigned: boolean; expiresAt: string; username: string }>("/me/claims", {
     method: "POST",
     token,
     body: { ...claim, issue: String(claim.issue) },
@@ -190,6 +190,8 @@ export const withdrawNomination = (t: string, id: string) =>
 
 export const getMaintainerClaims = (t: string) =>
   orNull<{ claims: Claim[]; people: People }>(call("/maintainers/claims", { token: t }));
+export const decideClaimRequest = (t: string, id: string, decision: "approve" | "decline") =>
+  call<Record<string, never>>(`/maintainers/claims/${encodeURIComponent(id)}/${decision}`, { method: "POST", token: t });
 export const releaseClaimAsMaintainer = (t: string, id: string) =>
   call<Record<string, never>>(`/maintainers/claims/${encodeURIComponent(id)}/release`, { method: "POST", token: t });
 

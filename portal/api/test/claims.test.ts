@@ -36,7 +36,7 @@ function fakeStore(seed: Claim[], opts: { releaseReturnsNull?: boolean } = {}) {
     },
     async releaseClaim(id: string, by: string) {
       if (opts.releaseReturnsNull) return null;
-      const c = claims.find((x) => x.id === id && x.status === "active");
+      const c = claims.find((x) => x.id === id && (x.status === "active" || x.status === "requested"));
       if (!c) return null;
       c.status = "released";
       c.releasedBy = by;
@@ -108,4 +108,65 @@ test("only the matching claim is released when you hold several", async () => {
   assert.equal(claims[0].status, "active");
   assert.equal(claims[1].status, "released");
   assert.equal(audit[0].target, "claim/github:bytheitc/portal#34");
+});
+
+/* ---------------- asking, and a maintainer's answer ---------------- */
+
+import { decideRequest, isEstablished } from "../src/portal/claims.js";
+
+function decisionStore(seed: Claim[], opts: { merged?: boolean; role?: "maintainer" | "reviewer" | null } = {}) {
+  const claims = seed.map((c) => ({ ...c }));
+  const audit: AuditEvent[] = [];
+  const store = {
+    async listClaims(o: { status?: ClaimStatus } = {}) {
+      return claims.filter((c) => o.status === undefined || c.status === o.status);
+    },
+    async approveClaim(id: string, by: string, expiresAt: Date) {
+      const c = claims.find((x) => x.id === id && x.status === "requested");
+      if (!c) return null;
+      Object.assign(c, { status: "active", approvedBy: by, expiresAt });
+      return { ...c };
+    },
+    async declineClaim(id: string, by: string) {
+      const c = claims.find((x) => x.id === id && x.status === "requested");
+      if (!c) return null;
+      Object.assign(c, { status: "declined", releasedBy: by });
+      return { ...c };
+    },
+    async listMaintainerships() {
+      return opts.role ? [{ role: opts.role }] : [];
+    },
+    async listContributions() {
+      return opts.merged ? [{ state: "merged" }] : [{ state: "open" }];
+    },
+    async addAudit(ev: AuditEvent) {
+      audit.push(ev);
+    },
+  } as unknown as PortalStore;
+  return { store, claims, audit };
+}
+
+test("a newcomer asks; merged work or a maintainer role claims outright", async () => {
+  assert.equal(await isEstablished(decisionStore([]).store, ME.id), false);
+  assert.equal(await isEstablished(decisionStore([], { merged: true }).store, ME.id), true);
+  assert.equal(await isEstablished(decisionStore([], { role: "reviewer" }).store, ME.id), true);
+});
+
+test("approving a request makes it an active claim for a fresh claim period, and records who approved", async () => {
+  const { store, claims, audit } = decisionStore([claim({ status: "requested" })]);
+  const now = new Date("2026-11-20T00:00:00Z");
+  const result = await decideRequest(store, THEM, "claim-1", "approve", 7, now);
+  assert.equal(result.ok, true);
+  assert.equal(claims[0].status, "active");
+  assert.equal(claims[0].approvedBy, "them");
+  assert.equal(claims[0].expiresAt.toISOString(), "2026-11-27T00:00:00.000Z", "the clock starts at approval, not at the request");
+  assert.equal(audit[0].action, "maintainers.claim.approve");
+});
+
+test("declining frees the issue; answering twice is refused", async () => {
+  const { store, claims } = decisionStore([claim({ status: "requested" })]);
+  assert.equal((await decideRequest(store, THEM, "claim-1", "decline", 7)).ok, true);
+  assert.equal(claims[0].status, "declined");
+  assert.deepEqual(await decideRequest(store, THEM, "claim-1", "approve", 7), { ok: false, reason: "not-pending" });
+  assert.deepEqual(await decideRequest(store, THEM, "nope", "approve", 7), { ok: false, reason: "not-found" });
 });

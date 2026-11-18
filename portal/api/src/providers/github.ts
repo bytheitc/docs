@@ -129,6 +129,21 @@ export const github: ProviderAdapter = {
   },
 };
 
+/** Comments on an issue as the token's owner, if GITHUB_ISSUES_TOKEN is set. Returns false when not configured. */
+export async function commentGithubIssue(
+  fetch: FetchLike, env: Record<string, string | undefined>, repo: string, issue: number, body: string,
+): Promise<boolean> {
+  const token = env.GITHUB_ISSUES_TOKEN;
+  if (!token) return false;
+  const res = await fetch(`${API}/repos/${repo}/issues/${issue}/comments`, {
+    method: "POST",
+    headers: { Accept: "application/vnd.github+json", Authorization: `Bearer ${token}`, "Content-Type": "application/json", "User-Agent": "itc-portal" },
+    body: JSON.stringify({ body }),
+  });
+  if (!res.ok) throw new ProviderError(`GitHub refused the comment (${res.status}).`);
+  return true;
+}
+
 /** Assigns an issue to a GitHub user, if GITHUB_ISSUES_TOKEN is set. Returns false when not configured. */
 export async function assignGithubIssue(
   fetch: FetchLike, env: Record<string, string | undefined>, repo: string, issue: number, login: string,

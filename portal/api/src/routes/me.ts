@@ -9,11 +9,11 @@
 //   POST   /me/contributions        self-logged work, held as pending until a steward verifies it
 //   DELETE /me/accounts/:provider/:providerUserId
 //   POST   /me/claims               claim an issue
-//   POST   /me/claims/:id/release   hand back a claim of your own before it expires
+//   POST   /me/claims/:id/release   hand back a claim of your own before it expires, or withdraw a request
 import { randomUUID } from "node:crypto";
 import { Router } from "express";
 import { badRequest, body, invalid, notFound, str } from "../http.js";
-import { releaseOwnClaim } from "../portal/claims.js";
+import { claimComments, isEstablished, releaseOwnClaim } from "../portal/claims.js";
 import { getSettings } from "../portal/content.js";
 import { needsContributor, needsDatabase } from "../portal/guard.js";
 import { counts, evaluateMilestones } from "../portal/milestones.js";
@@ -22,7 +22,7 @@ import { ClaimTakenError, DEFAULT_PROFILE, type Claim, type PublicProfile } from
 import { HANDLE, SELF_KINDS, httpUrl, isHouse } from "../portal/util.js";
 import { getMilestones } from "../portal/content.js";
 import { knownProvider } from "../providers/index.js";
-import { assignGithubIssue } from "../providers/github.js";
+import { assignGithubIssue, commentGithubIssue } from "../providers/github.js";
 import type { Ctx } from "../app.js";
 
 const REPO = /^[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/;
@@ -177,37 +177,46 @@ export function meRoutes({ cms }: Ctx): Router {
 
     const { claimDays } = await getSettings(cms);
     const now = new Date();
+    // Someone the collective doesn't know yet asks; a maintainer approves. See portal/claims.ts.
+    const established = await isEstablished(store, me.id);
     const claim: Claim = {
-      id: randomUUID(), provider, repo, issue, contributorId: me.id, username: account.username, status: "active",
+      id: randomUUID(), provider, repo, issue, contributorId: me.id, username: account.username,
+      status: established ? "active" : "requested",
       createdAt: now, expiresAt: new Date(now.getTime() + claimDays * 864e5), assigned: false,
     };
     try {
       await store.createClaim(claim);
     } catch (e) {
       if (e instanceof ClaimTakenError) {
-        throw badRequest("Someone is already working on this issue. Try another, or check back after their claim expires.");
+        throw badRequest("Someone is already working on this issue, or has asked to. Try another, or check back later.");
       }
       throw e;
     }
 
+    const env = process.env as Record<string, string | undefined>;
+    const until = claim.expiresAt.toISOString().slice(0, 10);
     let assigned = false;
     if (provider === "github") {
-      try {
-        assigned = await assignGithubIssue(fetch, process.env as Record<string, string | undefined>, repo, issue, account.username);
-      } catch {
-        assigned = false;
+      if (established) {
+        try {
+          assigned = await assignGithubIssue(fetch, env, repo, issue, account.username);
+        } catch {
+          assigned = false;
+        }
       }
+      // The comment is a courtesy to people watching the issue; a claim stands without it.
+      await commentGithubIssue(fetch, env, repo, issue, established ? claimComments.claimed(account.username, until) : claimComments.requested(account.username))
+        .catch((e) => console.error(`[portal] could not comment on ${repo}#${issue}: ${(e as Error).message}`));
     }
     if (assigned) {
       await store.markClaimAssigned(claim.id);
-    } else {
+    } else if (established) {
       // No write access configured: a steward assigns it by hand, prompted from the CMS inbox.
       await cms.submit("issue-claim", {
-        provider, repo, issue: String(issue), username: account.username, contributor: me.handle,
-        expires: claim.expiresAt.toISOString().slice(0, 10),
+        provider, repo, issue: String(issue), username: account.username, contributor: me.handle, expires: until,
       });
     }
-    res.status(201).json({ ok: true, assigned, expiresAt: claim.expiresAt.toISOString(), username: account.username });
+    res.status(201).json({ ok: true, status: claim.status, assigned, expiresAt: claim.expiresAt.toISOString(), username: account.username });
   });
 
   r.post("/me/claims/:id/release", async (req, res) => {

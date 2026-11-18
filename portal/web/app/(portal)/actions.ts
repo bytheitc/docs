@@ -96,9 +96,11 @@ export async function claimIssue(_: ActionState, fd: FormData): Promise<ActionSt
   const until = new Date(result.expiresAt).toLocaleDateString("en-GB");
   return {
     ok: true,
-    message: result.assigned
-      ? `Claimed and assigned to you on GitHub until ${until}.`
-      : `Claimed until ${until}. A steward will assign it to ${result.username}.`,
+    message: result.status === "requested"
+      ? "Requested. It's held for you while a maintainer reviews it, and you'll see the answer on GitHub and on your dashboard. Once you've had work merged, you can claim straight away."
+      : result.assigned
+        ? `Claimed and assigned to you on GitHub until ${until}.`
+        : `Claimed until ${until}. A steward will assign it to ${result.username}.`,
   };
 }
 

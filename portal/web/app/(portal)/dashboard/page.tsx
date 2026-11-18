@@ -17,7 +17,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const [dash, settings] = await Promise.all([getDashboard((await sessionToken())!), getSettings()]);
   const visible = dash?.contributions ?? [];
   const accounts = dash?.accounts ?? [];
-  const claims = (dash?.claims ?? []).filter((c) => c.status === "active");
+  const claims = (dash?.claims ?? []).filter((c) => c.status === "active" || c.status === "requested");
   const reached = dash?.milestones.reached ?? [];
   const next = dash?.milestones.next ?? [];
   const byHouse = new Map<string, number>();
@@ -93,7 +93,9 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               {claims.map((c) => (
                 <li key={c.id}>
                   <span className="c-title">{c.repo} #{c.issue}</span>
-                  <span className={`chip ${c.assigned ? "ok" : "warn"}`}>{c.assigned ? "Assigned" : "Awaiting assignment"}</span>
+                  {c.status === "requested"
+                    ? <span className="chip warn">Waiting for a maintainer</span>
+                    : <span className={`chip ${c.assigned ? "ok" : "warn"}`}>{c.assigned ? "Assigned" : "Awaiting assignment"}</span>}
                   <span className="c-meta">Until {fmtDate(c.expiresAt)}</span>
                   {/* A claim is a promise to everyone else that you are on it. Being able to hand it
                       back is what keeps the promise meaningful: otherwise the only way out is silence. */}
